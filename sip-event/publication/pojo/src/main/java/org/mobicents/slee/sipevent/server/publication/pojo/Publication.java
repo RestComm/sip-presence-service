@@ -131,4 +131,9 @@ public class Publication implements Serializable {
 	public void setUnmarshalledContent(JAXBElement unmarshalledContent) {
 		this.unmarshalledContent = unmarshalledContent;
 	}
+	
+	@Override
+	public String toString() {
+		return "Publication: resource="+publicationKey.getEntity()+",eventPackage="+publicationKey.getEventPackage();
+	}
 }

@@ -53,10 +53,10 @@ public class Subscription implements Serializable {
 	 * the current status of the subscription
 	 */
 	public enum Status {
-		ACTIVE, 
-		PENDING, 
-		WAITING, 
-		TERMINATED;
+		active, 
+		pending, 
+		waiting, 
+		terminated;
 	}
 	@Column(name = "STATUS", nullable = false)
 	private Status status;
@@ -90,13 +90,14 @@ public class Subscription implements Serializable {
 	 * last event that occurred in the subscription
 	 */
 	public enum Event {
-		NORESOURCE,
-		REJECTED,
-		DEACTIVATED,
-		PROBATION,
-		TIMEOUT,
-		APPROVED,
-		GIVEUP
+		noresource,
+		rejected,
+		deactivated,
+		probation,
+		timeout,
+		approved,
+		giveup,
+		subscribe
 	}
 	@Column(name = "LAST_EVENT", nullable = true)
 	private Event lastEvent;
@@ -122,6 +123,12 @@ public class Subscription implements Serializable {
 		this.subscriber = subscriber;
 		this.notifier = notifier;
 		this.status = status;
+		if (status.equals(Status.active)){
+			this.lastEvent = Event.approved;
+		}
+		else if (status.equals(Status.pending)) {
+			this.lastEvent = Event.subscribe;
+		}
 		this.creationDate = System.currentTimeMillis();
 		this.lastRefreshDate = creationDate;		
 		this.expires = expires;
@@ -152,27 +159,27 @@ public class Subscription implements Serializable {
 
 		// implements subscription state machine
 		Status oldStatus = status;
-		if (status == Status.ACTIVE) {
-			if (event == Event.NORESOURCE || event == Event.REJECTED || event == Event.DEACTIVATED || event == Event.PROBATION || event == Event.TIMEOUT) {
-				status = Status.TERMINATED;
+		if (status == Status.active) {
+			if (event == Event.noresource || event == Event.rejected || event == Event.deactivated || event == Event.probation || event == Event.timeout) {
+				status = Status.terminated;
 			}
 		}
 
-		else if (status == Status.PENDING) {
-			if (event == Event.APPROVED) {
-				status = Status.ACTIVE;
+		else if (status == Status.pending) {
+			if (event == Event.approved) {
+				status = Status.active;
 			}
-			else if (event == Event.TIMEOUT) {
-				status = Status.WAITING;
+			else if (event == Event.timeout) {
+				status = Status.waiting;
 			}
-			else if (event == Event.NORESOURCE || event == Event.REJECTED || event == Event.DEACTIVATED || event == Event.PROBATION || event == Event.GIVEUP) {
-				status = Status.TERMINATED;
+			else if (event == Event.noresource || event == Event.rejected || event == Event.deactivated || event == Event.probation || event == Event.giveup) {
+				status = Status.terminated;
 			}
 		}		
 
-		else if (status == Status.WAITING) {
-			if (event == Event.NORESOURCE || event == Event.REJECTED || event == Event.GIVEUP || event == Event.APPROVED) {
-				status = Status.TERMINATED;
+		else if (status == Status.waiting) {
+			if (event == Event.noresource || event == Event.rejected || event == Event.giveup || event == Event.approved) {
+				status = Status.terminated;
 			}
 		}
 
@@ -292,5 +299,10 @@ public class Subscription implements Serializable {
 	
 	public void incrementVersion() {
 		this.version++;
+	}
+	
+	@Override
+	public String toString() {
+		return "subscription: subscriber="+subscriber+",notifier="+notifier+",eventPackage="+subscriptionKey.getEventPackage()+",eventId="+subscriptionKey.getRealEventId()+",status="+status;
 	}
 }

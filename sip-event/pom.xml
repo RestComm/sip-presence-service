@@ -4,14 +4,13 @@
 	<packaging>pom</packaging>
 	
 	<parent>
-		<artifactId>mobicents</artifactId>
-		<groupId>org.mobicents</groupId>
-		<version>1.2.0.BETA3-SNAPSHOT</version>
+		<artifactId>sip-presence-parent</artifactId>
+		<groupId>org.mobicents.servers.sippresence</groupId>
+		<version>1.0.0.BETA2</version>
 	</parent>
 		
-	<artifactId>parent</artifactId>
+	<artifactId>sip-event-parent</artifactId>
 	<groupId>org.mobicents.servers.sipevent</groupId>
-	<version>1.0.0.BETA1</version>
 
 	<modules>
 		<module>subscription</module>	
@@ -22,9 +21,6 @@
 		<org.mobicents.servers.sipevent.finalName>
 			mobicents-sipevent-server-${pom.artifactId}-${pom.version}
 		</org.mobicents.servers.sipevent.finalName>
-		<mobicents.version>
-			1.2.0.BETA3-SNAPSHOT
-		</mobicents.version>
 	</properties>			
 	
 	<build>

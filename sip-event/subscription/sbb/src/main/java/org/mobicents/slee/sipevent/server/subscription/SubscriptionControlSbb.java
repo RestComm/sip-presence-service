@@ -4,9 +4,8 @@ import gov.nist.javax.sip.Utils;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.math.BigInteger;
 import java.text.ParseException;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -55,6 +54,7 @@ import javax.slee.facilities.TimerPreserveMissed;
 import javax.slee.serviceactivity.ServiceActivity;
 import javax.slee.serviceactivity.ServiceActivityFactory;
 import javax.slee.serviceactivity.ServiceStartedEvent;
+import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -65,6 +65,9 @@ import org.mobicents.slee.resource.sip.SipActivityContextInterfaceFactory;
 import org.mobicents.slee.resource.sip.SipResourceAdaptorSbbInterface;
 import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.pojo.SubscriptionKey;
+import org.mobicents.slee.sipevent.server.subscription.winfo.pojo.Watcher;
+import org.mobicents.slee.sipevent.server.subscription.winfo.pojo.WatcherList;
+import org.mobicents.slee.sipevent.server.subscription.winfo.pojo.Watcherinfo;
 
 /**
  * Sbb to control subscriptions of sip events in a dialog
@@ -197,12 +200,9 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 	
 	/**
 	 * Retrieves SIP response code for a new subscription request SUBSCRIBE. This value defines the authorization. 
-	 * @param subscriber
-	 * @param notifier
-	 * @param eventPackage
 	 * @return
 	 */
-	protected abstract int isSubscriberAuthorized(String subscriber, String notifier, String eventPackage);
+	protected abstract int isSubscriberAuthorized(String subscriber, UserAgentHeader subscriberUserAgent, String notifier, String eventPackage, String eventId);
 	
 	/**
 	 * Retrieves the content for the NOTIFY request of the specified Subscription
@@ -213,16 +213,21 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 	
 	/**
 	 * Filters content per subscriber.
-	 * @param subscriber
-	 * @return
+	 * @return content filtered
 	 */
-	protected abstract JAXBElement filterContentPerSubscriber(JAXBElement unmarshalledContent, String subscriber);
+	protected abstract JAXBElement filterContentPerSubscriber(String subscriber, String notifier, String eventPackage, JAXBElement unmarshalledContent);
 	
 	/**
 	 * Retrieves a JAXB Marshaller to convert a JAXBElement to a String. 
 	 * @return
 	 */
 	protected abstract Marshaller getMarshaller();
+	
+
+	/**
+	 * notifies the event package impl that a subscription is about to be removed, may have resources to releases
+	 */
+	protected abstract void removingSubscription(String subscriber, String notifier, String eventPackage, String eventId);
 	
 	// ----------- EVENT HANDLERS
 	
@@ -287,7 +292,9 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 		if (event.getRequest().getHeader(UserAgentHeader.NAME) != null)
 			event.getRequest().removeHeader(UserAgentHeader.NAME);
 
-		getLogger().info("Processing SUBSCRIBE request...");
+		if (getLogger().isDebugEnabled()) {
+			getLogger().debug("Processing SUBSCRIBE request...");
+		}
 
 		// get event header
 		EventHeader eventHeader = (EventHeader) event.getRequest().getHeader(
@@ -330,9 +337,9 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 							if (subscription != null) {
 								// subscription exists
 								if (subscription.getStatus().equals(
-										Subscription.Status.ACTIVE)
+										Subscription.Status.active)
 										|| subscription.getStatus().equals(
-												Subscription.Status.PENDING)) {
+												Subscription.Status.pending)) {
 									// subscription status permits refresh
 									refreshSubscription(event, aci, eventPackage,
 											eventId, expires, subscription, entityManager);
@@ -366,16 +373,18 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 						Subscription subscription = getSubscription(entityManager, dialog.getDialogId(), eventPackage, eventId);
 						if (subscription != null) {
 							if (subscription.getStatus().equals(
-									Subscription.Status.ACTIVE) || subscription
+									Subscription.Status.active) || subscription
 									.getStatus().equals(
-											Subscription.Status.PENDING)) {
+											Subscription.Status.pending)) {
 								// subscription exists and status permits remove
 								try {				
 									Response response = messageFactory.createResponse(Response.OK, event.getRequest());
 									response = addContactHeader(response);
 									response.addHeader(headerFactory.createExpiresHeader(expires));
 									event.getServerTransaction().sendResponse(response);
-									getLogger().info("Response sent:\n"+response.toString());					
+									if (getLogger().isDebugEnabled()) {
+										getLogger().debug("Response sent:\n"+response.toString());					
+									}
 								}
 								catch (Exception e) {
 									getLogger().error("Can't send RESPONSE",e);			
@@ -433,8 +442,6 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 			ActivityContextInterface aci, String eventPackage, String eventId,
 			int expires, EntityManager entityManager) {
 
-		getLogger().info("new subscription request for event package "+eventPackage);
-		
 		Dialog dialog = event.getDialog();
 		ActivityContextInterface dialogAci = null;
 		
@@ -452,7 +459,7 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 			responseCode = subscriber.equals(notifier) ? Response.OK : Response.FORBIDDEN;
 		}
 		else {
-			responseCode = isSubscriberAuthorized(subscriber,notifier,eventPackage);
+			responseCode = isSubscriberAuthorized(subscriber,(UserAgentHeader)event.getRequest().getHeader(UserAgentHeader.NAME),notifier,eventPackage,eventId);
 		}
 		
 		// send response
@@ -474,23 +481,30 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 				response = addContactHeader(response);
 				response.addHeader(headerFactory.createExpiresHeader(expires));
 				event.getServerTransaction().sendResponse(response);
-				getLogger().info("Response sent:\n"+response.toString());
+				if (getLogger().isDebugEnabled()) {
+					getLogger().debug("Response sent:\n"+response.toString());
+				}
 			}
 			else {
 				response = addContactHeader(response);
 				event.getServerTransaction().sendResponse(response);
-				getLogger().info("Response sent:\n"+response.toString());
+				getLogger().info("Subscription: subscriber="+subscriber+",notifier="+notifier+",eventPackage="+eventPackage+" not authorized ("+responseCode+")");
+				if (getLogger().isDebugEnabled()) {
+					getLogger().debug("Response sent:\n"+response.toString());
+				}
 				return;
 			}
 		}
 		catch (Exception e) {
-			getLogger().error("Can't send RESPONSE",e);
+			getLogger().error("Can't send new subscription request's reponse",e);
 			// cleanup
 			try {				
 				Response response = messageFactory.createResponse(Response.SERVER_INTERNAL_ERROR, event.getRequest());				
 				response = addContactHeader(response);
 				event.getServerTransaction().sendResponse(response);
-				getLogger().info("Response sent:\n"+response.toString());					
+				if (getLogger().isDebugEnabled()) {
+					getLogger().debug("Response sent:\n"+response.toString());
+				}					
 			}
 			catch (Exception f) {
 				getLogger().error("Can't send RESPONSE",f);				
@@ -499,11 +513,9 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 		}						
 
 		// create subscription, initial status depends on authorization
-		Subscription.Status initialStatus = 
-			responseCode == Response.ACCEPTED ? Subscription.Status.PENDING : Subscription.Status.ACTIVE;
 		SubscriptionKey subscriptionKey = new SubscriptionKey(dialog.getDialogId(),eventPackage,eventId);
-		// FIXME remove
-		getLogger().info("Creating "+subscriptionKey);
+		Subscription.Status initialStatus = 
+			responseCode == Response.ACCEPTED ? Subscription.Status.pending : Subscription.Status.active;
 		Subscription subscription = 
 			new Subscription(subscriptionKey,subscriber,notifier,initialStatus,subscriberDisplayName,expires);
 
@@ -526,6 +538,9 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 		
 		// set new timer
 		setSubscriptionTimer(entityManager,subscription,expires+5,aci);
+		
+		getLogger().info("Created "+subscription);
+		
 	}
 
 	// ---- SUBSCRIPTION REFRESH --------------------------------------------------------------
@@ -533,9 +548,7 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 	private void refreshSubscription(RequestEvent event,
 			ActivityContextInterface aci, String eventPackage, String eventId,
 			int expires, Subscription subscription, EntityManager entityManager) {
-		
-		getLogger().info("resfreshing "+subscription.getSubscriptionKey());
-		
+			
 		// cancel actual timer
 		timerFacility.cancelTimer(subscription.getTimerID());
 
@@ -548,7 +561,9 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 			response = addContactHeader(response);
 			response.addHeader(headerFactory.createExpiresHeader(expires));
 			event.getServerTransaction().sendResponse(response);
-			getLogger().info("Response sent:\n"+response.toString());					
+			if (getLogger().isDebugEnabled()) {
+				getLogger().debug("Response sent:\n"+response.toString());					
+			}
 		}
 		catch (Exception e) {
 			getLogger().error("Can't send RESPONSE",e);			
@@ -563,6 +578,8 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 		
 		// set new timer
 		setSubscriptionTimer(entityManager,subscription,expires+5,aci);
+		
+		getLogger().info("Refreshed "+subscription+" for "+expires+" seconds");
 	}
 	
 	// ---- SUBSCRIPTION REMOVAL -----------------------------------------------------------------
@@ -570,13 +587,11 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 	private void removeSubscription(ActivityContextInterface aci, String eventPackage, String eventId,
 			Subscription subscription, EntityManager entityManager) {
 		
-		getLogger().info("Removing "+subscription.getSubscriptionKey());
-		
 		// cancel timer
 		timerFacility.cancelTimer(subscription.getTimerID());
 
 		// change subscription state, simulate a timeout after a refresh of 0 secs 
-		subscription.changeStatus(Subscription.Event.TIMEOUT);
+		subscription.changeStatus(Subscription.Event.timeout);
 
 		// get dialog from aci
 		Dialog dialog = (Dialog)aci.getActivity();
@@ -592,12 +607,13 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 		notifyWinfoSubscriptions(entityManager,subscription);
 
 		// check resulting subscription state
-		if (subscription.getStatus().equals(Subscription.Status.TERMINATED)) {
+		if (subscription.getStatus().equals(Subscription.Status.terminated)) {
+			getLogger().info("Status changed for "+subscription);
 			// remove subscription data
 			removeSubscriptionData(entityManager,subscription,dialog,aci);
 		}
-		else if (subscription.getStatus().equals(Subscription.Status.WAITING)) {
-			getLogger().info("Subscription status is now waiting.");
+		else if (subscription.getStatus().equals(Subscription.Status.waiting)) {
+			getLogger().info("Status changed for "+subscription);
 			// keep the subscription for default waiting time so notifier may know about this attemp to subscribe him
 			// refresh subscription
 			subscription.refresh(getDefaultWaitingExpires());
@@ -628,27 +644,26 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 		
 		if (subscription != null) {
 			
-			getLogger().info("Timer expired for "+subscription.getSubscriptionKey());
+			getLogger().info("Timer expired for "+subscription);
 			
 			// check subscription status
-			if (subscription.getStatus().equals(Subscription.Status.WAITING)) {
+			if (subscription.getStatus().equals(Subscription.Status.waiting)) {
 				// change subscription status
-				subscription.changeStatus(Subscription.Event.GIVEUP);
+				subscription.changeStatus(Subscription.Event.giveup);
+				getLogger().info("Status changed for "+subscription);
 				// notify winfo subscription(s)				
 				notifyWinfoSubscriptions(entityManager,subscription);
 				// remove subscription data
 				removeSubscriptionData(entityManager,subscription,dialog,aci);
-				// close entity manager
-				entityManager.close();
 			}
 			else {
 				// remove subscription
 				removeSubscription(aci, subscription.getSubscriptionKey().getEventPackage(),
 						subscription.getSubscriptionKey().getRealEventId(),subscription,entityManager);
-				// flush and close entity manager
 				entityManager.flush();
-				entityManager.close();
 			}
+			// close entity manager
+			entityManager.close();
 		}
 		
 		
@@ -671,7 +686,7 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 		
 		for(Iterator it=resultList.iterator();it.hasNext();) {
 			Subscription subscription = (Subscription) it.next();
-			if (subscription.getStatus().equals(Subscription.Status.ACTIVE)) {
+			if (subscription.getStatus().equals(Subscription.Status.active)) {
 				try {
 					// get subscription dialog
 					ActivityContextInterface dialogACI = activityContextNamingfacility.lookup(subscription.getSubscriptionKey().toString());
@@ -685,7 +700,9 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 					// send notify in dialog related with subscription
 					ClientTransaction clientTransaction = sipProvider.getNewClientTransaction(notify);
 					dialog.sendRequest(clientTransaction);
-					getLogger().info("Request sent:\n"+notify.toString());
+					if (getLogger().isDebugEnabled()) {
+						getLogger().debug("Request sent:\n"+notify.toString());
+					}
 
 				} catch (Exception e) {
 					getLogger().error("failed to notify subscriber",e);
@@ -697,13 +714,122 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 		entityManager.close();
 	}
 	
+	// ----------- AUTH UPDATE on event package sbb
+	
+	protected void authorizationChanged(String subscriber, String notifier, String eventPackage, int authorizationCode) {
+		// get entity manager
+		EntityManager entityManager = getEntityManager();
+		// get this entity dialog
+		Dialog dialog = null;
+		ActivityContextInterface dialogACI = null;
+		for (ActivityContextInterface aci : sbbContext.getActivities()) {
+			Object activity = aci.getActivity();
+			if (activity instanceof Dialog) {
+				dialogACI = aci;
+				dialog = (Dialog)activity;
+			}
+		}
+		if (dialog != null) {
+			// process all subscriptions in this dialog
+			for(Object object: getDialogSubscriptions(entityManager,dialog)) {
+				Subscription subscription = (Subscription)object;
+				if (subscription.getSubscriber().equals(subscriber) && subscription.getNotifier().equals(notifier) && subscription.getSubscriptionKey().getEventPackage().equals(eventPackage)) {
+					// we have a subscription match
+					Subscription.Status oldStatus = subscription.getStatus();
+					switch (authorizationCode) {
+					/*
+					 * If the <sub-handling> permission changes value to "block", this
+					 * causes a "rejected" event to be generated into the subscription state
+					 * machine for all affected subscriptions. This will cause the state
+					 * machine to move into the "terminated" state, resulting in the
+					 * transmission of a NOTIFY to the watcher with a Subscription-State
+					 * header field with value "terminated" and a reason of "rejected" [7],
+					 * which terminates their subscription.
+					 */
+					case Response.FORBIDDEN:
+						subscription.changeStatus(Subscription.Event.rejected);
+						break;
+										
+					/* 
+					 * If the <sub-handling> permission changes value to "confirm", the
+					 * processing depends on the states of the affected subscriptions.
+					 * Unfortunately, the state machine in RFC 3857 does not define an event
+					 * corresponding to an authorization decision of "pending". If the
+					 * subscription is in the "active" state, it moves back into the
+					 * "pending" state. This causes a NOTIFY to be sent, updating the
+					 * Subscription-State [7] to "pending". No reason is included in the
+					 * Subscription-State header field (none are defined to handle this
+					 * case). No further documents are sent to this watcher. There is no
+					 * change in state if the subscription is in the "pending", "waiting",
+					 * or "terminated" states.
+					 */
+					case Response.ACCEPTED:
+						if (subscription.getStatus().equals(Subscription.Status.active)) {
+							subscription.setStatus(Subscription.Status.pending);
+							subscription.setLastEvent(null);	
+						}
+						break;
+							
+					 /* 
+					 * If the <sub-handling> permission changes value from "blocked" or
+					 * "confirm" to "polite-block" or "allow", this causes an "approved"
+					 * event to be generated into the state machine for all affected
+					 * subscriptions. If the subscription was in the "pending" state, the
+					 * state machine will move to the "active" state, resulting in the
+					 * transmission of a NOTIFY with a Subscription-State header field of
+					 * "active", and the inclusion of a presence document in that NOTIFY.
+					 * If the subscription was in the "waiting" state, it will move into the
+					 * "terminated" state. 
+					 */
+					case Response.OK:
+						subscription.changeStatus(Subscription.Event.approved);
+						break;
+
+					default:
+						getLogger().warn("Received authorization update with unknown auth code "+authorizationCode);
+						continue;
+					}
+					
+					if (!oldStatus.equals(subscription.getStatus())){
+						// subscription status changed
+						getLogger().info("Status changed for "+subscription);
+						// notify subscriber
+						try {
+							notifySubscriber(entityManager,subscription,dialog);
+						} catch (Exception e) {
+							getLogger().error("failed to notify subscriber",e);
+						}
+
+						// notify winfo subscription(s)				
+						notifyWinfoSubscriptions(entityManager,subscription);
+
+						// check resulting subscription state
+						if (subscription.getStatus().equals(Subscription.Status.terminated)) {
+							// remove subscription data
+							removeSubscriptionData(entityManager,subscription,dialog,dialogACI);
+						}
+						else if (subscription.getStatus().equals(Subscription.Status.waiting)) {
+							// keep the subscription for default waiting time so notifier may know about this attemp to subscribe him
+							// refresh subscription
+							subscription.refresh(getDefaultWaitingExpires());
+							// set waiting timer				
+							setSubscriptionTimer(entityManager,subscription,getDefaultWaitingExpires()+5,dialogACI);				
+						}							
+					}		
+				}
+			}
+		}
+		entityManager.flush();
+		entityManager.close();
+	}
+	
 	// ----------- AUX METHODS
 
 	private Request setNotifyContent(Subscription subscription, Request notify, JAXBElement content,
 			ContentTypeHeader contentTypeHeader) throws JAXBException, ParseException, IOException {
 
 		// filter content per subscriber (notifier rules)
-		JAXBElement filteredContent = filterContentPerSubscriber(content, subscription.getSubscriber());
+		JAXBElement filteredContent = filterContentPerSubscriber(subscription.getSubscriber(),subscription.getNotifier(),subscription.getSubscriptionKey().getEventPackage(),content);
 		// filter content per notifier (subscriber rules)
 		// TODO
 		// marshall content to string
@@ -714,68 +840,6 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 
 		return notify;
 	}
-
-	private String getPartialWatcherInfoContent(Subscription winfoSubscription,
-			Subscription subscription) {
-		// FIXME use dom or jaxb
-		// create xml element
-		String xml =	"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-						"<watcherinfo xmlns=\"urn:ietf:params:xml:ns:watcherinfo\" version=\""+winfoSubscription.getVersion()+"\" state=\"partial\">\n" +
-						"\t<watcher-list resource=\""+winfoSubscription.getNotifier()+"\" package=\""+subscription.getSubscriptionKey().getEventPackage()+"\">";		
-		// add watcher 
-		xml +=			"\n\t\t<watcher status=\""+subscription.getStatus().toString()+"\"\n"
-				+		"\t\tid=\""+subscription.hashCode()+"\"\n"
-				+		((subscription.getLastEvent() != null) ?
-						"\t\tevent=\""+subscription.getLastEvent().toString()+"\"\n" : "")
-				+		((subscription.getSubscriberDisplayName() != null) ?
-						"\t\tdisplay-name=\""+subscription.getSubscriberDisplayName()+"\"\n" : "")
-				+		(!subscription.getStatus().equals(Subscription.Status.TERMINATED) ?
-						"\t\texpiration=\""+subscription.getRemainingExpires()+"\"\n" :"")
-				+		"\t\tduration-subscribed=\""+subscription.getSubscriptionDuration()+"\">"+subscription.getSubscriber()+"</watcher>";	    				
-		// finalize xml element
-		xml += 	"\n\t</watcher-list>" +
-				"\n</watcherinfo>";
-		return xml;
-	}
-
-	private String getFullWatcherInfoContent(EntityManager entityManager,Subscription winfoSubscription) {
-		
-		String winfoEventPackage = winfoSubscription.getSubscriptionKey().getEventPackage();
-		String eventPackage = winfoEventPackage.substring(0,winfoEventPackage.indexOf(".winfo"));
-		// FIXME use dom or jaxb
-		// create xml element
-		String xml =	"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-		"<watcherinfo xmlns=\"urn:ietf:params:xml:ns:watcherinfo\" version=\""+winfoSubscription.getVersion()+"\" state=\"full\">\n" +
-		" <watcher-list resource=\""+winfoSubscription.getNotifier()+"\" package=\""+eventPackage+"\">";
-		
-		// get all subscriptions to specific event package
-		List resultList = entityManager
-		.createQuery("SELECT s FROM Subscription s WHERE s.subscriptionKey.eventPackage=:eventPackage AND s.notifier=:notifier")
-		.setParameter("eventPackage", eventPackage)
-		.setParameter("notifier", winfoSubscription.getNotifier()).getResultList();
-		// add a watcher element for each
-		for(Iterator i=resultList.iterator();i.hasNext();) {
-			Subscription subscription = (Subscription) i.next();
-			xml +=		"\n" 
-				+		"  <watcher status=\""+subscription.getStatus().toString()+"\"\n"
-				+		"   id=\""+subscription.hashCode()+"\"\n"				
-				+		((subscription.getSubscriberDisplayName() != null) ?
-						"   display-name=\""+subscription.getSubscriberDisplayName()+"\"\n" : "")
-				+		(!subscription.getStatus().equals(Subscription.Status.TERMINATED) ?
-						"   expiration=\""+subscription.getRemainingExpires()+"\"\n" :"")
-				+		"   duration-subscribed=\""+subscription.getSubscriptionDuration()+"\">"+subscription.getSubscriber()+"</watcher>";
-		}
-	
-		// finalize xml element
-		xml += 	"\n\t</watcher-list>" +
-				"\n</watcherinfo>";
-		return xml;
-	}
-	
-	
-	private ContentTypeHeader getWatcherInfoContentHeader() throws ParseException {		
-		return headerFactory.createContentTypeHeader("application","watcherinfo+xml");
-	}	
 	
 	private void setSubscriptionTimer(EntityManager entityManager, Subscription subscription, long delay, ActivityContextInterface aci) {
 		TimerOptions options = new TimerOptions();			
@@ -794,7 +858,7 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 		// create notify
 		Request notify = createNotify(dialog,subscription);			
 		// add content if subscription is active
-		if (subscription.getStatus().equals(Subscription.Status.ACTIVE)) {
+		if (subscription.getStatus().equals(Subscription.Status.active)) {
 			if (subscription.getSubscriptionKey().getEventPackage().endsWith(".winfo")) {
 				// winfo content, increment version before adding the content
 				subscription.incrementVersion();
@@ -819,11 +883,15 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 		// send notify
 		ClientTransaction clientTransaction = sipProvider.getNewClientTransaction(notify);
 		dialog.sendRequest(clientTransaction);
-		getLogger().info("Request sent:\n"+notify.toString());	
+		if (getLogger().isDebugEnabled()) {
+			getLogger().debug("Request sent:\n"+notify.toString());	
+		}
 		
 	}
 
 	private void removeSubscriptionData(EntityManager entityManager, Subscription subscription, Dialog dialog, ActivityContextInterface aci) {
+		// warn event package impl that subscription is to be removed, may need to clean up resources
+		removingSubscription(subscription.getSubscriber(), subscription.getNotifier(),subscription.getSubscriptionKey().getEventPackage(),subscription.getSubscriptionKey().getRealEventId());
 		// remove subscription
 		entityManager.remove(subscription);
 		// remove aci name binding
@@ -834,10 +902,21 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 		}
 		// verify if dialog is not needed anymore (and remove if that's the case)
 		verifyDialogSubscriptions(entityManager,subscription,dialog,aci);		
-		// FIXME check one flush is enough 
 		entityManager.flush();
+		
+		getLogger().info("Removed data for "+subscription);
 	}
 
+	/**
+	 * retreives subscriptions associated with the specified dialog
+	 * @param entityManager
+	 * @param dialog
+	 * @return
+	 */
+	private List getDialogSubscriptions(EntityManager entityManager, Dialog dialog) {
+		return entityManager.createQuery("SELECT s FROM Subscription s WHERE s.subscriptionKey.dialogId = :dialogId")
+		.setParameter("dialogId",dialog.getDialogId()).getResultList();
+	}
 	/**
 	 * Removes the specified dialog if no more subscriptions exists 
 	 * @param entityManager
@@ -847,10 +926,9 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 	 */
 	private void verifyDialogSubscriptions(EntityManager entityManager, Subscription removedSubscription, Dialog dialog, ActivityContextInterface dialogAci) {
 		// get subscriptions of dialog from persistence 
-		List subscriptionsInDialog = entityManager.createQuery("SELECT s FROM Subscription s WHERE s.subscriptionKey.dialogId = :dialogId")
-		.setParameter("dialogId",dialog.getDialogId()).getResultList();
-		if (subscriptionsInDialog.size() == 1 && ((Subscription)subscriptionsInDialog.get(0)).equals(removedSubscription)) {
-			getLogger().info("Deleting dialog, no more subscriptions.");
+		List subscriptionsInDialog = getDialogSubscriptions(entityManager, dialog);
+		if (subscriptionsInDialog.size() == 0) {
+			getLogger().info("No more subscriptions on dialog, deleting...");
 			// no more subscriptions in dialog, detach and delete the dialog
 			dialogAci.detach(sbbContext.getSbbLocalObject());
 			dialog.delete();
@@ -868,7 +946,7 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 			if (!winfoSubscriptions.isEmpty()) {
 				for(Iterator it=winfoSubscriptions.iterator();it.hasNext();) {
 					Subscription winfoSubscription = (Subscription) it.next();
-					if (winfoSubscription.getStatus().equals(Subscription.Status.ACTIVE)) {
+					if (winfoSubscription.getStatus().equals(Subscription.Status.active)) {
 						try {
 							// get subscription dialog
 							ActivityContextInterface winfoDialogAci = activityContextNamingfacility.lookup(winfoSubscription.getSubscriptionKey().toString());
@@ -882,7 +960,9 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 							// send notify in dialog related with subscription
 							ClientTransaction clientTransaction = sipProvider.getNewClientTransaction(notify);
 							winfoDialog.sendRequest(clientTransaction);
-							getLogger().info("Request sent:\n"+notify.toString());
+							if (getLogger().isDebugEnabled()) {
+								getLogger().debug("Request sent:\n"+notify.toString());
+							}
 							// persist subscription
 							entityManager.persist(winfoSubscription);
 						} catch (Exception e) {
@@ -895,13 +975,10 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 		}
 	}
 	
-	
 	/*
 	 * loads subscription pojo from persistence
 	 */ 
 	private Subscription getSubscription(EntityManager entityManager, String dialogId, String eventPackage, String eventId) {
-		// FIXME remove
-		getLogger().info("Searching for "+new SubscriptionKey(dialogId,eventPackage,eventId));
 		try {
 			return (Subscription) entityManager.createQuery(
 			"SELECT s FROM Subscription s WHERE s.subscriptionKey.dialogId = :dialogId AND s.subscriptionKey.eventPackage = :eventPackage AND s.subscriptionKey.eventId = :eventId")
@@ -946,7 +1023,9 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 			// 2xx response to SUBSCRIBE need a Contact
 			response = addContactHeader(response);
 			serverTransaction.sendResponse(response);
-			getLogger().info("Response sent:\n" + response.toString());
+			if (getLogger().isDebugEnabled()) {
+				getLogger().debug("Response sent:\n" + response.toString());
+			}
 		} catch (Exception e) {
 			getLogger().error("Can't send response!", e);
 		}
@@ -995,7 +1074,7 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 			 not active.
 			 */
 			SubscriptionStateHeader ssh = null;
-			if (subscription.getStatus().equals(Subscription.Status.ACTIVE) || subscription.getStatus().equals(Subscription.Status.PENDING)) {							
+			if (subscription.getStatus().equals(Subscription.Status.active) || subscription.getStatus().equals(Subscription.Status.pending)) {							
 				ssh = headerFactory.createSubscriptionStateHeader(subscription.getStatus().toString());
 				/*
 				 If the value of the "Subscription-State" header is "active" or
@@ -1005,7 +1084,7 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 				 */
 				ssh.setExpires(subscription.getRemainingExpires());
 			}
-			else if (subscription.getStatus().equals(Subscription.Status.WAITING) || subscription.getStatus().equals(Subscription.Status.TERMINATED)) {
+			else if (subscription.getStatus().equals(Subscription.Status.waiting) || subscription.getStatus().equals(Subscription.Status.terminated)) {
 				ssh = headerFactory.createSubscriptionStateHeader("terminated");
 				/*
 				 If the value of the "Subscription-State" header is "terminated", the
@@ -1037,6 +1116,8 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 		return false;
 	}
 	
+	// -- JPA STUFF
+	
 	private static EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("sipevent-subscription-pu");
 	
 	private EntityManager getEntityManager() {
@@ -1044,6 +1125,134 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 		return entityManagerFactory.createEntityManager();
 	}
 
+	// -- WINFO STUFF
+	
+	private static final JAXBContext winfoJAXBContext = initWInfoJAXBContext();
+	private static JAXBContext initWInfoJAXBContext() {
+		try {
+			return JAXBContext.newInstance("org.mobicents.slee.sipevent.server.subscription.winfo.pojo");
+		} catch (JAXBException e) {
+			logger.error("failed to create winfo jaxb context");
+			return null;
+		}
+	}
+	
+	private Marshaller getWInfoMarshaller() {
+		try {
+			return winfoJAXBContext.createMarshaller();
+		} catch (JAXBException e) {
+			getLogger().error("failed to create winfo unmarshaller",e);
+			return null;
+		}
+	}
+	
+	/*
+	 * creates watcher jaxb object for a subscription
+	 */
+	private Watcher createWInfoWatcher(Subscription subscription) {
+		// create watcher
+		Watcher watcher = new Watcher();
+		watcher.setId(String.valueOf(subscription.hashCode()));
+		watcher.setStatus(subscription.getStatus().toString());
+		watcher.setDurationSubscribed(BigInteger.valueOf(subscription.getSubscriptionDuration()));
+		if(subscription.getLastEvent() != null) {
+			watcher.setEvent(subscription.getLastEvent().toString());
+		}
+		if (subscription.getSubscriberDisplayName() != null) {
+			watcher.setDisplayName(subscription.getSubscriberDisplayName());
+		}
+		if (!subscription.getStatus().equals(Subscription.Status.terminated)) {
+			watcher.setExpiration(BigInteger.valueOf(subscription.getRemainingExpires()));
+		}
+		watcher.setValue(subscription.getSubscriber());
+		return watcher;
+	}
+	
+	/*
+	 * marshals a jaxb watcherinfo object to string
+	 */
+	private String marshallWInfo(Watcherinfo watcherinfo) {
+		// marshall to string
+		String result = null;
+		StringWriter stringWriter = new StringWriter();
+		try {
+			Marshaller marshaller = getWInfoMarshaller();
+			marshaller.marshal(watcherinfo, stringWriter);
+			result = stringWriter.toString();
+			stringWriter.close();
+		} catch (Exception e) {
+			getLogger().error("failed to marshall winfo", e);
+			try {
+				stringWriter.close();
+			}
+			catch (Exception f) {
+				getLogger().error("failed to close winfo string writer", f);
+			}
+		}
+				
+		return result;
+	}
+	
+	/*
+	 * creates partial watcher info doc
+	 */
+	private String getPartialWatcherInfoContent(Subscription winfoSubscription,
+			Subscription subscription) {		
+		// create watcher info 
+		Watcherinfo watcherinfo = new Watcherinfo();
+		watcherinfo.setVersion(BigInteger.valueOf(winfoSubscription.getVersion()));
+		watcherinfo.setState("partial");
+		// create watcher list
+		WatcherList watcherList = new WatcherList();
+		watcherList.setResource(winfoSubscription.getNotifier());
+		watcherList.setPackage(subscription.getSubscriptionKey().getEventPackage());
+		// create and add watcher to watcher info list
+		watcherList.getWatcher().add(createWInfoWatcher(subscription));
+		// add watcher list to watcher info
+		watcherinfo.getWatcherList().add(watcherList);
+		// marshall and return
+		return marshallWInfo(watcherinfo);		
+	}
+
+	/*
+	 * generates full watcher info doc
+	 */
+	private String getFullWatcherInfoContent(EntityManager entityManager,Subscription winfoSubscription) {
+		
+		// create watcher info 
+		Watcherinfo watcherinfo = new Watcherinfo();
+		watcherinfo.setVersion(BigInteger.valueOf(winfoSubscription.getVersion()));
+		watcherinfo.setState("full");
+		// create watcher list
+		WatcherList watcherList = new WatcherList();
+		watcherList.setResource(winfoSubscription.getNotifier());
+		String winfoEventPackage = winfoSubscription.getSubscriptionKey().getEventPackage();
+		String eventPackage = winfoEventPackage.substring(0,winfoEventPackage.indexOf(".winfo"));
+		watcherList.setPackage(eventPackage);
+		// get watcher subscriptions
+		List resultList = entityManager
+		.createQuery("SELECT s FROM Subscription s WHERE s.subscriptionKey.eventPackage=:eventPackage AND s.notifier=:notifier")
+		.setParameter("eventPackage", eventPackage)
+		.setParameter("notifier", winfoSubscription.getNotifier()).getResultList();
+		// add a watcher element for each
+		List<Watcher> watchers = watcherList.getWatcher();
+		for(Iterator i=resultList.iterator();i.hasNext();) {
+			Subscription subscription = (Subscription) i.next();
+			// create and add watcher to watcher info list
+			watchers.add(createWInfoWatcher(subscription));
+		}
+		// add watcher list to watcher info
+		watcherinfo.getWatcherList().add(watcherList);
+		// marshall and return
+		return marshallWInfo(watcherinfo);
+	}
+	
+	private ContentTypeHeader getWatcherInfoContentHeader() throws ParseException {		
+		return headerFactory.createContentTypeHeader("application","watcherinfo+xml");
+	}	
+	
+	// ----------------------
+	
 	/**
 	 * Workaround to the prob of having 2 subscribes fired in different activities.
 	 * @param ies
@@ -1059,7 +1268,7 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 		}
 		return ies;
 	}
-	
+
 	// ----------- SBB OBJECT's LIFE CYCLE
 	
 	public void sbbActivate() {}
@@ -1081,6 +1290,6 @@ public abstract class SubscriptionControlSbb implements Sbb, SubscriptionControl
 	
 	public void sbbStore() {}
 	
-	public void unsetSbbContext() {}
+	public void unsetSbbContext() { this.sbbContext= null; }
 	
 }

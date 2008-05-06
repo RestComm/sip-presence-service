@@ -9,29 +9,21 @@
 		<version>1.2.0.BETA3-SNAPSHOT</version>
 	</parent>
 		
-	<artifactId>parent</artifactId>
+	<artifactId>sip-presence-parent</artifactId>
 	<groupId>org.mobicents.servers.sippresence</groupId>
-	<version>1.0.0.BETA1</version>
-
+	<version>1.0.0.BETA2</version>
+	
 	<modules>		
 		<module>sip-event</module>	
-		<module>jaxb-pojos</module>	
-		<module>publication-sbb</module>
-		<module>subscription-sbb</module>
-		<module>du</module>	
+		<module>xdms-core</module>	
+		<module>ps-core</module>
 	</modules>
-	
+		
 	<properties>
-		<org.mobicents.servers.sippresence.finalName>
-			mobicents-sippresence-server-${pom.artifactId}-${pom.version}
-		</org.mobicents.servers.sippresence.finalName>
 		<mobicents.version>
 			1.2.0.BETA3-SNAPSHOT
 		</mobicents.version>
+		<xdm.server.xcap.root>/mobicents</xdm.server.xcap.root>
 	</properties>			
-	
-	<build>
-		<finalName>${org.mobicents.servers.sippresence.finalName}</finalName>
-	</build>
-	
+		
 </project>

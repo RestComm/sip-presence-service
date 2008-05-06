@@ -2,8 +2,6 @@ package org.mobicents.slee.sipevent.server.publication;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.StringWriter;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -264,7 +262,9 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 		if (event.getRequest().getHeader(UserAgentHeader.NAME) != null)
 			event.getRequest().removeHeader(UserAgentHeader.NAME);
 
-		getLogger().info("Processing PUBLISH request...");
+		if (getLogger().isDebugEnabled()) {
+			getLogger().debug("Processing PUBLISH request...");
+		}
 
 		/*
 		 * The presence of a body and the SIP-If-Match header field
@@ -424,7 +424,9 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 			RequestEvent event, String eventPackage, int expires,
 			String entity, ContentTypeHeader contentTypeHeader) {
 		
-		getLogger().info("newPublication(entity="+entity+",eventPackage="+eventPackage+",expires="+expires+")");
+		if (getLogger().isDebugEnabled()) {
+			getLogger().debug("newPublication(entity="+entity+",eventPackage="+eventPackage+",expires="+expires+")");
+		}
 		
 		NullActivity nullActivity = null;
 		try {			
@@ -452,7 +454,10 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 			if (!authorizePublication(event.getRequest(),unmarshalledContent)) {
 				Response response = messageFactory.createResponse(Response.FORBIDDEN, event.getRequest());
 				event.getServerTransaction().sendResponse(response);
-				getLogger().info("Response sent:\n"+response.toString());	
+				logger.info("publication for resource "+entity+" on event package "+eventPackage+" not authorized");
+				if (getLogger().isDebugEnabled()) {
+					getLogger().debug("Response sent:\n"+response.toString());	
+				}
 			}
 			else {
 				// create SIP-ETag
@@ -468,7 +473,9 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 				response.addHeader(headerFactory.createSIPETagHeader(eTag));
 				response.addHeader(headerFactory.createExpiresHeader(expires));
 				event.getServerTransaction().sendResponse(response);
-				getLogger().info("Response sent:\n"+response.toString());		
+				if (getLogger().isDebugEnabled()) {
+					getLogger().debug("Response sent:\n"+response.toString());		
+				}
 
 				// set a timer for this publication and store it in the publication pojo
 				// create null aci
@@ -492,8 +499,11 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 				entityManager.persist(publication);	
 				entityManager.persist(composedPublication);
 
+				logger.info("Created "+publication);
+				
 				// notify subscribers			
-				notifySubscribers(composedPublication);	
+				notifySubscribers(composedPublication);
+								
 			}
 		}		
 		catch (Exception e) {
@@ -502,10 +512,12 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 			try {
 				Response response = messageFactory.createResponse(Response.SERVER_INTERNAL_ERROR, event.getRequest());
 				event.getServerTransaction().sendResponse(response);
-				getLogger().info("Response sent:\n"+response.toString());
+				if (getLogger().isDebugEnabled()) {
+					getLogger().debug("Response sent:\n"+response.toString());
+				}
 			}
 			catch (Exception f) {
-				getLogger().info("Can't send response!",f);				
+				getLogger().error("Can't send response!",f);				
 			}
 			// end null activity if needed
 			if (nullActivity != null) {
@@ -531,7 +543,9 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 
 	private void refreshPublication(EntityManager entityManager,RequestEvent event,Publication publication,int expires) {
 
-		getLogger().info("refreshPublication(publication="+publication.getPublicationKey()+",expires="+expires+")");
+		if (getLogger().isDebugEnabled()) {
+			getLogger().debug("refreshPublication(publication="+publication.getPublicationKey()+",expires="+expires+")");
+		}
 		
 		try {
 			// cancel current timer
@@ -548,7 +562,9 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 			response.addHeader(headerFactory.createSIPETagHeader(eTag));
 			response.addHeader(headerFactory.createExpiresHeader(expires));
 			event.getServerTransaction().sendResponse(response);
-			getLogger().info("Response sent:\n"+response.toString());		
+			if (getLogger().isDebugEnabled()) {
+				getLogger().debug("Response sent:\n"+response.toString());		
+			}
 			// set a timer for this publication and store it in the new publication pojo
 			// get timer aci
 			ActivityContextInterface aci = activityContextNamingfacility.lookup(publication.getPublicationKey().toString());
@@ -562,7 +578,8 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 			TimerID newTimerID = timerFacility.setTimer(aci, null, System.currentTimeMillis() + ((expires+5) * 1000), 1, 1, options);
 			newPublication.setTimerID(newTimerID);						
 			// persist new publication
-			entityManager.persist(newPublication);						
+			entityManager.persist(newPublication);	
+			getLogger().info("Extended "+publication+ " for "+expires+" seconds");
 		}
 		catch (Exception e) {
 			getLogger().error("failed to refresh publication",e);
@@ -570,10 +587,12 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 			try {
 				Response response = messageFactory.createResponse(Response.SERVER_INTERNAL_ERROR, event.getRequest());
 				event.getServerTransaction().sendResponse(response);
-				getLogger().info("Response sent:\n"+response.toString());
+				if (getLogger().isDebugEnabled()) {
+					getLogger().debug("Response sent:\n"+response.toString());
+				}
 			}
 			catch (Exception f) {
-				getLogger().info("Can't send response!",f);				
+				getLogger().error("Can't send response!",f);				
 			}
 		}
 	}
@@ -581,7 +600,9 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 	private void removePublication(Publication publication, RequestEvent event,
 			EntityManager entityManager) {
 		
-		getLogger().info("removePublication(publication="+publication.getPublicationKey()+")");
+		if (getLogger().isDebugEnabled()) {
+			getLogger().debug("removePublication(publication="+publication.getPublicationKey()+")");
+		}
 		
 		try {
 			// cancel current timer
@@ -589,10 +610,8 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 			// lookup timer aci
 			String aciName = publication.getPublicationKey().toString();
 			ActivityContextInterface aci = activityContextNamingfacility.lookup(aciName);
-			// unbind name
-			activityContextNamingfacility.unbind(aciName);
-			// detach from it, impliclt the aci ends
-			aci.detach(sbbContext.getSbbLocalObject());
+			// explictly end the null activity
+			((NullActivity)aci.getActivity()).endActivity();
 			// remove old publication
 			entityManager.remove(publication);
 			// send 200 ok response	with expires and sipEtag				
@@ -600,7 +619,10 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 			response.addHeader(headerFactory.createSIPETagHeader(publication.getPublicationKey().getETag()));
 			response.addHeader(headerFactory.createExpiresHeader(0));
 			event.getServerTransaction().sendResponse(response);
-			getLogger().info("Response sent:\n"+response.toString());
+			if (getLogger().isDebugEnabled()) {
+				getLogger().debug("Response sent:\n"+response.toString());
+			}
+			getLogger().info("Removed "+publication);
 			// we need to re-compose all publications except the one being removed
 			ComposedPublication composedPublication = removeFromComposedPublication(entityManager, publication);			
 			entityManager.flush();
@@ -613,7 +635,9 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 			try {
 				Response response = messageFactory.createResponse(Response.SERVER_INTERNAL_ERROR, event.getRequest());
 				event.getServerTransaction().sendResponse(response);
-				getLogger().info("Response sent:\n"+response.toString());
+				if (getLogger().isDebugEnabled()) {
+					getLogger().debug("Response sent:\n"+response.toString());
+				}
 			}
 			catch (Exception f) {
 				getLogger().info("Can't send response!",f);				
@@ -623,7 +647,9 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 
 	private void modifyPublication(EntityManager entityManager,RequestEvent event, Publication publication, int expires, ContentTypeHeader contentTypeHeader) {
 		
-		getLogger().info("modifyPublication(publication="+publication.getPublicationKey()+",expires="+expires+")");
+		if (getLogger().isDebugEnabled()) {
+			getLogger().debug("modifyPublication(publication="+publication.getPublicationKey()+",expires="+expires+")");
+		}
 		
 		try {
 			// cancel current timer
@@ -656,7 +682,10 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 			if (!authorizePublication(event.getRequest(),unmarshalledContent)) {
 				Response response = messageFactory.createResponse(Response.FORBIDDEN, event.getRequest());
 				event.getServerTransaction().sendResponse(response);
-				getLogger().info("Response sent:\n"+response.toString());	
+				getLogger().info("authorization to modify publication "+publication+" failed");
+				if (getLogger().isDebugEnabled()) {
+					getLogger().debug("Response sent:\n"+response.toString());	
+				}
 			}
 			else {
 				// create new SIP-ETag
@@ -671,7 +700,9 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 				response.addHeader(headerFactory.createSIPETagHeader(eTag));
 				response.addHeader(headerFactory.createExpiresHeader(expires));
 				event.getServerTransaction().sendResponse(response);
-				getLogger().info("Response sent:\n"+response.toString());		
+				if (getLogger().isDebugEnabled()) {
+					getLogger().debug("Response sent:\n"+response.toString());		
+				}
 				// set a timer for this publication and store it in the new publication pojo
 				// get timer aci
 				ActivityContextInterface aci = activityContextNamingfacility.lookup(publication.getPublicationKey().toString());
@@ -685,6 +716,7 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 				TimerID newTimerID = timerFacility.setTimer(aci, null, System.currentTimeMillis() + ((expires+5) * 1000), 1, 1, options);
 				newPublication.setTimerID(newTimerID);				
 
+				getLogger().info(publication+" modified.");
 				// compose document			
 				ComposedPublication composedPublication = getUpdatedComposedPublication(entityManager,newPublication);
 
@@ -696,15 +728,17 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 			}
 		}
 		catch (Exception e) {
-			getLogger().error("failed to refresh publication",e);
+			getLogger().error("failed to modify publication",e);
 			// try to send server error
 			try {
 				Response response = messageFactory.createResponse(Response.SERVER_INTERNAL_ERROR, event.getRequest());
 				event.getServerTransaction().sendResponse(response);
-				getLogger().info("Response sent:\n"+response.toString());
+				if (getLogger().isDebugEnabled()) {
+					getLogger().debug("Response sent:\n"+response.toString());
+				}
 			}
 			catch (Exception f) {
-				getLogger().info("Can't send response!",f);				
+				getLogger().error("Can't send response!",f);				
 			}
 		}
 		
@@ -730,10 +764,10 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 		
 		if (publication != null) {
 			
-			getLogger().info("Timer expired for "+publication.getPublicationKey());
 			try {								
 				// remove publication
 				entityManager.remove(publication);
+				getLogger().info(publication+" removed. Timer expired.");
 				// we need to re-compose all publications except the one being removed
 				ComposedPublication composedPublication = removeFromComposedPublication(entityManager, publication);
 				entityManager.flush();
@@ -750,7 +784,7 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 
 	public void onOptions(RequestEvent requestEvent, ActivityContextInterface aci) {
 		
-		getLogger().info("processing options event");
+		getLogger().info("options event received but server does not supports it");
 		aci.detach(this.sbbContext.getSbbLocalObject());
 		/*
 		 * A client may probe the ESC for the support of PUBLISH using the
@@ -941,7 +975,9 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 			// Both 2xx response to SUBSCRIBE and NOTIFY need a Contact
 			response = addContactHeader(response);
 			serverTransaction.sendResponse(response);
-			getLogger().info("Response sent:\n"+response.toString());
+			if (getLogger().isDebugEnabled()) {
+				getLogger().debug("Response sent:\n"+response.toString());
+			}
 		}
 		catch (Exception e) {
 			getLogger().error("Can't send response!",e);
@@ -994,6 +1030,6 @@ public abstract class PublicationControlSbb implements Sbb, PublicationControlSb
 	
 	public void sbbStore() {}
 	
-	public void unsetSbbContext() {}
+	public void unsetSbbContext() { this.sbbContext = null; }
 	
 }
