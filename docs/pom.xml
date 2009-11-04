@@ -1,195 +1,49 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	
+	<modelVersion>4.0.0</modelVersion>
+	
 	<parent>
 		<artifactId>sip-presence-parent</artifactId>
 		<groupId>org.mobicents.servers.sippresence</groupId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	
-	<artifactId>SIP_Presence_Service_User_Guide_en-US</artifactId>
-	
-	<modelVersion>4.0.0</modelVersion>
+	<artifactId>sip-presence-docs</artifactId>
 		
-	<packaging>jdocbook</packaging>
+	<packaging>pom</packaging>
 	
-	<properties>
-		<product.name>SIP Presence Service</product.name>
-		<year>2009</year>
-		<bookid>SIP_Presence_Service_User_Guide</bookid>
-		<release.size>90MB</release.size>
-		<translation>en-US</translation>
-	</properties>
-	
+	<modules>
+		<module>sources</module>
+	</modules>
+
 	<profiles>
 		<profile>
-			<id>community</id>
+			<id>all</id>
 			<activation>
 				<activeByDefault>true</activeByDefault>
 			</activation>
-			<properties>
-				<platform.name>Mobicents</platform.name>
-				<release.integrated.filename>mobicents-sip-presence-integrated-${version}.zip</release.integrated.filename>
-				<release.xdms.filename>mobicents-sip-presence-xdms-${version}.zip</release.xdms.filename>
-				<release.source.filename>mobicents-sip-presence-${version}-src.zip</release.source.filename>
-				<author.email.ivelin>ivelin.atanasoff.ivanov (at) gmail.com</author.email.ivelin>
-				<author.email.eduardo>emmartins (at) gmail.com</author.email.eduardo>
-			</properties>
+			<modules>
+				<module>sources-mobicents</module>
+				<module>sources-jbcp</module>
+				<module>jdocbook-mobicents</module>
+				<module>jdocbook-jbcp</module>
+			</modules>
+		</profile>
+		<profile>
+			<id>mobicents</id>			
+			<modules>
+				<module>sources-mobicents</module>
+				<module>jdocbook-mobicents</module>				
+			</modules>
 		</profile>
 		<profile>
 			<id>jbcp</id>
-			<properties>
-				<platform.name>JBoss Communications</platform.name>
-				<release.integrated.filename>jbcp-sip-presence-integrated-${version}.zip</release.integrated.filename>
-				<release.xdms.filename>jbcp-sip-presence-xdms-${version}.zip</release.xdms.filename>
-				<release.source.filename>jbcp-sip-presence-${version}-src.zip</release.source.filename>
-				<author.email.ivelin>iivanov@redhat.com</author.email.ivelin>
-				<author.email.eduardo>emartins@redhat.com</author.email.eduardo>
-			</properties>
+			<modules>
+				<module>sources-jbcp</module>
+				<module>jdocbook-jbcp</module>
+			</modules>
 		</profile>
-	</profiles>	
-	
-	<build>
-	<resources>
-			<resource>
-        		<directory>${basedir}/src/main/resources</directory>
-        		<filtering>true</filtering>
-      		</resource>
-      	</resources>
-		<plugins>
-		<plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/docbook/resources</outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin> 
-			<plugin>
-				<groupId>org.jboss.maven.plugins</groupId>
-				<artifactId>maven-jdocbook-plugin</artifactId>
-				<version>2.2.0</version>
-				<extensions>true</extensions>
-				<dependencies>
-					<dependency>
-						<groupId>org.jboss</groupId>
-						<artifactId>jbossorg-docbook-xslt</artifactId>
-						<version>1.1.0</version>
-					</dependency>
-					<dependency>
-						<groupId>org.jboss</groupId>
-						<artifactId>jbossorg-jdocbook-style</artifactId>
-						<version>1.1.0</version>
-						<type>jdocbook-style</type>
-					</dependency>
-				</dependencies>
-				<configuration>					
-					<sourceDocumentName>SIP_Presence_Service_User_Guide.xml</sourceDocumentName>
-					<sourceDirectory>${project.build.directory}/docbook/resources</sourceDirectory>
-					<imageResource>
-						<directory>${basedir}/src/main/resources/${translation}</directory>
-						<includes>
-							<include>images/*</include>
-						</includes>
-					</imageResource>
-					<formats>
-						<format>
-							<formatName>pdf</formatName>
-							<stylesheetResource>classpath:/xslt/org/jboss/pdf.xsl</stylesheetResource>
-							<finalName>SIP_Presence_Service_User_Guide.pdf</finalName>
-						</format>
-						<format>
-							<formatName>html</formatName>
-							<stylesheetResource>classpath:/xslt/org/jboss/xhtml.xsl</stylesheetResource>
-							<finalName>index.html</finalName>
-						</format>
-						<format>
-							<formatName>html_single</formatName>
-							<stylesheetResource>classpath:/xslt/org/jboss/xhtml-single.xsl</stylesheetResource>
-							<finalName>index.html</finalName>
-						</format>
-					</formats>
-					<options>
-						<xincludeSupported>true</xincludeSupported>
-						<!-- needed for uri-resolvers; can be ommitted if using 'current' uri scheme -->
-						<!-- could also locate the docbook dependency and inspect its version... -->
-						<docbookVersion>1.72.0</docbookVersion>					
-					</options>		
-				</configuration>			
-			</plugin>
-		</plugins>
-	</build>
-	
-	<pluginRepositories>
-		<!--original repository-->
-		<pluginRepository>
-			<id>jboss</id>
-			<name>JBoss Plugin Repository</name>
-			<url>http://repository.jboss.org/maven2</url>
-			<layout>default</layout>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-				<checksumPolicy>fail</checksumPolicy>
-			</snapshots>
-		</pluginRepository>
-		<pluginRepository>
-			<id>jboss</id>
-			<name>JBoss Plugin Repository</name>
-			<url>http://repository.jboss.org/maven2</url>
-			<layout>default</layout>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-				<checksumPolicy>fail</checksumPolicy>
-			</snapshots>
-		</pluginRepository>
-		<pluginRepository>
-			<id>snapshots.jboss</id>
-			<name>JBoss Snapshots</name>
-			<url>http://snapshots.jboss.org/maven2</url>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-				<checksumPolicy>fail</checksumPolicy>
-			</snapshots>
-		</pluginRepository>
-		<pluginRepository>
-			<id>people.apache</id>
-			<name>People Apache plugin repository</name>
-			<url>http://people.apache.org/repo/m2-snapshot-repository</url>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-				<checksumPolicy>fail</checksumPolicy>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
+	</profiles>
 
 </project>
