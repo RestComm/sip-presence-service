@@ -200,13 +200,39 @@
 			
 		<section id="xdms-Configuring_the_XDM_Server_XCAP_ROOT">
 			<title>Configuring the XDM Server XCAP root</title>
-			<para>The &PLATFORM_NAME; XDM Server comes pre-configured for an XCAP root of http://&lt;hostname&gt;:8080/mobicents, hostname being the host/<acronym>IP</acronym> used to start the server (127.0.0.1 by default). It is possible to change the last path segment:</para>
+			<para>The &PLATFORM_NAME; XDM Server comes pre-configured for an XCAP root of http://&lt;hostname&gt;:8080/mobicents, hostname being the host/<acronym>IP</acronym> used to start the server (127.0.0.1 by default). It is possible to change the host, the port and the last path segment:</para>
 			<itemizedlist>	
 				<listitem>
 					<para>Rename <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents.war</filename> to the desired last path segment in the XCAP root (e.g. rename to xcap-root.war for an XCAP root of http://&lt;hostname&gt;:8080/xcap-root). The &lt;server_profile&gt; is the server configuration/profile used in the underlying <application>JBoss AS</application>, by default it is <emphasis>default</emphasis></para>					
 				</listitem>
 				<listitem>
-					<para>Edit properties file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/msps-xdms-ds-ra-DU-&VERSION;.jar/library/msps-xdms-core-sbb-&VERSION;.jar/org/mobicents/slee/xdm/server/configuration.properties</filename>, define the new XCAP root last path segment through the property XCAP_ROOT, don't forget to use a leading / . Again the &lt;server_profile&gt; is the server configuration/profile used in the underlying <application>JBoss AS</application>.</para>
+					<para>Edit <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/http-servlet-ra-DU-*.jar/META-INF/deploy-config.xml</filename>. Uncomment and set custom servlet name again to the desired last path segment in the XCAP root.</para>					
+				</listitem>
+				<listitem>
+					<para>Edit the properties in file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-xdms/3-beans/configuration/xdms/META-INF/jboss-beans.xml</filename>. Note that the xcapRoot has a leading /. Also note that for the <application>Integrated Server</application> the path segment mobicents-xdms is mobicents-sip-presence.</para>
+					<para>This configuration part can also be done through JMX, using the MBean named <emphasis>org.mobicents.slee:sippresence=XDMServerConfiguration</emphasis>. The configuratian changes through JMX are not persistent.</para>
+				</listitem>
+			</itemizedlist>
+		</section>
+		
+		<section id="xdms-Configuring_the_XDM_Server_XCAP_Interface">
+			<title>Other configurations in the XDM Server XCAP Interface</title>
+			<para>There are other configurable features related with the XCAP Interface:</para>
+			<itemizedlist>	
+				<listitem>
+					<para>Edit the properties in file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-xdms/3-beans/configuration/xdms/META-INF/jboss-beans.xml</filename>. Note that for the <application>Integrated Server</application> the path segment mobicents-xdms is mobicents-sip-presence.</para>
+					<para>This configuration part can also be done through JMX, using the MBean named <emphasis>org.mobicents.slee:sippresence=XDMServerConfiguration</emphasis>. The configuratian changes through JMX are not persistent.</para>
+				</listitem>
+			</itemizedlist>
+		</section>
+		
+		<section id="xdms-Configuring_the_XDM_Server_SIP_Interface">
+			<title>Configuring the XDM Server XCAP Diff SIP Subscription Interface</title>
+			<para>The &PLATFORM_NAME; XDM Server SIP Interface can be configured regarding several features, such as subscription timers:</para>
+			<itemizedlist>	
+				<listitem>
+					<para>Edit the properties in file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-xdms/3-beans/configuration/sip-event/subscription/META-INF/jboss-beans.xml</filename>. Note that for the <application>Integrated Server</application> the path segment mobicents-xdms is mobicents-sip-presence.</para>
+					<para>This configuration part can also be done through JMX, using the MBean named <emphasis>org.mobicents.slee:sippresence=SipEventSubscriptionControl</emphasis>. The configuratian changes through JMX are not persistent.</para>
 				</listitem>
 			</itemizedlist>
 		</section>
@@ -218,7 +244,7 @@
 				<varlistentry>
 					<term>User Provisioning through an JMX Client</term>
 					<listitem>
-						<para>Users can be added/removed through the MBean named <emphasis>slee:userprofile=UserProfileControl</emphasis></para>
+						<para>Users can be added/removed through the MBean named <emphasis>org.mobicents.slee:userprofile=UserProfileControl</emphasis></para>
 					</listitem>
 				</varlistentry>
 				<varlistentry>

@@ -19,7 +19,7 @@
 				<term>The <application>Integrated SIP Presence Service</application> binary distribution <emphasis>with &PLATFORM_NAME; JAIN SLEE</emphasis>
 				</term>
 				<listitem>
-					<para>These installation instructions detail the installation, running and configuring of the <emphasis>Integrated</emphasis> binary <application>&PLATFORM_NAME; SIP Presence Service</application> distribution. This distribution includes the <application>XDM</application> and <application>SIP Presence Servers</application>, the servers are pre-installed in a version of the <application>&PLATFORM_NAME; JAIN SLEE Server</application>, and the &PLATFORM_NAME; JAIN SLEE SIP11 and HTTP Servlet Resource Adaptors. Examples of JAIN SLEE applications interacting with the <application> &PLATFORM_NAME; Integrated SIP Presence Service</application> are also included and come pre-installed.</para>
+					<para>These installation instructions detail the installation, running and configuring of the <emphasis>Integrated</emphasis> binary <application>&PLATFORM_NAME; SIP Presence Service</application> distribution. This distribution includes the <application>XDM</application> and <application>SIP Presence Servers</application>, the servers are pre-installed in a version of the <application>&PLATFORM_NAME; JAIN SLEE</application>, and the &PLATFORM_NAME; JAIN SLEE SIP11 and HTTP Servlet Resource Adaptors. Examples of JAIN SLEE applications interacting with the <application> &PLATFORM_NAME; Integrated SIP Presence Service</application> are also included and come pre-installed.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -65,14 +65,19 @@
 				<varlistentry>
 					<term>JDK 5</term>
 					<listitem>
-						<para>A working installation of the Java Development Kit (<acronym>JDK</acronym>) version 5 is required in order to run the <application>&PLATFORM_NAME; SIP Presence Service</application>.</para>
-						<note><para>JDK 6 is not supported by the <application>&PLATFORM_NAME; XDM Server</application></para></note>
+						<para>A working installation of the Java Development Kit (<acronym>JDK</acronym>) version 5 or higher is required in order to run the <application>&PLATFORM_NAME; SIP Presence Service</application>.</para>
 					</listitem>
 				</varlistentry>
 				<varlistentry>
 					<term>Apache Ant 1.6 or later</term>
 					<listitem>
 						<para>A working installation of the Apache Ant 1.6 or later is required in order to install the <application>&PLATFORM_NAME; SIP Presence Service</application> release without <application>$PLATFORM_NAME JAIN SLEE</application>.</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term>Mobicents JAIN SLEE 2.x</term>
+					<listitem>
+						<para>The <application>&PLATFORM_NAME; SIP Presence Service</application> is a set of JAIN SLEE and JEE components built on top of <application>&PLATFORM_NAME; JAIN SLEE</application> container.</para>
 					</listitem>
 				</varlistentry>
 				<varlistentry>
@@ -87,7 +92,7 @@
 			id="itsps-binary-SIP_Presence_Service-Downloading">
 			<title>Downloading</title>
 			<para>You can download the latest version of the <application>&PLATFORM_NAME; SIP Presence Service</application> distribution you need from the &PLATFORM_NAME; <literal>Downloads</literal> page at <ulink
-					url="http://sourceforge.net/project/showfiles.php?group_id=102670"/>. Click on the <literal>&PLATFORM_NAME; SIP Presence Service</literal> link to view all available distributions and downloads. The latest releases are nearer the top.</para>
+					url="https://sourceforge.net/projects/mobicents/files/Mobicents%20SIP%20Presence%20Service/"/>. The latest releases are nearer the top.</para>
 			<para>If you are unsure which distribution zip file to download, refer to <xref
 					linkend="itsps-Description_of_the_Different_SIP_Presence_Service_Distributions"/>, and then to the following list of release binaries.</para>
 			<variablelist
@@ -137,7 +142,7 @@
 				</step>
 				<step>
 					<para>Invoke the correct Apache Ant target in build.xml script to install:</para>
-					<bridgehead>Install the Integrated <application>SIP Presence Service</application>:</bridgehead>
+					<bridgehead>Install the <application>Integrated SIP Presence Service</application>:</bridgehead>
 					<screen>~]$ ant integrated-deploy</screen>
 					<bridgehead>Install the stand-alone <application> XDM Server</application>:</bridgehead>
 					<screen>~]$ ant xdms-deploy</screen>					
@@ -147,8 +152,7 @@
 		<section
 			id="itsps-binary-SIP_Presence_Service-Running">
 			<title>Running</title>
-			<para>Once installed, you can run server(s) by executing the run.sh (Unix) or run.bat (Microsoft Windows) startup scripts in the <filename>&lt;install_directory&gt;/bin</filename> directory (on Unix or Windows). In the Unix terminal or Command Prompt, you will be able to tell that the server started successfully if the last line of output is similar to the following (ending with <quote>Started in 23s:648ms</quote>):</para>
-			<programlisting><![CDATA[11:23:07,656 INFO  [Server] JBoss (MX MicroKernel) [4.2.3.GA (build: SVNTag=JBoss_4_2_2_GA date=200710221139)] Started in 23s:648ms]]></programlisting>
+			<para>Once installed, you can run server(s) by executing the run.sh (Unix) or run.bat (Microsoft Windows) startup scripts in the <filename>&lt;install_directory&gt;/bin</filename> directory (on Unix or Windows).</para>
 			<note><para>By default the server(s) start and bind to 127.0.0.1 IP, to use a different hostname or IP use the -b HOST parameter when executing the startup script (e.g. run.sh -b 172.31.1.1).</para></note>
 		</section>
 		<section
@@ -189,6 +193,7 @@ Halting VM]]></programlisting>
 			<title>Building from Source Project</title>
 			<note><para>The source building process requires access to the Internet. It also requires an <application>SVN Client</application> (to sources checkout) and <application>Apache Maven2 2.0.9+</application> (for the building process) installed.</para></note>
 			<para>The source project can be downloaded using SVN, the checkout URL is <uri>http://mobicents.googlecode.com/svn/tags/servers/sip-presence/mobicents-sip-presence-service-&VERSION;</uri> </para>
+			<para><application>&PLATFORM_NAME; SIP Presence Service</application> configurations can be done through the root <filename>pom.xml</filename>.</para>
 			<para>To build the binaries from source, enter the release directory inside the directory used to checkout the source project and:</para>
 			<screen>~]$ ant</screen>
 		</section>

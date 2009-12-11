@@ -9,6 +9,19 @@
 		<revhistory>
 		<!--revisions must be listed in chronological order with the latest at the top-->
 			<revision>
+				<revnumber>3.1</revnumber>
+				<date>Fri Dec 11 2009</date>
+				<author>
+					<firstname>Eduardo</firstname>
+					<surname>Martins</surname>					
+				</author>
+				<revdescription>
+					<simplelist>
+						<member>Migration to Mobicents JAIN SLEE 2.x introduces major refactoring, specially on configurations.</member>
+					</simplelist>
+				</revdescription>
+			</revision>
+			<revision>
 				<revnumber>3.0</revnumber>
 				<date>Fri Jul 10 2009</date>
 				<author>

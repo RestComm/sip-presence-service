@@ -118,7 +118,22 @@
 	<section
 	id="sps-Configuring_The_Sip_Presence_Server">
 		<title>Configuring The SIP Presence Server</title>
-		<para>TODO how to configure the SIP Publication and Subscription Interfaces</para>		
+		<para>Several features of the SIP Presence Server are configurable, through XML files or JMX.:</para>			
+		<section id="sps-Configuring_the_Abstract_SIP_Event_Publication_Interface">
+			<title>Configuring the Abstract SIP Event Publication Interface</title>
+			<para>Edit the properties in file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-sip-presence/3-beans/configuration/sip-event/publication/META-INF/jboss-beans.xml</filename>.</para>
+			<para>This configuration part can also be done through JMX, using the MBean named <emphasis>org.mobicents.slee:sippresence=SipEventPublicationControl</emphasis>. The configuratian changes through JMX are not persistent.</para>
+		</section>
+		<section id="sps-Configuring_the_Abstract_SIP_Event_Subscription_Interface">
+			<title>Configuring the Abstract SIP Event Subscription Interface</title>
+			<para>Edit the properties in file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-sip-presence/3-beans/configuration/sip-event/subscription/META-INF/jboss-beans.xml</filename>.</para>
+			<para>This configuration part can also be done through JMX, using the MBean named <emphasis>org.mobicents.slee:sippresence=SipEventSubscriptionControl</emphasis>. The configuratian changes through JMX are not persistent.</para>
+		</section>
+		<section id="sps-Configuring_the_Concrete_SIP_Event_Interfaces">
+			<title>Configuring the Concrete SIP Event Interfaces</title>
+			<para>Edit the properties in file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-sip-presence/3-beans/configuration/sip-presence/META-INF/jboss-beans.xml</filename>.</para>
+			<para>This configuration part can also be done through JMX, using the MBean named <emphasis>org.mobicents.slee:sippresence=SipPresenceServerManagement</emphasis>. The configuratian changes through JMX are not persistent.</para>
+		</section>		
 	</section>
 	<section
 		id="sps-Resources_and_Further_Information_about_the_SIP_Presence_Server">
