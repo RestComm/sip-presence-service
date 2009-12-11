@@ -2,11 +2,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<parent>
-		<artifactId>subscription-parent</artifactId>
-		<groupId>org.mobicents.servers.sipevent</groupId>
+		<artifactId>sip-presence-parent</artifactId>
+		<groupId>org.mobicents.servers.sippresence</groupId>
 		<version>1.0.0-SNAPSHOT</version>
+		<relativePath>../../../..</relativePath>
 	</parent>
-		
+	
+	<groupId>org.mobicents.servers.sipevent</groupId>
 	<artifactId>sip-event-subscription-control-pojo</artifactId>
 				
 	<dependencies>	
@@ -19,24 +21,22 @@
 			<artifactId>jain-slee</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>javax.xml.bind</groupId>
+			<groupId>sun-jaxb</groupId>
 			<artifactId>jaxb-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>javax.xml</groupId>
+			<groupId>sun-jaxb</groupId>
 			<artifactId>jaxb-impl</artifactId>
-		</dependency>
-		
+		</dependency>	
 		<dependency>
-			<artifactId>server-internal-client-sbb</artifactId>
-			<groupId>org.mobicents.servers.xdm.core</groupId>
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<artifactId>client-appusages-rls-services</artifactId>			
 			<version>${pom.version}</version>
 		</dependency>
-		
+		<dependency>
+			<artifactId>log4j</artifactId>
+			<groupId>log4j</groupId>
+		</dependency>
 	</dependencies>
-	
-	<build>
-		<finalName>${mobicents.sip.presence.service.finalName.prefix}sip-event-sub-pojo-${pom.version}</finalName>
-	</build>
 	
 </project>
