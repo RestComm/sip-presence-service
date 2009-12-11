@@ -1,0 +1,39 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">	
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+			<artifactId>sip-presence-parent</artifactId>
+			<groupId>org.mobicents.servers.sippresence</groupId>
+			<version>1.0.0-SNAPSHOT</version>
+			<relativePath>../..</relativePath>
+	</parent>
+	
+	<artifactId>commons</artifactId>
+	<groupId>org.mobicents.servers.xdm</groupId>
+	
+	<dependencies>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>xerces</groupId>
+  			<artifactId>xercesImpl</artifactId>
+  			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>sun-jaxb</groupId>
+			<artifactId>jaxb-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>sun-jaxb</groupId>
+			<artifactId>jaxb-impl</artifactId>
+		</dependency>
+        <dependency>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+         </dependency>
+	</dependencies>
+	
+</project>
