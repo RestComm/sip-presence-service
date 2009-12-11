@@ -19,17 +19,15 @@
 	</dependencies>
 	
 	<build>
-		<finalName>${mobicents.sip.presence.service.finalName.prefix}examples-intsub-du-${pom.version}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.mobicents.tools</groupId>
 				<artifactId>maven-du-plugin</artifactId>
-				<version>${mobicents.tools.mavenplugin.du.version}</version>
 				<extensions>true</extensions>
 				<configuration />
 				<executions>
 					<execution>
-						<phase>install</phase>
+						<phase>generate-resources</phase>
 						<goals>
 							<goal>create</goal>
 						</goals>

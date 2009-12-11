@@ -18,8 +18,4 @@
 		</dependency>
 	</dependencies>
 	
-	<build>
-		<finalName>${mobicents.sip.presence.service.finalName.prefix}examples-intpub-sbb-${pom.version}</finalName>
-	</build>
-	
 </project>

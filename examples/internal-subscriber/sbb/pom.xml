@@ -21,8 +21,5 @@
 			<groupId>log4j</groupId>
 		</dependency>
 	</dependencies>
-	
-	<build>
-		<finalName>${mobicents.sip.presence.service.finalName.prefix}examples-intsub-sbb-${pom.version}</finalName>
-	</build>	
+		
 </project>

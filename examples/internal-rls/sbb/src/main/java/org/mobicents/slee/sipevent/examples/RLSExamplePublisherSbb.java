@@ -18,6 +18,8 @@ import javax.slee.nullactivity.NullActivityContextInterfaceFactory;
 import javax.slee.nullactivity.NullActivityFactory;
 
 import org.apache.log4j.Logger;
+import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription.Event;
+import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription.Status;
 import org.mobicents.slee.sippresence.client.PresenceClientControlParentSbbLocalObject;
 import org.mobicents.slee.sippresence.client.PresenceClientControlSbbLocalObject;
 
@@ -27,7 +29,7 @@ import org.mobicents.slee.sippresence.client.PresenceClientControlSbbLocalObject
  * 
  */
 public abstract class RLSExamplePublisherSbb implements javax.slee.Sbb,
-	RLSExamplePublisherSbbLocalObject {
+	RLSExamplePublisher {
 
 	String eventPackage = "presence";
 	String contentType = "application";
@@ -103,7 +105,7 @@ public abstract class RLSExamplePublisherSbb implements javax.slee.Sbb,
 			getParentSbbCMP().publisherNotStarted(publisher);
 		}
 	}
-
+	
 	public void newPublicationError(Object requestId, int error) {
 		log4j.info("error on mew publication: requestId=" + requestId
 				+ ",error=" + error);	
@@ -119,7 +121,6 @@ public abstract class RLSExamplePublisherSbb implements javax.slee.Sbb,
 		// let's set a periodic timer in a null activity to refresh the
 		// publication
 		TimerOptions timerOptions = new TimerOptions();
-		timerOptions.setPersistent(true);
 		timerOptions.setPreserveMissed(TimerPreserveMissed.ALL);
 		
 		NullActivity nullActivity = nullActivityFactory.createNullActivity();
@@ -177,6 +178,98 @@ public abstract class RLSExamplePublisherSbb implements javax.slee.Sbb,
 		log4j.info("publication removed!");		
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#modifyPublicationError(java.lang.Object, int)
+	 */
+	@Override
+	public void modifyPublicationError(Object requestId, int error) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#modifyPublicationOk(java.lang.Object, java.lang.String, int)
+	 */
+	@Override
+	public void modifyPublicationOk(Object requestId, String eTag, int expires)
+			throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#newSubscriptionError(java.lang.String, java.lang.String, java.lang.String, java.lang.String, int)
+	 */
+	@Override
+	public void newSubscriptionError(String subscriber, String notifier,
+			String eventPackage, String subscriptionId, int error) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#newSubscriptionOk(java.lang.String, java.lang.String, java.lang.String, java.lang.String, int, int)
+	 */
+	@Override
+	public void newSubscriptionOk(String subscriber, String notifier,
+			String eventPackage, String subscriptionId, int expires,
+			int responseCode) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#notifyEvent(java.lang.String, java.lang.String, java.lang.String, java.lang.String, org.mobicents.slee.sipevent.server.subscription.pojo.Subscription.Event, org.mobicents.slee.sipevent.server.subscription.pojo.Subscription.Status, java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
+	public void notifyEvent(String subscriber, String notifier,
+			String eventPackage, String subscriptionId,
+			Event terminationReason, Status status, String content,
+			String contentType, String contentSubtype) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#refreshSubscriptionError(java.lang.String, java.lang.String, java.lang.String, java.lang.String, int)
+	 */
+	@Override
+	public void refreshSubscriptionError(String subscriber, String notifier,
+			String eventPackage, String subscriptionId, int error) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#refreshSubscriptionOk(java.lang.String, java.lang.String, java.lang.String, java.lang.String, int)
+	 */
+	@Override
+	public void refreshSubscriptionOk(String subscriber, String notifier,
+			String eventPackage, String subscriptionId, int expires) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#removeSubscriptionError(java.lang.String, java.lang.String, java.lang.String, java.lang.String, int)
+	 */
+	@Override
+	public void removeSubscriptionError(String subscriber, String notifier,
+			String eventPackage, String subscriptionId, int error) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#removeSubscriptionOk(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
+	public void removeSubscriptionOk(String subscriber, String notifier,
+			String eventPackage, String subscriptionId) {
+		// TODO Auto-generated method stub
+		
+	}
+		
 	// --- SBB OBJECT
 
 	private SbbContext sbbContext = null; // This SBB's context

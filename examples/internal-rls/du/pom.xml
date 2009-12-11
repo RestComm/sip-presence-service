@@ -18,12 +18,6 @@
 		</dependency>
 	</dependencies>
 
-	<build>
-		<finalName>
-			${mobicents.sip.presence.service.finalName.prefix}examples-rls-du-${pom.version}
-		</finalName>
-	</build>
-
 	<!-- we will restrict the example du build and install to a non maven-release profile, to not install it when doing a release -->
 	
 	<profiles>
@@ -41,14 +35,11 @@
 					<plugin>
 						<groupId>org.mobicents.tools</groupId>
 						<artifactId>maven-du-plugin</artifactId>
-						<version>
-							${mobicents.tools.mavenplugin.du.version}
-						</version>
 						<extensions>true</extensions>
 						<configuration />
 						<executions>
 							<execution>
-								<phase>install</phase>
+								<phase>generate-resources</phase>
 								<goals>
 									<goal>create</goal>
 								</goals>

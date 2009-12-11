@@ -19,6 +19,7 @@ import javax.slee.serviceactivity.ServiceActivityContextInterfaceFactory;
 import javax.slee.serviceactivity.ServiceActivityFactory;
 
 import org.apache.log4j.Logger;
+import org.mobicents.slee.sipevent.server.publication.PublicationClientControlParent;
 import org.mobicents.slee.sipevent.server.publication.PublicationClientControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.publication.PublicationClientControlSbbLocalObject;
 
@@ -32,7 +33,7 @@ import org.mobicents.slee.sipevent.server.publication.PublicationClientControlSb
  * 
  */
 public abstract class InternalPublisherExampleSbb implements javax.slee.Sbb,
-		PublicationClientControlParentSbbLocalObject {
+		PublicationClientControlParent {
 
 	String presenceDomain = System.getProperty("bind.address","127.0.0.1");
 	String entity = "sip:internal-publisher@" + presenceDomain;

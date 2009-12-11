@@ -25,7 +25,7 @@ import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControl
  * 
  */
 public abstract class RLSExampleRootSbb implements javax.slee.Sbb,
-		RLSExampleRootSbbLocalObject {
+		RLSExampleRoot {
 
 	String presenceDomain = System.getProperty("bind.address","127.0.0.1");
 	String[] publishers = {"sip:alice@"+presenceDomain,"sip:bob@"+presenceDomain};

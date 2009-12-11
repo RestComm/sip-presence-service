@@ -2,6 +2,7 @@ package org.mobicents.slee.sipevent.examples;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Map;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -35,7 +36,9 @@ import org.openxdm.xcap.client.appusage.rlsservices.jaxb.RlsServices;
 import org.openxdm.xcap.client.appusage.rlsservices.jaxb.ServiceType;
 import org.openxdm.xcap.common.key.UserDocumentUriKey;
 import org.openxdm.xcap.common.key.XcapUriKey;
-import org.openxdm.xcap.server.slee.appusage.rlsservices.RLSServicesAppUsage;
+import org.openxdm.xcap.common.uri.AttributeSelector;
+import org.openxdm.xcap.common.uri.DocumentSelector;
+import org.openxdm.xcap.common.uri.NodeSelector;
 
 /**
  * 
@@ -43,7 +46,7 @@ import org.openxdm.xcap.server.slee.appusage.rlsservices.RLSServicesAppUsage;
  * 
  */
 public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
-	RLSExampleSubscriberSbbLocalObject {
+	RLSExampleSubscriber {
 
 	String presenceDomain = System.getProperty("bind.address","127.0.0.1");
 	String subscriber = "sip:carol@"+presenceDomain;
@@ -163,7 +166,7 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 		try {
 			XDMClientControlSbbLocalObject xdm = getXDMClientControlSbb();
 			// insert the document
-			xdm.put(new UserDocumentUriKey(RLSServicesAppUsage.ID,subscriber,"index"), RLSServicesAppUsage.MIMETYPE, getRlsServices(entryURIs).getBytes("UTF-8"),null);			
+			xdm.put(new UserDocumentUriKey("rls-services",subscriber,"index"), "application/rls-services+xml", getRlsServices(entryURIs).getBytes("UTF-8"),null);			
 		} catch (Exception e) {
 			log4j.error(e.getMessage(), e);
 			getParentSbbCMP().subscriberNotStarted();
@@ -195,7 +198,6 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 			// let's set a periodic timer in a null activity to refresh the
 			// publication
 			TimerOptions timerOptions = new TimerOptions();
-			timerOptions.setPersistent(true);
 			timerOptions.setPreserveMissed(TimerPreserveMissed.ALL);
 
 			NullActivity nullActivity = nullActivityFactory.createNullActivity();
@@ -214,7 +216,7 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 	
 	private void deleteRlsServices() {
 		try {
-			getXDMClientControlSbb().delete(new UserDocumentUriKey(RLSServicesAppUsage.ID,subscriber,"index"),null);			
+			getXDMClientControlSbb().delete(new UserDocumentUriKey("rls-services",subscriber,"index"),null);			
 		} catch (Exception e) {
 			log4j.error(e.getMessage(), e);			
 		}
@@ -282,6 +284,125 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 		getParentSbbCMP().subscriberStopped();		
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.XDMClientControlParent#attributeUpdated(org.openxdm.xcap.common.uri.DocumentSelector, org.openxdm.xcap.common.uri.NodeSelector, org.openxdm.xcap.common.uri.AttributeSelector, java.util.Map, java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
+	public void attributeUpdated(DocumentSelector documentSelector,
+			NodeSelector nodeSelector, AttributeSelector attributeSelector,
+			Map<String, String> namespaces, String oldETag, String newETag,
+			String documentAsString, String attributeValue) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.XDMClientControlParent#documentUpdated(org.openxdm.xcap.common.uri.DocumentSelector, java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
+	public void documentUpdated(DocumentSelector documentSelector,
+			String oldETag, String newETag, String documentAsString) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.XDMClientControlParent#elementUpdated(org.openxdm.xcap.common.uri.DocumentSelector, org.openxdm.xcap.common.uri.NodeSelector, java.util.Map, java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
+	public void elementUpdated(DocumentSelector documentSelector,
+			NodeSelector nodeSelector, Map<String, String> namespaces,
+			String oldETag, String newETag, String documentAsString,
+			String elementAsString) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.XDMClientControlParent#getResponse(org.openxdm.xcap.common.key.XcapUriKey, int, java.lang.String, java.lang.String, java.lang.String)
+	 */
+	@Override
+	public void getResponse(XcapUriKey key, int responseCode, String mimetype,
+			String content, String eTag) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#modifyPublicationError(java.lang.Object, int)
+	 */
+	@Override
+	public void modifyPublicationError(Object requestId, int error) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#modifyPublicationOk(java.lang.Object, java.lang.String, int)
+	 */
+	@Override
+	public void modifyPublicationOk(Object requestId, String eTag, int expires)
+			throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#newPublicationError(java.lang.Object, int)
+	 */
+	@Override
+	public void newPublicationError(Object requestId, int error) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#newPublicationOk(java.lang.Object, java.lang.String, int)
+	 */
+	@Override
+	public void newPublicationOk(Object requestId, String eTag, int expires)
+			throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#refreshPublicationError(java.lang.Object, int)
+	 */
+	@Override
+	public void refreshPublicationError(Object requestId, int error) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#refreshPublicationOk(java.lang.Object, java.lang.String, int)
+	 */
+	@Override
+	public void refreshPublicationOk(Object requestId, String eTag, int expires)
+			throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#removePublicationError(java.lang.Object, int)
+	 */
+	@Override
+	public void removePublicationError(Object requestId, int error) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#removePublicationOk(java.lang.Object)
+	 */
+	@Override
+	public void removePublicationOk(Object requestId) throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+		
 	
 	// --- SBB OBJECT
 

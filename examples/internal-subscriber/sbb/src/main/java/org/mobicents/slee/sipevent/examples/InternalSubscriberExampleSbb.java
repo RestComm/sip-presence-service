@@ -19,6 +19,7 @@ import javax.slee.serviceactivity.ServiceActivityContextInterfaceFactory;
 import javax.slee.serviceactivity.ServiceActivityFactory;
 
 import org.apache.log4j.Logger;
+import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlParent;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription.Event;
@@ -34,7 +35,7 @@ import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription.Status;
  * 
  */
 public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
-		SubscriptionClientControlParentSbbLocalObject {
+		SubscriptionClientControlParent {
 
 	String presenceDomain = System.getProperty("bind.address","127.0.0.1");
 	String subscriber = "sip:internal-subscriber@"+presenceDomain;
