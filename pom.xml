@@ -11,10 +11,9 @@
 	</licenses>
 	
 	<parent>
-		<artifactId>mobicents</artifactId>
+		<artifactId>mobicents-parent</artifactId>
 		<groupId>org.mobicents</groupId>
-		<version>12</version>
-		<relativePath>../../parent/pom.xml</relativePath>
+		<version>2.0</version>
 	</parent>
 		
 	<artifactId>sip-presence-parent</artifactId>
@@ -22,33 +21,82 @@
 	<version>1.0.0-SNAPSHOT</version>
 	
 	<modules>		
+	
+		<module>xdm/commons</module>
+		<module>xcap-client/api</module>
+		<module>xdm/client</module>
+		
+		<module>xdm/server/core/configuration</module>
+		 
 		<module>user-profile</module>
-		<module>sip-event</module>
-		<module>xcap-client</module>	
-		<module>xdms-core</module>	
-		<module>ps-core</module>
+		
+		<module>sip-event/server/publication/pojo</module>
+		<module>sip-event/client/publication</module>
+		<module>sip-event/server/publication/configuration</module>
+		<module>sip-event/server/publication/sbb-local-object</module>
+		<module>sip-event/server/publication/library</module>
+		<module>sip-event/server/publication/sbb</module>
+	
+		<module>sip-event/server/subscription/pojo</module>
+		<module>sip-event/client/subscription</module>
+		<module>sip-event/server/subscription/configuration</module>
+		<module>sip-event/server/subscription/event</module>
+		<module>sip-event/server/subscription/sbb-local-object</module>
+		<module>sip-event/server/subscription/library</module>
+		<module>sip-event/server/subscription/sbb</module>
+		
+		<module>xdm/server/core/appusage-cache</module>
+		<module>xdm/server/core/datasource</module>
+		<module>xdm/server/core/xcap-control/sbb</module>
+		<module>xdm/server/appusages</module>
+		<module>xdm/server/core/xcap-control/library</module>
+		<module>xdm/server/core/xcap-control/du</module>
+		<module>xdm/server/core/internal-client</module>
+		<module>xdm/server/core/subscription-control</module>
+				
+		<module>presence/client</module>
+		<module>presence/server/jaxb-pojos</module>
+		<module>presence/server/library</module>
+		<module>presence/server/configuration</module>
+		<module>presence/server/publication-sbb</module>
+		<module>presence/server/subscription-sbb</module>
+		<module>presence/server/internal-client-sbb</module>
+
+		<module>integrated/server/subscription-library</module>
+		<module>integrated/server/subscription-sbb</module>
+		<module>integrated/server/deployable-unit</module>
+		 
 	</modules>
 	
 	<properties>
-		<!-- PRESENCE SERVICE CONFIGURATION -->
+		
+		<!-- PRESENCE SERVICE BUILD CONFIGURATION -->
+		
 		<xdm.server.xcap.root>/mobicents</xdm.server.xcap.root>
+		<xdm.server.xcap.dynamicUserProvision>true</xdm.server.xcap.dynamicUserProvision>
+		
 		<presence.server.notifier.presrules.auid>org.openmobilealliance.pres-rules</presence.server.notifier.presrules.auid>
 		<presence.server.notifier.presrules.documentName>pres-rules</presence.server.notifier.presrules.documentName>
+		
+		<sipevent.server.defaultExpires>3600</sipevent.server.defaultExpires>
+		<sipevent.server.maxExpires>3600</sipevent.server.maxExpires>
+		<sipevent.server.minExpires>60</sipevent.server.minExpires>
+		<sipevent.server.contactAddressDisplayName>Mobicents SIP Event Server</sipevent.server.contactAddressDisplayName>
+		<sipevent.server.PChargingVectorHeaderTerminatingIOI>mobicents.org</sipevent.server.PChargingVectorHeaderTerminatingIOI>
+		<sipevent.server.subscription.defaultWaitingExpires>86400</sipevent.server.subscription.defaultWaitingExpires>
+		<sipevent.server.subscription.maxForwards>70</sipevent.server.subscription.maxForwards>
+		<sipevent.server.subscription.eventListSupportOn>true</sipevent.server.subscription.eventListSupportOn>
+		      
 		<!-- OTHER MOBICENTS COMPONENTS VERSIONS -->
-		<mobicents.servers.jainslee.version>1.2.6.GA</mobicents.servers.jainslee.version>
-		<mobicents.tools.mavenplugin.du.version>1.0.0.BETA2</mobicents.tools.mavenplugin.du.version>
-		<mobicents.tools.mavenplugin.eclipse.version>1.0.0.BETA2</mobicents.tools.mavenplugin.eclipse.version>
-		<!-- don't change -->
-		<mobicents.sip.presence.service.finalName.prefix>
-			msps-
-		</mobicents.sip.presence.service.finalName.prefix>
+		<mobicents.servers.jainslee.version>2.0.0.BETA2</mobicents.servers.jainslee.version>
+		<mobicents.tools.mavenplugin.du.version>2.0.0.BETA3</mobicents.tools.mavenplugin.du.version>
 	</properties>			
 	
 	<dependencyManagement>
 		<dependencies>		
 			<dependency>
-				<groupId>org.mobicents.core</groupId>
-				<artifactId>mobicents-core-jar</artifactId>
+				<groupId>org.mobicents.servers.jainslee.core</groupId>
+				<artifactId>jar</artifactId>
 				<version>${mobicents.servers.jainslee.version}</version>
 			</dependency>
 			<dependency>
@@ -62,25 +110,23 @@
 				<version>${mobicents.servers.jainslee.version}</version>
 			</dependency>
 			<dependency>
-				<artifactId>sip11-ra</artifactId>
 				<groupId>org.mobicents.resources</groupId>
+				<artifactId>sip11-ratype</artifactId>
 				<version>${mobicents.servers.jainslee.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>${junit.version}</version>
+				<groupId>org.mobicents.resources</groupId>
+				<artifactId>sip11-library</artifactId>
+				<version>${mobicents.servers.jainslee.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	
 	<build>
-		<finalName>${mobicents.sip.presence.service.finalName}</finalName>
 		<plugins>
 			<plugin>
 				<artifactId>maven-eclipse-plugin</artifactId>
    				<groupId>org.mobicents.tools</groupId>
-    			<version>${mobicents.tools.mavenplugin.eclipse.version}</version>
 				<inherited>false</inherited>
 				<executions />
 				<configuration>
@@ -92,13 +138,6 @@
 					<eclipseProjectName>mobicents-sip-presence-service</eclipseProjectName>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <configuration>
-            	    <finalName>${mobicents.sip.presence.service.finalName}-src</finalName>
-                </configuration>
-            </plugin>
 		</plugins>		
 	</build>
 	
@@ -136,12 +175,16 @@
 		<profile>
 			<id>maven-release</id>
 			<modules>
-				<module>xdms</module>
-				<module>integrated</module>
+				<!-- <module>xcap-client/ra</module>
+				<module>xcap-client/ra-example</module> -->
+				<module>sip-event/server/subscription/rls-test</module>
+				<module>xdm/server/tests</module>
+				<module>xdm/server/installer</module>
+				<module>integrated/server/installer</module>
 				<module>examples/internal-publisher</module>
 				<module>examples/internal-subscriber</module>
 				<module>examples/internal-rls</module>
-				<module>docs</module>				
+				<module>docs</module> 				
 			</modules>
             <build>
 				<plugins>
@@ -151,6 +194,7 @@
 					<configuration>
 						<tagBase>https://mobicents.googlecode.com/svn/tags/servers/sip-presence</tagBase>
 						<autoVersionSubmodules>true</autoVersionSubmodules>
+						<preparationGoals>clean install</preparationGoals>
 					</configuration>
 					</plugin>
 				</plugins>

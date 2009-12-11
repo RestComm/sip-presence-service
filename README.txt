@@ -4,15 +4,13 @@ This module is a full SIP Presence Service, including servers:
 
 - XDMS (XML Document Management Server)
 - PS (Presence Server)
-- RLS (Resource List Server) <not available yet>
+- RLS (Resource List Server)
 
 ----> REQUIREMENTS:
 
-The XDMS and PS depends on the Mobicents Http-Servlet and SIP11 RAs.
+The XDMS and PS depends on the Mobicents Http-Servlet and SIP11 JAIN SLEE RAs.
 You need to deploy those RAs prior to the installation of  
 the servers.
-
-IMPORTANT, at the moment the XDM is not compatible with JDK 1.6!
 
 ----> CONFIGURATION:
 
@@ -43,34 +41,33 @@ pom.xml on this directory, before building the server(s).
 
 ----> INSTALL:
 
-Option 1) For both servers integrated on same Mobicents do:
+Option 1) For all servers integrated on same Mobicents do:
 
-"mvn -f integrated/pom.xml install" on this directory
-or "mvn install" on integrated sub-directory
+"mvn -f integrated/server/installer/pom.xml install" on this directory
+or "mvn install" on integrated/server/installer/ sub-directory
 
 Option 2) For independent servers (in different Mobicents hosts):
 
-- XDMS : do "mvn -f xdms/pom.xml install" on this directory
-or "mvn install" on xdms sub-directory
+- XDMS : do "mvn -f xdm/server/installer/pom.xml install" on this directory
+or "mvn install" on xdm/server/installer/ sub-directory
 - PS : <not available yet>
 
 ----> UNINSTALL:
 
-Option 1) For both servers integrated on same Mobicents do:
+Option 1) For all servers integrated on same Mobicents do:
 
-"mvn -f integrated/pom.xml clean" on this directory
-or "mvn clean" on integrated sub-directory
+"mvn -f integrated/server/installer/pom.xml clean" on this directory
+or "mvn clean" on integrated/server/installer/ sub-directory
 
 Option 2) For independent servers:
 
-- XDMS : do "mvn -f xdms/pom.xml clean" on this directory
-or "mvn clean" on xdms sub-directory
+- XDMS : do "mvn -f xdm/server/installer/pom.xml clean" on this directory
+or "mvn clean" on xdm/server/installer/ sub-directory
 - PS : <not available yet>
 
 ----> TESTING:
 
-Currently only the XDMS has a test framework, it's recommended
-to run it before using the server. See xdms/tests/README.txt
-for more info.
+Currently only the XDMS has a test framework.
+See xdm/server/tests/README.txt for more info.
 
 Author: Eduardo Martins, JBoss R&D

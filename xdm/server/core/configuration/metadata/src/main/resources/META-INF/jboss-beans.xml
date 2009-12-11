@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="urn:jboss:bean-deployer:2.0">
+	
+	<!-- MOBICENTS SIP PRESENCE SERVICE: SIP EVENT SUBSCRIPTION CONTROL XML CONFIGURATION -->
+	
+	<!-- Gets the singleton and registers it as JMX MBean -->
+	
+	<bean name="Mobicents.SipPresence.XDMS.ServerConfiguration" class="org.mobicents.slee.xdm.server.ServerConfiguration">
+      
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="org.mobicents.slee:sippresence=XDMServerConfiguration",exposedInterface=org.mobicents.slee.xdm.server.ServerConfigurationMBean.class,registerDirectly=true)</annotation>
+      
+      <constructor factoryMethod="getInstance"/>
+      
+      <!-- the server host, if not set, defaults to the jboss AS binding address, which is correct most of the times
+      <property name="serverHost">127.0.0.1</property>
+       -->
+      
+      <!-- the server port, must match the one of the jboss web connector for http servlets, if not set defaults to 8080
+      <property name="serverPort">8080</property>
+       -->
+       
+      <!-- the scheme and authority, if not set, defaults to http://${serverHost}:${serverPort}
+      <property name="schemeAndAuthority">http://127.0.0.1:8080</property>
+      -->
+      
+      <!-- the xcap root of the server, must begin with / -->
+      <property name="xcapRoot">${xdm.server.xcap.root}</property>
+      
+      <!-- if a xcap put creates doc collections/folders needed to hold the new doc, if false those must be provisioned -->
+      <property name="dynamicUserProvision">${xdm.server.xcap.dynamicUserProvision}</property>	      
+      
+      <!--  realm for http digest user authentication, if not set the server host will be used
+      <property name="authenticationRealm">...</property>
+       -->
+      
+   </bean>
+   
+</deployment>
