@@ -2,38 +2,24 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<parent>
-		<artifactId>integrated-parent</artifactId>
+		<artifactId>sip-presence-parent</artifactId>
 		<groupId>org.mobicents.servers.sippresence</groupId>
-		<version>1.0.0-SNAPSHOT</version>	
+		<version>1.0.0-SNAPSHOT</version>
+		<relativePath>../../..</relativePath>
 	</parent>
 		
-	<artifactId>integrated-subscription-control-sbb</artifactId>
+	<artifactId>integrated-server-subscription-sbb</artifactId>
 	
-	<build>
-		<finalName>${mobicents.sip.presence.service.finalName.prefix}integrated-sub-sbb-${pom.version}</finalName>
-		<resources>
-			<resource>
-        		<directory>src/main/resources</directory>
-        		<filtering>true</filtering>
-      		</resource>
-      	</resources>
-	</build>	
-				
 	<dependencies>
 		<dependency>
-			<groupId>org.mobicents.servers.xdm.core</groupId>
-			<artifactId>server-subscription-control-sbb</artifactId>
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<artifactId>xdms-core-subscription-control-sbb</artifactId>
 			<version>${pom.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
-			<artifactId>sip-presence-subscription-control-sbb</artifactId>
+			<artifactId>sip-presence-server-subscription-control-sbb</artifactId>
 			<version>${pom.version}</version>			
-		</dependency>
-		<dependency>
-			<artifactId>sip-event-subscription-control-sbb</artifactId>
-			<groupId>org.mobicents.servers.sipevent</groupId>
-			<version>${pom.version}</version>
 		</dependency>
 		<dependency>
 			<artifactId>sip-event-publication-control-sbb</artifactId>
@@ -41,18 +27,18 @@
 			<version>${pom.version}</version>
 		</dependency>	
 		<dependency>
-			<groupId>org.mobicents.servers.xdm.core</groupId>
-			<artifactId>server-datasource-ratype</artifactId>
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<artifactId>xdms-core-datasource-ratype</artifactId>
 			<version>${pom.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.mobicents.servers.xdm.core</groupId>
-			<artifactId>server-appusagecache-ratype</artifactId>
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<artifactId>xdms-core-appusagecache-ratype</artifactId>
 			<version>${pom.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.mobicents.servers.xdm.core</groupId>
-			<artifactId>server-internal-client-sbb</artifactId>
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<artifactId>xdms-core-xcap-control-sbb</artifactId>
 			<version>${pom.version}</version>
 		</dependency>			
 	</dependencies>

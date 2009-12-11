@@ -1,9 +1,0 @@
-package org.mobicents.slee.sippresence.server.integrated.subscription;
-
-import org.mobicents.slee.sippresence.server.subscription.PresenceSubscriptionControlSbbLocalObject;
-import org.mobicents.slee.xdm.server.subscription.XcapDiffSubscriptionControlSbbLocalObject;
-
-public interface IntegratedSubscriptionControlSbbLocalObject extends XcapDiffSubscriptionControlSbbLocalObject, PresenceSubscriptionControlSbbLocalObject{
-
-	
-}
