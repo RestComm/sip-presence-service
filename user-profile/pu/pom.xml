@@ -7,18 +7,13 @@
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	
-	<artifactId>sbb</artifactId>
+	<artifactId>user-profile-pu</artifactId>
 				
 	<dependencies>
 		<dependency>
-			<artifactId>user-profile-jmx</artifactId>
-			<groupId>${pom.groupId}</groupId>
-			<version>${pom.version}</version>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-entitymanager</artifactId>
 		</dependency>
-		<dependency>
-			<artifactId>jain-slee</artifactId>
-			<groupId>javax.slee</groupId>			
-		</dependency> 
 	</dependencies>
 	
 </project>

@@ -13,6 +13,8 @@
 	<groupId>org.mobicents.slee.enabler.userprofile</groupId>
 			
 	<modules>
+		<module>pu</module>
+		<module>jmx</module>
 		<module>sbb</module>
 		<module>du</module>
 	</modules>
