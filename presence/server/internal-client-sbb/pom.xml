@@ -1,0 +1,44 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<artifactId>sip-presence-parent</artifactId>
+		<groupId>org.mobicents.servers.sippresence</groupId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+		
+	<artifactId>sip-presence-server-internal-client-sbb</artifactId>
+				
+	<dependencies>
+		<dependency>
+			<artifactId>sip-presence-client-sbb-local-object</artifactId>
+			<groupId>${pom.groupId}</groupId>
+			<version>${pom.version}</version>			
+		</dependency>
+		<dependency>
+			<artifactId>sip-presence-server-library</artifactId>
+			<groupId>${pom.groupId}</groupId>
+			<version>${pom.version}</version>			
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents.servers.sipevent</groupId>
+			<artifactId>sip-event-client-subscription-sbb-local-object</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents.servers.sipevent</groupId>
+			<artifactId>sip-event-client-publication-sbb-local-object</artifactId>	
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents.servers.sipevent</groupId>
+			<artifactId>sip-event-subscription-control-pojo</artifactId>	
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<artifactId>sip11-ratype</artifactId>
+			<groupId>org.mobicents.resources</groupId>			
+		</dependency>		
+	</dependencies>
+
+</project>
