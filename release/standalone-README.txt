@@ -7,17 +7,17 @@ This module is a full SIP Presence Service, including servers:
 
 ----> REQUIREMENTS:
 
-The XDMS and PS depends on the Mobicents JAIN SLEE Http-Servlet
+The Mobicents SIP Presence Service works on top of Mobicents JAIN SLEE 2.x
+
+The XDMS and PS depends on the Mobicents JAIN SLEE 2.x Http-Servlet
 and SIP 11 RAs.
 You need to deploy those RAs prior to the installation of  
 the servers. 
 
 Make sure that JBOSS_HOME environment variable is set and pointing
-to the Mobicents JAIN SLEE server.
+to the Mobicents JAIN SLEE container.
 
-IMPORTANT, at the moment the XDM Server is not compatible with JDK 1.6!
-
-----> HARD DEPLOY:
+----> DEPLOY:
 
 Option 1) For both servers integrated on same Mobicents do:
 
@@ -28,7 +28,7 @@ Option 2) For independent servers (in different Mobicents hosts):
 - XDMS : do "ant xdms-deploy" on this directory
 - PS : <not available yet>
 
-----> HARD UNDEPLOY:
+----> UNDEPLOY:
 
 Option 1) For both servers integrated on same Mobicents do:
 
@@ -38,31 +38,6 @@ Option 2) For independent servers:
 
 - XDMS : do "ant xdms-undeploy" on this directory
 - PS : <not available yet>
-
-----> DEPLOY VIA JMX:
-
-Option 1) For both servers integrated on same Mobicents do:
-
-"ant integrated-deploy-jmx" on this directory
-
-Option 2) For independent servers (in different Mobicents hosts):
-
-- XDMS : do "ant xdms-deploy-jmx" on this directory
-- PS : <not available yet>
-
-----> UNDEPLOY VIA JMX:
-
-Option 1) For both servers integrated on same Mobicents do:
-
-"ant integrated-undeploy-jmx" on this directory
-
-Option 2) For independent servers:
-
-- XDMS : do "ant xdms-undeploy-jmx" on this directory
-- PS : <not available yet>
-
-NOTE: For management via JMX you can configure JNP host and port
-in the build.xml script, through properties.
 
 -----> JAIN SLEE "PRESENCE AWARE" APP EXAMPLES:
 
