@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.slee.resource.ActivityAlreadyExistsException;
-import javax.slee.resource.CouldNotStartActivityException;
+import javax.slee.resource.ActivityFlags;
+import javax.slee.resource.StartActivityException;
 
 import org.apache.commons.httpclient.HttpException;
 import org.mobicents.slee.resource.xcapclient.AsyncActivity;
@@ -15,15 +16,22 @@ import org.openxdm.xcap.client.RequestHeader;
 import org.openxdm.xcap.client.Response;
 import org.openxdm.xcap.common.key.XcapUriKey;
 
+/**
+ * 
+ * @author emmartins
+ * @author aayush.bhatnagar
+ *
+ */
 public class XCAPClientResourceAdaptorSbbInterfaceImpl implements XCAPClientResourceAdaptorSbbInterface {
     
 	private XCAPClientResourceAdaptor ra;
+	private static final int ACTIVITY_FLAGS = ActivityFlags.REQUEST_ENDED_CALLBACK;
 	
 	public XCAPClientResourceAdaptorSbbInterfaceImpl(XCAPClientResourceAdaptor ra) {
 		this.ra = ra;
 	}
 
-	public AsyncActivity createActivity() throws ActivityAlreadyExistsException, CouldNotStartActivityException {
+	public AsyncActivity createActivity() throws ActivityAlreadyExistsException, StartActivityException {
 			// generate id	
 			String id = UUID.randomUUID().toString();
 			// create handle
@@ -31,9 +39,10 @@ public class XCAPClientResourceAdaptorSbbInterfaceImpl implements XCAPClientReso
 			// create activity
 			AsyncActivityImpl activity = new AsyncActivityImpl(ra,handle);
 			// start activity
-			ra.getSleeEndpoint().activityStarted(handle);
-			// save handle in ra
-			ra.getActivities().put(handle,activity);
+			//ra.getSleeEndpoint().activityStarted(handle);
+			this.ra.getXCAPResourceAdaptorContext().getSleeEndpoint().startActivityTransacted(handle, activity,ACTIVITY_FLAGS);
+			this.ra.addActivity(handle, activity);
+
 			return activity;
 	}
 

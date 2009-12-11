@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sbb-jar PUBLIC "-//Sun Microsystems, Inc.//DTD JAIN SLEE SBB 1.1//EN"
+                         "http://java.sun.com/dtd/slee-sbb-jar_1_1.dtd">
 <sbb-jar>
 
 	<sbb>
@@ -9,6 +11,12 @@
 		<sbb-vendor>org.mobicents</sbb-vendor>
 		<sbb-version>1.0</sbb-version>
 
+		<library-ref>
+			<library-name>xcap-client-library</library-name>
+			<library-vendor>org.mobicents.examples</library-vendor>
+			<library-version>1.0</library-version>
+		</library-ref>
+		
 		<sbb-classes>
 			<sbb-abstract-class reentrant="False">
 				<sbb-abstract-class-name>
@@ -25,21 +33,9 @@
 					javax.slee.serviceactivity.ServiceStartedEvent
 				</event-type-name>
 				<event-type-vendor>javax.slee</event-type-vendor>
-				<event-type-version>1.0</event-type-version>
+				<event-type-version>1.1</event-type-version>
 			</event-type-ref>
 			<initial-event-select variable="ActivityContext" />
-		</event>
-
-		<event event-direction="Receive" initial-event="False"
-			mask-on-attach="False">
-			<event-name>ActivityEndEvent</event-name>
-			<event-type-ref>
-				<event-type-name>
-					javax.slee.ActivityEndEvent
-				</event-type-name>
-				<event-type-vendor>javax.slee</event-type-vendor>
-				<event-type-version>1.0</event-type-version>
-			</event-type-ref>
 		</event>
 
 		<event event-direction="Receive" initial-event="false"

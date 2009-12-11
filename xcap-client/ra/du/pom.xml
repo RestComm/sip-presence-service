@@ -1,63 +1,47 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<packaging>pom</packaging>
 	
 	<parent>
-		<artifactId>xcap-client-ra-parent</artifactId>
-		<groupId>org.mobicents.servers.sippresence</groupId>
+		<artifactId>mobicents-slee-ra-xcap-client</artifactId>
+		<groupId>org.mobicents.resources</groupId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	
-	<artifactId>xcap-client-ra-DU</artifactId>
+	<artifactId>mobicents-slee-ra-xcap-client-DU</artifactId>
 	
 	<dependencies>
-		<!-- components -->
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
-			<artifactId>xcap-client-ra-events</artifactId>
+			<artifactId>mobicents-slee-ra-xcap-client-events</artifactId>
 			<version>${pom.version}</version>
-			
 		</dependency>
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
-			<artifactId>xcap-client-ra-ratype</artifactId>
+			<artifactId>mobicents-slee-ra-xcap-client-ratype</artifactId>
 			<version>${pom.version}</version>
-			
 		</dependency>
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
-			<artifactId>xcap-client-ra-ra</artifactId>
+			<artifactId>mobicents-slee-ra-xcap-client-ra</artifactId>
 			<version>${pom.version}</version>
-			
-		</dependency>
-		<!-- libs -->
-		<dependency>
-			<groupId>org.mobicents.servers.xdm.core</groupId>
-			<artifactId>commons</artifactId>
-			<version>${pom.version}</version>
-			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
-			<artifactId>xcap-client-api</artifactId>
+			<artifactId>mobicents-slee-ra-xcap-client-library</artifactId>
 			<version>${pom.version}</version>
-			<scope>runtime</scope>
-		</dependency>
+		</dependency>	
 	</dependencies>
 	
-	
 	<build>
-		<finalName>${mobicents.sip.presence.service.finalName.prefix}${pom.artifactId}-${pom.version}</finalName>	
 		<plugins>
 			<plugin>
 				<groupId>org.mobicents.tools</groupId>
 				<artifactId>maven-du-plugin</artifactId>
-				<version>${mobicents.tools.mavenplugin.du.version}</version>
 				<extensions>true</extensions>
 				<configuration />
 				<executions>
 					<execution>
-						<phase>install</phase>
+						<phase>generate-resources</phase>
 						<goals>
 							<goal>create</goal>
 						</goals>

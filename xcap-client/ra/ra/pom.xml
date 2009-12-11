@@ -2,27 +2,28 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<parent>
-		<artifactId>xcap-client-ra-parent</artifactId>
-		<groupId>org.mobicents.servers.sippresence</groupId>
+		<artifactId>mobicents-slee-ra-xcap-client</artifactId>
+		<groupId>org.mobicents.resources</groupId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	
-	<artifactId>xcap-client-ra-ra</artifactId>	
+	<artifactId>mobicents-slee-ra-xcap-client-ra</artifactId>	
 	
 	<dependencies>
+
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
-			<artifactId>xcap-client-ra-ratype</artifactId>
+			<artifactId>mobicents-slee-ra-xcap-client-ratype</artifactId>
 			<version>${pom.version}</version>
 		</dependency>		
-		<dependency>
-			<groupId>org.mobicents.core</groupId>
-			<artifactId>mobicents-core-jar</artifactId>
-		</dependency>
-	</dependencies>
+               <dependency>
+					<groupId>org.mobicents.servers.jainslee.core</groupId>
+					<version>2.0.0.BETA2</version>
+					<artifactId>jar</artifactId>
+			   </dependency>
+	    </dependencies>
 	
 	<build>
-		<finalName>${mobicents.sip.presence.service.finalName.prefix}${pom.artifactId}-${pom.version}</finalName>	
 		<resources>
 			<resource>
         		<directory>src/main/resources</directory>

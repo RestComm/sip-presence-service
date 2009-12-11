@@ -17,8 +17,9 @@ import javax.slee.SbbContext;
 import javax.slee.TransactionRequiredLocalException;
 import javax.slee.TransactionRolledbackLocalException;
 import javax.slee.UnrecognizedActivityException;
+import javax.slee.facilities.Tracer;
 import javax.slee.resource.ActivityAlreadyExistsException;
-import javax.slee.resource.CouldNotStartActivityException;
+import javax.slee.resource.StartActivityException;
 import javax.slee.serviceactivity.ServiceActivity;
 import javax.slee.serviceactivity.ServiceActivityFactory;
 import javax.xml.bind.JAXBContext;
@@ -26,7 +27,6 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 
 import org.apache.commons.httpclient.HttpException;
-import org.apache.log4j.Logger;
 import org.mobicents.slee.resource.xcapclient.AsyncActivity;
 import org.mobicents.slee.resource.xcapclient.ResponseEvent;
 import org.mobicents.slee.resource.xcapclient.XCAPClientActivityContextInterfaceFactory;
@@ -56,7 +56,7 @@ public abstract class XCAPClientExampleSbb implements javax.slee.Sbb {
 		try {
 			return JAXBContext.newInstance("org.openxdm.xcap.client.appusage.resourcelists.jaxb");
 		} catch (JAXBException e) {
-			log.error("unable to init jaxb context",e);
+			log.severe("unable to init jaxb context",e);
 			return null;
 		}
 	}
@@ -73,13 +73,16 @@ public abstract class XCAPClientExampleSbb implements javax.slee.Sbb {
 	 */
 	public void setSbbContext(SbbContext context) { 
 		this.sbbContext = context;
+		if (log == null) {
+			log = context.getTracer(getClass().getSimpleName());
+		}		 
 		try {
 			myEnv = (Context) new InitialContext().lookup("java:comp/env");           
 			ra = (XCAPClientResourceAdaptorSbbInterface) myEnv.lookup("slee/resources/xcapclient/1.0/sbbrainterface");
 			acif = (XCAPClientActivityContextInterfaceFactory) myEnv.lookup("slee/resources/xcapclient/1.0/acif");  
 		}
 		catch (NamingException e) {
-			log.error("unable to set sbb context",e);
+			log.severe("unable to set sbb context",e);
 		}
 	}
 	
@@ -99,31 +102,23 @@ public abstract class XCAPClientExampleSbb implements javax.slee.Sbb {
 		return sbbContext;
 	}	
 	
-	/*
-	 * Init the xmpp component connection when the service is activated by SLEE
+	/**
+	 * 
+	 * @param event
+	 * @param aci
 	 */
 	public void onServiceStartedEvent(javax.slee.serviceactivity.ServiceStartedEvent event, ActivityContextInterface aci) {		           
+		   						
+		log.info("service started...");
+		
 		try {
-			//check if it's my service that is starting
-            ServiceActivity sa = ((ServiceActivityFactory) myEnv.lookup("slee/serviceactivity/factory")).getActivity();                       
-	    	if (sa.equals(aci.getActivity())) {	    						
-	    		// do sync test
-        		if (log.isDebugEnabled()) {
-					log.debug("service started...");
-				}
-        		try {
-        			syncTest();
-        			asyncTest();
-        		}
-        		catch (Exception f) {
-        			log.error("sync test failed...",f);
-        		}
-        		// start async test
-        	}
+			syncTest();
+			asyncTest();
 		}
-        catch (Exception e) {
-        	log.error("unable to handle service started event...",e);        	
-        }					
+		catch (Exception f) {
+			log.severe("sync test failed...",f);
+		}
+        						
 	}	
 	
 	public void syncTest() throws HttpException, IOException, JAXBException {
@@ -156,10 +151,10 @@ public abstract class XCAPClientExampleSbb implements javax.slee.Sbb {
 			if(response.getCode() == 200 || response.getCode() == 201) {
 				log.info("document created in xcap server...");
 			} else {
-				log.error("bad response from xcap server: "+response.toString());
+				log.severe("bad response from xcap server: "+response.toString());
 			}
 		} else {
-			log.error("unable to create document in xcap server...");
+			log.severe("unable to create document in xcap server...");
 		}
 					
 		// let's create an uri selecting an element
@@ -180,10 +175,10 @@ public abstract class XCAPClientExampleSbb implements javax.slee.Sbb {
 			if(response.getCode() == 201) {
 				log.info("element created in xcap server...");
 			} else {
-				log.error("bad response from xcap server: "+response.toString());
+				log.severe("bad response from xcap server: "+response.toString());
 			}
 		} else {
-			log.error("unable to create element in xcap server...");
+			log.severe("unable to create element in xcap server...");
 		}
 				
 		// get the document and check content is ok
@@ -195,15 +190,15 @@ public abstract class XCAPClientExampleSbb implements javax.slee.Sbb {
 				log.info("document retreived in xcap server and content is the expected...");
 				log.info("sync test suceed :)");
 			} else {
-				log.error("bad response from xcap server: "+response.toString());
+				log.severe("bad response from xcap server: "+response.toString());
 			}
 		} else {
-			log.error("unable to retreive document in xcap server...");
+			log.severe("unable to retreive document in xcap server...");
 		}	
 							
 	}
 	
-	public void asyncTest() throws ActivityAlreadyExistsException, CouldNotStartActivityException, NullPointerException, UnrecognizedActivityException, TransactionRequiredLocalException, TransactionRolledbackLocalException, HttpException, SLEEException, IllegalStateException, JAXBException, IOException {
+	public void asyncTest() throws ActivityAlreadyExistsException, NullPointerException, UnrecognizedActivityException, TransactionRequiredLocalException, TransactionRolledbackLocalException, HttpException, SLEEException, IllegalStateException, JAXBException, IOException, StartActivityException {
 		
 		// now we will use marshalling and unmarshalling too
 						
@@ -234,10 +229,10 @@ public abstract class XCAPClientExampleSbb implements javax.slee.Sbb {
 			if(response.getCode() == 201) {
 				log.info("list element created in xcap server...");
 			} else {
-				log.error("bad response from xcap server: "+response.toString());
+				log.severe("bad response from xcap server: "+response.toString());
 			}
 		} else {
-			log.error("unable to create list element in xcap server...");
+			log.severe("unable to create list element in xcap server...");
 		}
 		
 		// now lets get it using the async interface
@@ -274,7 +269,7 @@ public abstract class XCAPClientExampleSbb implements javax.slee.Sbb {
 					listType = (ListType) jAXBContext.createUnmarshaller().unmarshal(stringReader);
 				}
 				catch (Exception e) {
-					log.error("unable to unmarshall response content",e);
+					log.severe("unable to unmarshall response content",e);
 				}
 				stringReader.close();
 				if(listType != null && listType.getName().equals("enemies")) {
@@ -286,21 +281,21 @@ public abstract class XCAPClientExampleSbb implements javax.slee.Sbb {
 							log.info("async test suceed :)");
 						}
 						else {
-							log.error("list element retreived is not the expected one");
+							log.severe("list element retreived is not the expected one");
 						}
 					}
 					else {
-						log.error("list element retreived is not the expected one");
+						log.severe("list element retreived is not the expected one");
 					}
 				}				
 				else {
-					log.error("list element retreived is not the expected one");
+					log.severe("list element retreived is not the expected one");
 				}
 			} else {
-				log.error("bad response from xcap server: "+response.toString());
+				log.severe("bad response from xcap server: "+response.toString());
 			}
 		} else {
-			log.error("unable to create list element in xcap server...");
+			log.severe("unable to create list element in xcap server...");
 		}
 		
 		try {
@@ -308,7 +303,7 @@ public abstract class XCAPClientExampleSbb implements javax.slee.Sbb {
 			ra.delete(new UserDocumentUriKey("resource-lists",userName,documentName),null);	
 		}
 		catch (Exception e) {
-			log.error("failed to delete document",e);
+			log.severe("failed to delete document",e);
 		}
 						
 		// cleanup, end the activity
@@ -319,25 +314,6 @@ public abstract class XCAPClientExampleSbb implements javax.slee.Sbb {
 		
 	}	
 		
-	/*
-	 * Service deactivated.
-	 */
-	
-	public void onActivityEndEvent(ActivityEndEvent event, ActivityContextInterface aci) {
-		try {			
-			//check if it's my service aci that is ending, in that case the connection is terminated
-			ServiceActivity sa = ((ServiceActivityFactory) myEnv.lookup("slee/serviceactivity/factory")).getActivity();			
-			if (sa.equals(aci.getActivity())) {
-				if (log.isDebugEnabled()) {
-					log.debug("service deactivated...");
-				}				
-			}						
-		}
-		catch (Exception e) {
-			log.error("unable to handle activity end event...",e);			
-		}
-	}	
-		
-	private static Logger log = Logger.getLogger(XCAPClientExampleSbb.class);
+	private static Tracer log;
 	
 }

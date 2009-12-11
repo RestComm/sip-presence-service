@@ -9,9 +9,11 @@
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	
-	<artifactId>xcap-client-ra-example-parent</artifactId>
+	<artifactId>mobicents-slee-example-xcap-client</artifactId>
+	<groupId>org.mobicents.examples</groupId>
 		
 	<modules>
+		<module>library</module>
 		<module>sbb</module>						
 		<module>du</module>			
 	</modules>
