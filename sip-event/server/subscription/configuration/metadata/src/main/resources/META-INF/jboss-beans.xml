@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="urn:jboss:bean-deployer:2.0">
+	
+	<!-- MOBICENTS SIP PRESENCE SERVICE: SIP EVENT SUBSCRIPTION CONTROL XML CONFIGURATION -->
+	
+	<!-- Gets the singleton and registers it as JMX MBean -->
+	
+	<bean name="Mobicents.SipPresence.SipEvent.SubscriptionControlManagement" class="org.mobicents.slee.sipevent.server.subscription.jmx.SubscriptionControlManagement">
+      
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="org.mobicents.slee:sippresence=SipEventSubscriptionControl",exposedInterface=org.mobicents.slee.sipevent.server.subscription.jmx.SubscriptionControlManagementMBean.class,registerDirectly=true)</annotation>
+      
+      <constructor factoryMethod="getInstance"/>
+      
+      <property name="defaultExpires">${sipevent.server.defaultExpires}</property>
+      <property name="maxExpires">${sipevent.server.maxExpires}</property>
+      <property name="minExpires">${sipevent.server.minExpires}</property>
+      <property name="defaultWaitingExpires">${sipevent.server.subscription.defaultWaitingExpires}</property> 
+      <property name="maxForwards">${sipevent.server.subscription.maxForwards}</property>
+      <property name="contactAddressDisplayName">${sipevent.server.contactAddressDisplayName}</property>
+      <property name="eventListSupportOn">${sipevent.server.subscription.eventListSupportOn}</property>
+      <property name="PChargingVectorHeaderTerminatingIOI">${sipevent.server.PChargingVectorHeaderTerminatingIOI}</property>
+      			      
+   </bean>
+   
+</deployment>

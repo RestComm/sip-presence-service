@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="urn:jboss:bean-deployer:2.0">
+	
+	<!-- MOBICENTS SIP PRESENCE SERVICE: SIP EVENT PUBLICATION CONTROL XML CONFIGURATION -->
+	
+	<!-- Gets the singleton and registers it as JMX MBean -->
+	
+	<bean name="Mobicents.SipPresence.SipEvent.PublicationControlManagement" class="org.mobicents.slee.sipevent.server.publication.jmx.PublicationControlManagement">
+      
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="org.mobicents.slee:sippresence=SipEventPublicationControl",exposedInterface=org.mobicents.slee.sipevent.server.publication.jmx.PublicationControlManagementMBean.class,registerDirectly=true)</annotation>
+      
+      <constructor factoryMethod="getInstance"/>
+      
+	  <property name="defaultExpires">${sipevent.server.defaultExpires}</property>
+      <property name="maxExpires">${sipevent.server.maxExpires}</property>
+      <property name="minExpires">${sipevent.server.minExpires}</property>
+      <property name="contactAddressDisplayName">${sipevent.server.contactAddressDisplayName}</property>
+      <property name="PChargingVectorHeaderTerminatingIOI">${sipevent.server.PChargingVectorHeaderTerminatingIOI}</property>
+            	      
+   </bean>
+   
+</deployment>
