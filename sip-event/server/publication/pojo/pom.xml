@@ -2,11 +2,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<parent>
-		<artifactId>publication-parent</artifactId>
-		<groupId>org.mobicents.servers.sipevent</groupId>
+		<artifactId>sip-presence-parent</artifactId>
+		<groupId>org.mobicents.servers.sippresence</groupId>
 		<version>1.0.0-SNAPSHOT</version>
+		<relativePath>../../../..</relativePath>
 	</parent>
-		
+	
+	<groupId>org.mobicents.servers.sipevent</groupId>
 	<artifactId>sip-event-publication-control-pojo</artifactId>
 				
 	<dependencies>	
@@ -19,17 +21,13 @@
 			<artifactId>hibernate-entitymanager</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>javax.xml.bind</groupId>
+			<groupId>sun-jaxb</groupId>
 			<artifactId>jaxb-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>javax.xml</groupId>
+			<groupId>sun-jaxb</groupId>
 			<artifactId>jaxb-impl</artifactId>
 		</dependency>
 	</dependencies>
-	
-	<build>
-		<finalName>${mobicents.sip.presence.service.finalName.prefix}sip-event-pub-pojo-${pom.version}</finalName>
-	</build>
 	
 </project>

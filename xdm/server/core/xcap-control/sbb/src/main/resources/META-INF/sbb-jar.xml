@@ -22,7 +22,7 @@
         	<sbb-alias>authenticationProxySbb</sbb-alias>
         </sbb-ref>
         <sbb-classes>
-            <sbb-abstract-class reentrant="False">
+            <sbb-abstract-class reentrant="True">
                 <sbb-abstract-class-name>org.openxdm.xcap.server.slee.AggregationProxySbb</sbb-abstract-class-name>
                 
                 <get-child-relation-method>                	
@@ -136,7 +136,7 @@
         </library-ref>
                       
         <sbb-classes>
-            <sbb-abstract-class reentrant="False">
+            <sbb-abstract-class reentrant="True">
                 <sbb-abstract-class-name>org.openxdm.xcap.server.slee.RequestProcessorSbb</sbb-abstract-class-name>                       
 	        </sbb-abstract-class>
 	        <sbb-local-interface>
