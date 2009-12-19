@@ -8,6 +8,7 @@ import javax.naming.NamingException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
 import org.apache.log4j.Logger;
@@ -92,8 +93,14 @@ public class UserProfileControlManagement implements
 		}
 		
 		EntityManager entityManager = null;
-				
+		
+		Transaction tx= null;
+		
 		try {
+			
+			if (txMgr.getTransaction() != null) {
+				tx = txMgr.suspend();
+			}
 			
 			txMgr.begin();
 			
@@ -105,19 +112,26 @@ public class UserProfileControlManagement implements
 			entityManager.persist(userProfile);
 			
 			txMgr.commit();
-			
+						
 			if (logger.isInfoEnabled()) {
 				logger.info("Added user "+username);
 			}
 
 		} catch (Throwable e) {
 			try {
-				txMgr.rollback();			
+				txMgr.rollback();							
 			} catch (Throwable f) {
 				logger.error(f.getMessage(),f);
 			}		
 			throw new RuntimeException(e.getMessage(), e);
 		} finally {
+			if (tx != null) {
+				try {
+					txMgr.resume(tx);			
+				} catch (Throwable f) {
+					logger.error(f.getMessage(),f);
+				}
+			}
 			if (entityManager != null) {
 				entityManager.close();
 			}
@@ -185,7 +199,14 @@ public class UserProfileControlManagement implements
 			throw new NullPointerException("null username");
 
 		EntityManager entityManager = null;
+		
+		Transaction tx= null;
+		
 		try {
+			
+			if (txMgr.getTransaction() != null) {
+				tx = txMgr.suspend();
+			}
 			
 			txMgr.begin();
 			
@@ -212,6 +233,13 @@ public class UserProfileControlManagement implements
 			}
 			throw new RuntimeException(e.getMessage(), e);
 		} finally {
+			if (tx != null) {
+				try {
+					txMgr.resume(tx);			
+				} catch (Throwable f) {
+					logger.error(f.getMessage(),f);
+				}
+			}
 			if (entityManager != null) {
 				entityManager.close();
 			}
