@@ -10,7 +10,6 @@ import java.io.StringWriter;
 import java.text.ParseException;
 
 import javax.persistence.EntityManager;
-import javax.sip.ClientTransaction;
 import javax.sip.Dialog;
 import javax.sip.SipException;
 import javax.sip.TransactionDoesNotExistException;
@@ -21,6 +20,8 @@ import javax.sip.message.Request;
 import javax.slee.ActivityContextInterface;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
+
+import net.java.slee.resource.sip.DialogActivity;
 
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
@@ -57,7 +58,7 @@ public class SipSubscriberNotificationHandler {
 					.getActivityContextNamingfacility().lookup(
 							subscription.getKey().toString());
 			if (dialogACI != null) {
-				Dialog dialog = (Dialog) dialogACI.getActivity();
+				DialogActivity dialog = (DialogActivity) dialogACI.getActivity();
 				// create notify
 				Request notify = createNotify(dialog, subscription);
 				// add content
@@ -70,13 +71,7 @@ public class SipSubscriberNotificationHandler {
 				notify.addHeader(addPChargingVectorHeader());
 				
 				// send notify in dialog related with subscription
-				dialog.sendRequest(sipSubscriptionHandler.sbb.getSipProvider()
-						.getNewClientTransaction(notify));
-				if (logger.isDebugEnabled()) {
-					logger.debug("NotifySubscribers: subscription "
-							+ subscription.getKey() + " sent request:\n"
-							+ notify.toString());
-				}
+				dialog.sendRequest(notify);				
 			} else {
 				// clean up
 				logger.warn("Unable to find dialog aci to notify subscription "
@@ -111,7 +106,7 @@ public class SipSubscriberNotificationHandler {
 		}
 		else {
 			// resource list subscription, no filtering
-			if (content instanceof JAXBElement) {
+			if (content instanceof JAXBElement<?>) {
 				// marshall content to string
 				StringWriter stringWriter = new StringWriter();
 				childSbb.getMarshaller().marshal(content, stringWriter);
@@ -131,7 +126,7 @@ public class SipSubscriberNotificationHandler {
 	 * subscriber
 	 */
 	public void createAndSendNotify(EntityManager entityManager,
-			Subscription subscription, Dialog dialog,
+			Subscription subscription, DialogActivity dialog,
 			ImplementedSubscriptionControlSbbLocalObject childSbb)
 			throws TransactionDoesNotExistException, SipException,
 			ParseException {
@@ -174,13 +169,7 @@ public class SipSubscriberNotificationHandler {
 		notify.addHeader(addPChargingVectorHeader());
 		
 		// send notify
-		ClientTransaction clientTransaction = sipSubscriptionHandler.sbb
-				.getSipProvider().getNewClientTransaction(notify);
-		dialog.sendRequest(clientTransaction);
-		if (logger.isDebugEnabled()) {
-			logger.debug("Request sent:\n" + notify.toString());
-		}
-
+		dialog.sendRequest(notify);
 	}
 
 	// creates a notify request and fills headers

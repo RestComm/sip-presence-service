@@ -39,6 +39,7 @@ import javax.slee.serviceactivity.ServiceStartedEvent;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
+import net.java.slee.resource.sip.DialogActivity;
 import net.java.slee.resource.sip.SipActivityContextInterfaceFactory;
 import net.java.slee.resource.sip.SleeSipProvider;
 
@@ -586,13 +587,13 @@ public abstract class SubscriptionControlSbb implements Sbb,
 		EntityManager entityManager = getEntityManager();
 		// get this entity dialog (if it's not a internal subscription) and the
 		// subscription aci
-		Dialog dialog = null;
+		DialogActivity dialog = null;
 		ActivityContextInterface subscriptionAci = null;
 		for (ActivityContextInterface aci : sbbContext.getActivities()) {
 			Object activity = aci.getActivity();
-			if (activity instanceof Dialog) {
+			if (activity instanceof DialogActivity) {
 				subscriptionAci = aci;
-				dialog = (Dialog) activity;
+				dialog = (DialogActivity) activity;
 				break;
 			} else if (activity instanceof NullActivity) {
 				subscriptionAci = aci;
@@ -951,7 +952,6 @@ public abstract class SubscriptionControlSbb implements Sbb,
 			EntityManager entityManager, Subscription subscription, long delay,
 			ActivityContextInterface aci) {
 		TimerOptions options = new TimerOptions();
-		options.setPersistent(true);
 		options.setPreserveMissed(TimerPreserveMissed.ALL);
 		// set timer
 		TimerID timerId = timerFacility.setTimer(aci, null, System

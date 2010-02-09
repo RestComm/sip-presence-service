@@ -6,6 +6,8 @@ import javax.sip.ResponseEvent;
 import javax.sip.header.EventHeader;
 import javax.slee.ActivityContextInterface;
 
+import net.java.slee.resource.sip.DialogActivity;
+
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
@@ -56,7 +58,7 @@ public class RemoveSipSubscriptionHandler {
 		}
 
 		// get dialog from aci
-		Dialog dialog = (Dialog) aci.getActivity();
+		DialogActivity dialog = (DialogActivity) aci.getActivity();
 
 		// notify subscriber
 		try {

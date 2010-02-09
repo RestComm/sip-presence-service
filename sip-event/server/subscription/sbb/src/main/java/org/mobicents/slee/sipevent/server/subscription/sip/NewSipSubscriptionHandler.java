@@ -1,7 +1,5 @@
 package org.mobicents.slee.sipevent.server.subscription.sip;
 
-import gov.nist.javax.sip.Utils;
-
 import javax.persistence.EntityManager;
 import javax.sip.Dialog;
 import javax.sip.RequestEvent;
@@ -9,7 +7,6 @@ import javax.sip.ServerTransaction;
 import javax.sip.address.Address;
 import javax.sip.header.ContentTypeHeader;
 import javax.sip.header.FromHeader;
-import javax.sip.header.ToHeader;
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
 import javax.slee.SbbLocalObject;
@@ -92,10 +89,7 @@ public class NewSipSubscriptionHandler {
 									event.getRequest());
 					response = sipSubscriptionHandler
 							.addContactHeader(response);
-					event.getServerTransaction().sendResponse(response);
-					if (logger.isDebugEnabled()) {
-						logger.debug("Response sent:\n" + response.toString());
-					}
+					event.getServerTransaction().sendResponse(response);					
 				} catch (Exception f) {
 					logger.error("Can't send RESPONSE", f);
 				}
@@ -126,10 +120,7 @@ public class NewSipSubscriptionHandler {
 					response = sipSubscriptionHandler
 					.addContactHeader(response);
 					response.addHeader(sipSubscriptionHandler.sbb.getHeaderFactory().createRequireHeader("eventlist"));
-					event.getServerTransaction().sendResponse(response);
-					if (logger.isDebugEnabled()) {
-						logger.debug("Response sent:\n" + response.toString());
-					}
+					event.getServerTransaction().sendResponse(response);					
 				} catch (Exception f) {
 					logger.error("Can't send RESPONSE", f);
 				}
@@ -196,7 +187,7 @@ public class NewSipSubscriptionHandler {
 			int expires, int responseCode, boolean eventList, EntityManager entityManager,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 
-		Dialog dialog = serverTransaction.getDialog();
+		DialogActivity dialog = (DialogActivity) serverTransaction.getDialog();
 		ActivityContextInterface dialogAci = null;
 
 		// send response
@@ -206,15 +197,12 @@ public class NewSipSubscriptionHandler {
 							serverTransaction.getRequest());
 			if (responseCode == Response.ACCEPTED
 					|| responseCode == Response.OK) {
-				ToHeader responseToHeader = (ToHeader) response
-						.getHeader(ToHeader.NAME);
-				responseToHeader.setTag(Utils.getInstance().generateTag());
 				// attach to dialog
 				SbbLocalObject sbbLocalObject = sipSubscriptionHandler.sbb
 						.getSbbContext().getSbbLocalObject();
 				dialogAci = sipSubscriptionHandler.sbb
 						.getSipActivityContextInterfaceFactory()
-						.getActivityContextInterface((DialogActivity) dialog);
+						.getActivityContextInterface(dialog);
 				dialogAci.attach(sbbLocalObject);
 				if (serverTransactionACI != null) {
 					serverTransactionACI.detach(sbbLocalObject);
@@ -223,10 +211,7 @@ public class NewSipSubscriptionHandler {
 				response = sipSubscriptionHandler.addContactHeader(response);
 				response.addHeader(sipSubscriptionHandler.sbb
 						.getHeaderFactory().createExpiresHeader(expires));
-				serverTransaction.sendResponse(response);
-				if (logger.isDebugEnabled()) {
-					logger.debug("Response sent:\n" + response.toString());
-				}
+				serverTransaction.sendResponse(response);				
 			} else {
 				response = sipSubscriptionHandler.addContactHeader(response);
 				serverTransaction.sendResponse(response);
@@ -235,9 +220,6 @@ public class NewSipSubscriptionHandler {
 							+ ",notifier=" + notifier + ",eventPackage="
 							+ key.getEventPackage() + " not authorized ("
 							+ responseCode + ")");
-				}
-				if (logger.isDebugEnabled()) {
-					logger.debug("Response sent:\n" + response.toString());
 				}
 				return;
 			}
@@ -250,10 +232,7 @@ public class NewSipSubscriptionHandler {
 								Response.SERVER_INTERNAL_ERROR,
 								serverTransaction.getRequest());
 				response = sipSubscriptionHandler.addContactHeader(response);
-				serverTransaction.sendResponse(response);
-				if (logger.isDebugEnabled()) {
-					logger.debug("Response sent:\n" + response.toString());
-				}
+				serverTransaction.sendResponse(response);				
 			} catch (Exception f) {
 				logger.error("Can't send RESPONSE", f);
 			}

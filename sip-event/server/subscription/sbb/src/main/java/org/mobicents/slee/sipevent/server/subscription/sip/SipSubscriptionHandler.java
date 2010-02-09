@@ -15,13 +15,11 @@ import javax.sip.address.SipURI;
 import javax.sip.header.ContactHeader;
 import javax.sip.header.EventHeader;
 import javax.sip.header.ExpiresHeader;
-import javax.sip.header.UserAgentHeader;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
 
 import org.apache.log4j.Logger;
-import org.mobicents.slee.sipevent.server.internal.InternalSubscriptionHandler;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
 import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
@@ -88,10 +86,7 @@ public class SipSubscriptionHandler {
 				// create response
 				Response response = sbb.getMessageFactory().createResponse(
 						Response.SERVER_INTERNAL_ERROR, event.getRequest());
-				event.getServerTransaction().sendResponse(response);
-				if (logger.isDebugEnabled()) {
-					logger.debug("Response sent:\n" + response.toString());
-				}
+				event.getServerTransaction().sendResponse(response);				
 			} catch (Exception f) {
 				logger.error("Can't send error response!", f);
 			}
@@ -208,11 +203,7 @@ public class SipSubscriptionHandler {
 									response.addHeader(sbb.getHeaderFactory()
 											.createExpiresHeader(expires));
 									event.getServerTransaction().sendResponse(
-											response);
-									if (logger.isDebugEnabled()) {
-										logger.debug("Response sent:\n"
-												+ response.toString());
-									}
+											response);									
 								} catch (Exception e) {
 									logger.error("Can't send RESPONSE", e);
 								}
@@ -331,10 +322,7 @@ public class SipSubscriptionHandler {
 				response.addHeader(pcfa);
 			//...aayush added code till here.
 			
-			serverTransaction.sendResponse(response);
-			if (logger.isDebugEnabled()) {
-				logger.debug("Response sent:\n" + response.toString());
-			}
+			serverTransaction.sendResponse(response);			
 		} catch (Exception e) {
 			logger.error("Can't send response!", e);
 		}

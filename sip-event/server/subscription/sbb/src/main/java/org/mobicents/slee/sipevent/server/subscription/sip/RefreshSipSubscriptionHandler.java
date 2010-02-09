@@ -1,10 +1,11 @@
 package org.mobicents.slee.sipevent.server.subscription.sip;
 
 import javax.persistence.EntityManager;
-import javax.sip.Dialog;
 import javax.sip.RequestEvent;
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
+
+import net.java.slee.resource.sip.DialogActivity;
 
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
@@ -59,10 +60,7 @@ public class RefreshSipSubscriptionHandler {
 			response = sipSubscriptionHandler.addContactHeader(response);
 			response.addHeader(sipSubscriptionHandler.sbb.getHeaderFactory()
 					.createExpiresHeader(expires));
-			event.getServerTransaction().sendResponse(response);
-			if (logger.isDebugEnabled()) {
-				logger.debug("Response sent:\n" + response.toString());
-			}
+			event.getServerTransaction().sendResponse(response);			
 		} catch (Exception e) {
 			logger.error("Can't send RESPONSE", e);
 		}
@@ -72,7 +70,7 @@ public class RefreshSipSubscriptionHandler {
 			try {
 				sipSubscriptionHandler.getSipSubscriberNotificationHandler()
 				.createAndSendNotify(entityManager, subscription,
-						(Dialog) aci.getActivity(), childSbb);
+						(DialogActivity) aci.getActivity(), childSbb);
 			} catch (Exception e) {
 				logger.error("failed to notify subscriber", e);
 			}
