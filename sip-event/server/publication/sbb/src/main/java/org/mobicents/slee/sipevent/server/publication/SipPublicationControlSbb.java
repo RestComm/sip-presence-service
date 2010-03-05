@@ -286,7 +286,7 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 	public void onOptions(RequestEvent requestEvent, ActivityContextInterface aci) {
 		
 		if (logger.isInfoEnabled()) {
-			logger.info("options event received but server does not supports it");
+			logger.info("Processing OPTIONS request");
 		}
 		aci.detach(this.sbbContext.getSbbLocalObject());
 		/*
@@ -301,8 +301,47 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 		 * support for PUBLISH messages when registering. (See SIP Capabilities
 		 * [12] for details).
 		 */
+        PublicationControlSbbLocalObject childSbb = getPublicationControlChildSbb();						
 		
-		// TODO 
+		if (childSbb == null) { 
+			try {
+				// create an error response:
+				Response response = messageFactory.createResponse(Response.SERVER_INTERNAL_ERROR,requestEvent.getRequest());
+				requestEvent.getServerTransaction().sendResponse(response);				
+			}
+			catch (Exception f) {
+				logger.error("Can't send error response!",f);
+			}
+			return;
+		}
+
+		try {
+			// create successful response:
+			Response response = messageFactory.createResponse(Response.OK,requestEvent.getRequest());
+			// add headers here:
+				String allowEventsHeader = "";
+				boolean first = true;
+				for (String acceptedEventPackage : childSbb.getEventPackages()) {
+					if (first) {
+						allowEventsHeader += acceptedEventPackage;
+						first = false;
+					}
+					else {
+						allowEventsHeader += ","+acceptedEventPackage;
+					}					
+				}
+				// Indicate the allowable event packages supported at the server:
+				response.addHeader(headerFactory.createAllowEventsHeader(allowEventsHeader));
+				
+                //In the response to an OPTIONS request, the ESC SHOULD include "PUBLISH" to the list
+				//of allowed methods in the Allow header field:
+				response.addHeader(headerFactory.createAllowHeader("PUBLISH, SUBSCRIBE, NOTIFY, OPTIONS"));
+				
+			requestEvent.getServerTransaction().sendResponse(response);			
+		}
+		catch (Exception e) {
+			logger.error("Can't send response!",e);
+		} 
 		
 	}
 	
