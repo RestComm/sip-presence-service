@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">                                                               
+<scenario name="Mobicents SIP Presence functional Tests - Publication">
+
+	<!-- publish -->
+	
+  	<send retrans="500">
+    <![CDATA[
+
+      PUBLISH sip:publisher[call_number]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: publisher[call_number] <sip:publisher[call_number]@[local_ip]>;tag=[call_number]
+      To: publisher[call_number] <sip:publisher[call_number]@[remote_ip]>
+      Call-ID: [call_id]
+      CSeq: 1 PUBLISH
+      Max-Forwards: 70
+      Expires: 3600
+      Event: presence
+      Content-Type: application/pidf+xml
+      Content-Length: [len]
+
+<?xml version="1.0" encoding="UTF-8"?>
+<presence xmlns="urn:ietf:params:xml:ns:pidf"
+	entity="sip:publisher[call_number]@[remote_ip]">
+	<tuple id="[call_number]a">
+		<status>
+        	<basic>open</basic>
+		</status>
+		<contact priority="0.8">sip:publisher[call_number]@[remote_ip]</contact>
+		<note xml:lang="en">Don't Disturb Please!</note>
+		<note xml:lang="fr">Ne derangez pas, s'il vous plait</note>
+		<timestamp>2001-10-27T16:49:29Z</timestamp>
+	</tuple>
+	<tuple id="[call_number]b">
+		<status>
+			<basic>open</basic>
+		</status>
+		<contact priority="1.0">mailto:publisher[call_number]@[remote_ip]</contact>
+	</tuple>
+	<note>I'll be in Tokyo next week</note>
+</presence>
+    ]]>
+	</send>
+
+ 	<recv response="200" rtd="true" rrs="true">
+	 	<action>
+	 		<ereg regexp=".*" search_in="hdr" header="SIP-ETag:" assign_to="etag" />
+	 	</action>	
+ 	</recv>
+	
+	<!-- modify -->
+
+	<pause milliseconds="500" />
+	
+  	<send retrans="500">
+    <![CDATA[
+
+      PUBLISH sip:publisher[call_number]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: publisher[call_number] <sip:publisher[call_number]@[local_ip]>;tag=[call_number]
+      To: publisher[call_number] <sip:publisher[call_number]@[remote_ip]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 2 PUBLISH
+      Max-Forwards: 70
+      Expires: 3600
+      Event: presence
+      SIP-If-Match: [$etag]
+      [routes]
+      Content-Type: application/pidf+xml
+      Content-Length: [len]
+
+<?xml version="1.0" encoding="UTF-8"?>
+<presence xmlns="urn:ietf:params:xml:ns:pidf"
+	entity="sip:publisher[call_number]@[remote_ip]">
+	<tuple id="[call_number]a">
+		<status>
+        	<basic>closed</basic>
+		</status>
+	</tuple>
+</presence>
+    ]]>
+	</send>
+
+ 	<recv response="200" rtd="true" rrs="true">
+	 	<action>
+	 		<ereg regexp=".*" search_in="hdr" header="SIP-ETag:" assign_to="etag" />
+	 	</action>	
+ 	</recv>
+
+	<!-- refresh -->
+
+	<pause milliseconds="500" />
+	
+  	<send retrans="500">
+    <![CDATA[
+
+      PUBLISH sip:publisher[call_number]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: publisher[call_number] <sip:publisher[call_number]@[local_ip]>;tag=[call_number]
+      To: publisher[call_number] <sip:publisher[call_number]@[remote_ip]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 3 PUBLISH
+      Max-Forwards: 70
+      Expires: 3600
+      Event: presence
+      SIP-If-Match: [$etag]
+      [routes]
+      Content-Length: 0
+      
+      ]]>
+	</send>
+
+ 	<recv response="200" rtd="true" rrs="true">
+	 	<action>
+	 		<ereg regexp=".*" search_in="hdr" header="SIP-ETag:" assign_to="etag" />
+	 	</action>	
+ 	</recv>
+ 	 	
+ 	<!-- remove -->
+	
+	<pause milliseconds="500" />
+ 	  
+	<send retrans="500">
+    <![CDATA[
+
+      PUBLISH sip:publisher[call_number]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: publisher[call_number] <sip:publisher[call_number]@[local_ip]>;tag=[call_number]
+      To: publisher[call_number] <sip:publisher[call_number]@[remote_ip]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 4 PUBLISH
+      Max-Forwards: 70
+      Expires: 0
+      Event: presence
+      SIP-If-Match: [$etag]
+      [routes]
+      Content-Length: 0
+      
+      ]]>
+	</send>
+
+ 	<recv response="200" />
+ 	
+</scenario>
