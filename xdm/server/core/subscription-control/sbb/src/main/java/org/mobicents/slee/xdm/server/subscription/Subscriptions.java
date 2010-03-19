@@ -19,12 +19,15 @@ public class Subscriptions implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private final SubscriptionKey key;
+	private final String subscriber;
+	
 	private transient Set<String> appUsages;
 	private transient Set<DocumentSelector> documentSelectors;
 	
-	public Subscriptions(SubscriptionKey key, Set<String> appUsages,
+	public Subscriptions(SubscriptionKey key, String subscriber, Set<String> appUsages,
 			Set<DocumentSelector> documentSelectors) {
 		this.key = key;
+		this.subscriber = subscriber;
 		this.appUsages = appUsages;
 		this.documentSelectors = documentSelectors;
 		filter();
@@ -45,6 +48,13 @@ public class Subscriptions implements Serializable {
 	
 	public SubscriptionKey getKey() {
 		return key;
+	}
+	
+	/**
+	 * @return the subscriber
+	 */
+	public String getSubscriber() {
+		return subscriber;
 	}
 	
 	public Set<String> getAppUsages() {

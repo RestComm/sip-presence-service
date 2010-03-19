@@ -48,6 +48,7 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 			.getLogger(PresenceSubscriptionControlSbb.class);
 
 	private static final SipPresenceServerManagement configuration = SipPresenceServerManagement.getInstance();
+	private static final PresenceSubscriptionControl presenceSubscriptionControl = new PresenceSubscriptionControl();
 	
 	/**
 	 * JAIN-SIP provider & factories
@@ -110,25 +111,25 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 			int expires, String content, String contentType,
 			String contentSubtype, boolean eventList, ServerTransaction serverTransaction) {
 		
-		new PresenceSubscriptionControl(this).isSubscriberAuthorized(
+		presenceSubscriptionControl.isSubscriberAuthorized(
 				subscriber, subscriberDisplayName, notifier, key, expires,
 				content, contentType, contentSubtype, eventList, configuration.getPresRulesAUID(),
-				configuration.getPresRulesDocumentName(),serverTransaction);
+				configuration.getPresRulesDocumentName(),serverTransaction, this);
 	}
 
 	public void removingSubscription(Subscription subscription) {
-		new PresenceSubscriptionControl(this).removingSubscription(
-				subscription, configuration.getPresRulesAUID(), configuration.getPresRulesDocumentName());
+		presenceSubscriptionControl.removingSubscription(
+				subscription, configuration.getPresRulesAUID(), configuration.getPresRulesDocumentName(),this);
 	}
 
 	public NotifyContent getNotifyContent(Subscription subscription) {
-		return new PresenceSubscriptionControl(this)
-				.getNotifyContent(subscription);
+		return presenceSubscriptionControl
+				.getNotifyContent(subscription,this);
 	}
 
 	public Object filterContentPerSubscriber(String subscriber,
 			String notifier, String eventPackage, Object unmarshalledContent) {
-		return new PresenceSubscriptionControl(this)
+		return presenceSubscriptionControl
 				.filterContentPerSubscriber(subscriber, notifier, eventPackage,
 						unmarshalledContent);
 	}
@@ -218,8 +219,8 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 	 */
 	public void getResponse(XcapUriKey key, int responseCode, String mimetype,
 			String content, String tag) {
-		new PresenceSubscriptionControl(this).getResponse(key, responseCode,
-				mimetype, content);
+		presenceSubscriptionControl.getResponse(key, responseCode,
+				mimetype, content,this);
 	}
 
 	/**
@@ -227,8 +228,8 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 	 */
 	public void documentUpdated(DocumentSelector documentSelector,
 			String oldETag, String newETag, String documentAsString) {
-		new PresenceSubscriptionControl(this).documentUpdated(documentSelector,
-				oldETag, newETag, documentAsString);
+		presenceSubscriptionControl.documentUpdated(documentSelector,
+				oldETag, newETag, documentAsString,this);
 	}
 
 	// atm only processing update per doc "granularity"
@@ -261,7 +262,7 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 	 * interface used by rules processor to get sphere for a notifier
 	 */
 	public String getSphere(String notifier) {
-		return new PresenceSubscriptionControl(this).getSphere(notifier);
+		return presenceSubscriptionControl.getSphere(notifier,this);
 	}
 
 	// --------- JAXB

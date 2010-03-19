@@ -147,37 +147,6 @@ public class Parser {
 		}		
 		return namespaces;
 	}
-	
-	public static DocumentSelector parseDocumentSelector(String documentSelector) throws ParseException {
-		
-		try {
-			// get documentName & documentParent
-			int documentNameSeparator = documentSelector.lastIndexOf("/");
-			if (documentNameSeparator != -1) {
-				String documentParent = documentSelector.substring(0,documentNameSeparator);
-				String documentName = documentSelector.substring(documentNameSeparator+1);
-				// check there is a leading '/'
-				if (documentParent.charAt(0) != '/') {
-					throw new ParseException(null);
-				} else {
-					int auidSeparator = documentParent.indexOf('/',1);
-					if (auidSeparator > 1) {
-						String auid = documentParent.substring(1,auidSeparator);
-						return new DocumentSelector(auid,documentParent.substring(auidSeparator+1),documentName);
-					}
-					else {
-						throw new ParseException(null);
-					}
-				}
-			} else {
-				throw new ParseException(null);
-			}			
-		}
-		catch (IndexOutOfBoundsException e) {
-			throw new ParseException(null);
-		}
-		
-	}
 		
 	public static NodeSelector parseNodeSelector(String nodeSelector) throws ParseException {
 				

@@ -23,10 +23,8 @@ import org.openxdm.xcap.client.appusage.resourcelists.jaxb.ResourceLists;
 import org.openxdm.xcap.common.datasource.Document;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
 import org.openxdm.xcap.common.uri.DocumentSelector;
-import org.openxdm.xcap.common.uri.NodeSelector;
 import org.openxdm.xcap.common.uri.Parser;
 import org.openxdm.xcap.common.uri.ResourceSelector;
-import org.openxdm.xcap.common.uri.TerminalSelector;
 import org.openxdm.xcap.common.xcapdiff.DocumentType;
 import org.openxdm.xcap.common.xcapdiff.ObjectFactory;
 import org.openxdm.xcap.common.xcapdiff.XcapDiff;
@@ -41,20 +39,13 @@ public class XcapDiffSubscriptionControl {
 
 	private static final String[] xcapDiffEventPackages = { "xcap-diff" };
 
-	private XcapDiffSubscriptionControlSbbInterface sbb;
-
-	public XcapDiffSubscriptionControl(
-			XcapDiffSubscriptionControlSbbInterface sbb) {
-		this.sbb = sbb;
-	}
-
 	public static String[] getEventPackages() {
 		return xcapDiffEventPackages;
 	}
 
 	private ContentTypeHeader xcapDiffContentTypeHeader = null;
 
-	public ContentTypeHeader getXcapDiffContentTypeHeader() {
+	public ContentTypeHeader getXcapDiffContentTypeHeader(XcapDiffSubscriptionControlSbbInterface sbb) {
 		if (xcapDiffContentTypeHeader == null) {
 			try {
 				xcapDiffContentTypeHeader = sbb
@@ -71,7 +62,7 @@ public class XcapDiffSubscriptionControl {
 	public void isSubscriberAuthorized(String subscriber,
 			String subscriberDisplayName, String notifier, SubscriptionKey key,
 			int expires, String content, String contentType,
-			String contentSubtype, boolean eventList, ServerTransaction serverTransaction) {
+			String contentSubtype, boolean eventList, ServerTransaction serverTransaction, XcapDiffSubscriptionControlSbbInterface sbb) {
 
 		StringReader stringReader = null;
 
@@ -87,8 +78,8 @@ public class XcapDiffSubscriptionControl {
 			for (ListType listType : object.getList()) {
 				for (Object listOrExternalOrEntry : listType
 						.getListOrExternalOrEntry()) {
-					if (listOrExternalOrEntry instanceof JAXBElement) {
-						JAXBElement jAXBElement = (JAXBElement) listOrExternalOrEntry;
+					if (listOrExternalOrEntry instanceof JAXBElement<?>) {
+						JAXBElement<?> jAXBElement = (JAXBElement<?>) listOrExternalOrEntry;
 						if (jAXBElement.getValue() instanceof EntryType) {
 							EntryType entryType = (EntryType) jAXBElement
 									.getValue();
@@ -123,13 +114,26 @@ public class XcapDiffSubscriptionControl {
 									if (logger.isInfoEnabled()) {
 										logger.info("subscribing auid " + auid);
 									}
-									appUsagesToSubscribe.add(auid);
+									// FIXME authorize and allow it in case authorization succeeds, right now forbidden this kind of subscription
+									sbb.getParentSbbCMP().newSubscriptionAuthorization(subscriber, subscriberDisplayName, notifier, key, expires, Response.FORBIDDEN, eventList, serverTransaction);
+									//appUsagesToSubscribe.add(auid);
 								} else {
 									// trying to subscribe a document or part of
 									// it
-									DocumentSelector documentSelector = Parser
-											.parseDocumentSelector(resourceSelector
+									final DocumentSelector documentSelector = DocumentSelector.valueOf(resourceSelector
 													.getDocumentSelector());
+									// FIXME add proper authorization
+									if (!documentSelector.isUserDocument()) {
+										// right now we don't support an external PS or RLS so it is secure to forbidden subscription to all global docs
+										sbb.getParentSbbCMP().newSubscriptionAuthorization(subscriber, subscriberDisplayName, notifier, key, expires, Response.FORBIDDEN, eventList, serverTransaction);
+									}
+									else {
+										if (!documentSelector.getDocumentParent().substring("users/".length()).startsWith(subscriber)) {
+											// right now, due to security, do not allow any subscription where the subscriber is different than the XUI
+											sbb.getParentSbbCMP().newSubscriptionAuthorization(subscriber, subscriberDisplayName, notifier, key, expires, Response.FORBIDDEN, eventList, serverTransaction);
+										}
+									}
+									/* TODO support subscription to element or attribute
 									NodeSelector nodeSelector = null;
 									TerminalSelector terminalSelector = null;
 									if (resourceSelector.getNodeSelector() != null) {
@@ -142,7 +146,7 @@ public class XcapDiffSubscriptionControl {
 													.parseTerminalSelector(nodeSelector
 															.getTerminalSelector());
 										}
-									}
+									}*/
 									if (logger.isInfoEnabled()) {
 										logger
 												.info("subscribing document (or part of it) "
@@ -162,7 +166,7 @@ public class XcapDiffSubscriptionControl {
 			}
 
 			// create subscriptions object
-			Subscriptions subscriptions = new Subscriptions(key,
+			Subscriptions subscriptions = new Subscriptions(key,subscriber,
 					appUsagesToSubscribe, documentsToSubscribe);
 			// get subscriptions map cmp
 			SubscriptionsMap subscriptionsMap = sbb.getSubscriptionsMap();
@@ -225,7 +229,7 @@ public class XcapDiffSubscriptionControl {
 
 	}
 
-	public void removingSubscription(Subscription subscription) {
+	public void removingSubscription(Subscription subscription,XcapDiffSubscriptionControlSbbInterface sbb) {
 
 		// get subscriptions map and remove subscription terminating
 		SubscriptionsMap subscriptionsMap = sbb.getSubscriptionsMap();
@@ -267,7 +271,7 @@ public class XcapDiffSubscriptionControl {
 		}
 	}
 
-	public NotifyContent getNotifyContent(Subscription subscription) {
+	public NotifyContent getNotifyContent(Subscription subscription,XcapDiffSubscriptionControlSbbInterface sbb) {
 		// let's gather all content this subscription
 		SubscriptionsMap subscriptionsMap = sbb.getSubscriptionsMap();
 		Subscriptions subscriptions = subscriptionsMap
@@ -333,7 +337,7 @@ public class XcapDiffSubscriptionControl {
 				xcapDiff.getDocumentOrElementOrAttribute().add(documentType);
 			}
 
-			return new NotifyContent(xcapDiff, getXcapDiffContentTypeHeader());
+			return new NotifyContent(xcapDiff, getXcapDiffContentTypeHeader(sbb));
 
 		} else {
 
@@ -347,7 +351,7 @@ public class XcapDiffSubscriptionControl {
 	}
 
 	public void documentUpdated(DocumentSelector documentSelector,
-			String oldETag, String newETag, String documentAsString) {
+			String oldETag, String newETag, String documentAsString,XcapDiffSubscriptionControlSbbInterface sbb) {
 		XcapDiff xcapDiff = null;
 		// for all subscriptions in this entity that have interest on the
 		// document
@@ -375,7 +379,9 @@ public class XcapDiffSubscriptionControl {
 				}
 				if (doNotify) {
 					// TODO check if subscriber has authorization to read
-					// document
+					// document in case it is a subscription to an app usage
+					//if (s.getAppUsages().contains(documentSelector.getAUID())) {					
+					//}
 					if (xcapDiff == null) {
 						// lazy build of xcap diff
 						xcapDiff = buildDocumentXcapDiff(documentSelector,
@@ -383,7 +389,7 @@ public class XcapDiffSubscriptionControl {
 					}
 					// tell underlying sip event framework to notify subscriber
 					sbb.getParentSbbCMP().notifySubscriber(s.getKey(),
-							xcapDiff, getXcapDiffContentTypeHeader());
+							xcapDiff, getXcapDiffContentTypeHeader(sbb));
 				}
 			}
 

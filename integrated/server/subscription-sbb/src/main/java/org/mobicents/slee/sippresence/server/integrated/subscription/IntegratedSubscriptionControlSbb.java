@@ -14,6 +14,7 @@ import javax.slee.CreateException;
 import javax.slee.RolledBackContext;
 import javax.slee.Sbb;
 import javax.slee.SbbContext;
+import javax.slee.facilities.Tracer;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -21,7 +22,6 @@ import javax.xml.bind.Unmarshaller;
 
 import net.java.slee.resource.sip.SleeSipProvider;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.publication.PublicationControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
@@ -49,8 +49,7 @@ import org.openxdm.xcap.server.slee.resource.datasource.DataSourceSbbInterface;
 public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 		IntegratedSubscriptionControlSbbInterface {
 
-	private static Logger logger = Logger
-			.getLogger(IntegratedSubscriptionControlSbb.class);
+	private static Tracer tracer;
 
 	private static final String[] eventPackages = initEventPackages();
 
@@ -75,6 +74,8 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 	
 	private static final SipPresenceServerManagement configuration = SipPresenceServerManagement.getInstance();
 
+	private static final PresenceSubscriptionControl PRESENCE_SUBSCRIPTION_CONTROL = new PresenceSubscriptionControl();
+	private static final XcapDiffSubscriptionControl XCAP_DIFF_SUBSCRIPTION_CONTROL = new XcapDiffSubscriptionControl();
 	/**
 	 * JAIN-SIP provider & factories
 	 * 
@@ -94,6 +95,9 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 
 	public void setSbbContext(SbbContext sbbContext) {
 		this.sbbContext = sbbContext;
+		if (tracer == null) {
+			tracer = sbbContext.getTracer(this.getClass().getSimpleName());
+		}
 		// retrieve factories, facilities & providers
 		try {
 			Context context = (Context) new InitialContext()
@@ -109,7 +113,7 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 			dataSourceSbbInterface = (DataSourceSbbInterface) context
 					.lookup("slee/resources/xdm/datasource/sbbrainterface");
 		} catch (NamingException e) {
-			logger.error("Can't set sbb context.", e);
+			tracer.severe("Can't set sbb context.", e);
 		}
 	}
 
@@ -149,39 +153,39 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 
 		if (contains(PresenceSubscriptionControl.getEventPackages(), key
 				.getEventPackage())) {
-			new PresenceSubscriptionControl(this).isSubscriberAuthorized(
+			PRESENCE_SUBSCRIPTION_CONTROL.isSubscriberAuthorized(
 					subscriber, subscriberDisplayName, notifier, key, expires,
 					content, contentType, contentSubtype, eventList, configuration.getPresRulesAUID(),
-					configuration.getPresRulesDocumentName(),serverTransaction);
+					configuration.getPresRulesDocumentName(),serverTransaction,this);
 		} else if (contains(XcapDiffSubscriptionControl.getEventPackages(), key
 				.getEventPackage())) {
-			new XcapDiffSubscriptionControl(this).isSubscriberAuthorized(
+			XCAP_DIFF_SUBSCRIPTION_CONTROL.isSubscriberAuthorized(
 					subscriber, subscriberDisplayName, notifier, key, expires,
-					content, contentType, contentSubtype,eventList,serverTransaction);
+					content, contentType, contentSubtype,eventList,serverTransaction,this);
 		}
 	}
 
 	public void removingSubscription(Subscription subscription) {
 		if (contains(PresenceSubscriptionControl.getEventPackages(),
 				subscription.getKey().getEventPackage())) {
-			new PresenceSubscriptionControl(this).removingSubscription(
-					subscription, configuration.getPresRulesAUID(), configuration.getPresRulesDocumentName());
+			PRESENCE_SUBSCRIPTION_CONTROL.removingSubscription(
+					subscription, configuration.getPresRulesAUID(), configuration.getPresRulesDocumentName(),this);
 		} else if (contains(XcapDiffSubscriptionControl.getEventPackages(),
 				subscription.getKey().getEventPackage())) {
-			new XcapDiffSubscriptionControl(this)
-					.removingSubscription(subscription);
+			XCAP_DIFF_SUBSCRIPTION_CONTROL
+					.removingSubscription(subscription,this);
 		}
 	}
 
 	public NotifyContent getNotifyContent(Subscription subscription) {
 		if (contains(PresenceSubscriptionControl.getEventPackages(),
 				subscription.getKey().getEventPackage())) {
-			return new PresenceSubscriptionControl(this)
-					.getNotifyContent(subscription);
+			return PRESENCE_SUBSCRIPTION_CONTROL
+					.getNotifyContent(subscription,this);
 		} else if (contains(XcapDiffSubscriptionControl.getEventPackages(),
 				subscription.getKey().getEventPackage())) {
-			return new XcapDiffSubscriptionControl(this)
-					.getNotifyContent(subscription);
+			return XCAP_DIFF_SUBSCRIPTION_CONTROL
+					.getNotifyContent(subscription,this);
 		} else {
 			return null;
 		}
@@ -191,17 +195,17 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 			String notifier, String eventPackage, Object unmarshalledContent) {
 		if (contains(PresenceSubscriptionControl.getEventPackages(),
 				eventPackage)) {
-			return new PresenceSubscriptionControl(this)
+			return PRESENCE_SUBSCRIPTION_CONTROL
 					.filterContentPerSubscriber(subscriber, notifier,
 							eventPackage, unmarshalledContent);
 		} else if (contains(XcapDiffSubscriptionControl.getEventPackages(),
 				eventPackage)) {
-			return new XcapDiffSubscriptionControl(this)
+			return XCAP_DIFF_SUBSCRIPTION_CONTROL
 					.filterContentPerSubscriber(subscriber, notifier,
 							eventPackage, unmarshalledContent);
 		} else {
-			logger
-					.warn("filterContentPerSubscriber() invoked with unknown event package");
+			tracer
+					.warning("filterContentPerSubscriber() invoked with unknown event package");
 			return null;
 		}
 	}
@@ -210,7 +214,7 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 		try {
 			return jaxbContext.createMarshaller();
 		} catch (JAXBException e) {
-			logger.error("failed to create marshaller", e);
+			tracer.severe("failed to create marshaller", e);
 			return null;
 		}
 	}
@@ -232,7 +236,7 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 				childSbb = (PublicationControlSbbLocalObject) getPublicationControlChildRelation()
 						.create();
 			} catch (Exception e) {
-				logger.error("Failed to create child sbb", e);
+				tracer.severe("Failed to create child sbb", e);
 				return null;
 			}
 			setPublicationControlChildSbbCMP(childSbb);
@@ -255,7 +259,7 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 				childSbb = (XDMClientControlSbbLocalObject) getXDMClientControlChildRelation()
 						.create();
 			} catch (Exception e) {
-				logger.error("Failed to create child sbb", e);
+				tracer.severe("Failed to create child sbb", e);
 				return null;
 			}
 			setXDMClientControlChildSbbCMP(childSbb);
@@ -271,8 +275,10 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 
 	public abstract SubscriptionsMap getSubscriptionsMap();
 
+	@SuppressWarnings("unchecked")
 	public abstract void setCombinedRules(HashMap rules);
 
+	@SuppressWarnings("unchecked")
 	public abstract HashMap getCombinedRules();
 
 	public DataSourceSbbInterface getDataSourceSbbInterface() {
@@ -287,7 +293,7 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 		try {
 			return jaxbContext.createUnmarshaller();
 		} catch (JAXBException e) {
-			logger.error("failed to create unmarshaller", e);
+			tracer.severe("failed to create unmarshaller", e);
 			return null;
 		}
 	}
@@ -299,8 +305,8 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 	 */
 	public void getResponse(XcapUriKey key, int responseCode, String mimetype,
 			String content, String tag) {
-		new PresenceSubscriptionControl(this).getResponse(key, responseCode,
-				mimetype, content);
+		PRESENCE_SUBSCRIPTION_CONTROL.getResponse(key, responseCode,
+				mimetype, content,this);
 	}
 
 	/**
@@ -308,10 +314,10 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 	 */
 	public void documentUpdated(DocumentSelector documentSelector,
 			String oldETag, String newETag, String documentAsString) {
-		new PresenceSubscriptionControl(this).documentUpdated(documentSelector,
-				oldETag, newETag, documentAsString);
-		new XcapDiffSubscriptionControl(this).documentUpdated(documentSelector,
-				oldETag, newETag, documentAsString);
+		PRESENCE_SUBSCRIPTION_CONTROL.documentUpdated(documentSelector,
+				oldETag, newETag, documentAsString,this);
+		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(documentSelector,
+				oldETag, newETag, documentAsString,this);
 	}
 
 	// atm only processing update per doc "granularity"
@@ -344,7 +350,7 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 	 * interface used by rules processor to get sphere for a notifier
 	 */
 	public String getSphere(String notifier) {
-		return new PresenceSubscriptionControl(this).getSphere(notifier);
+		return PRESENCE_SUBSCRIPTION_CONTROL.getSphere(notifier,this);
 	}
 
 	// --------- JAXB
@@ -368,7 +374,7 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 							+ ":org.openxdm.xcap.common.xcapdiff"
 							+ ":org.openxdm.xcap.client.appusage.resourcelists.jaxb");
 		} catch (JAXBException e) {
-			logger.error("failed to create jaxb context");
+			tracer.severe("failed to create jaxb context");
 			return null;
 		}
 	}

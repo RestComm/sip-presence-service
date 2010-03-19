@@ -73,8 +73,8 @@ public abstract class FlatListMakerSbb implements Sbb,
 	 * flats a tree of {@link ListType}
 	 */
 	private ArrayList<SerializableListType> addNestedLists(ArrayList<SerializableListType> lists, SerializableListType list) {
-		for (Iterator i=list.getPojo().getListOrExternalOrEntry().iterator(); i.hasNext();) {
-			JAXBElement element = (JAXBElement) i.next();
+		for (Iterator<Object> i=list.getPojo().getListOrExternalOrEntry().iterator(); i.hasNext();) {
+			JAXBElement<?> element = (JAXBElement<?>) i.next();
 			if (element.getValue() instanceof ListType) {
 				addNestedLists(lists, new SerializableListType((ListType)element.getValue()));
 				i.remove();
@@ -100,8 +100,8 @@ public abstract class FlatListMakerSbb implements Sbb,
 		 * depends on the name of the element:
 		 */
 		
-		for (Iterator i=currentListType.getPojo().getListOrExternalOrEntry().iterator(); i.hasNext();) {
-			JAXBElement element = (JAXBElement) i.next();
+		for (Iterator<Object> i=currentListType.getPojo().getListOrExternalOrEntry().iterator(); i.hasNext();) {
+			JAXBElement<?> element = (JAXBElement<?>) i.next();
 			
 			// we remove it before processing, so we never get it again
 			i.remove();
@@ -245,7 +245,7 @@ public abstract class FlatListMakerSbb implements Sbb,
 								resourceList, null);
 			}
 			
-			documentSelector = Parser.parseDocumentSelector(resourceSelector.getDocumentSelector());
+			documentSelector = DocumentSelector.valueOf(resourceSelector.getDocumentSelector());
 			if (!documentSelector.getAUID().equals("resource-lists")) {
 				logger.error("Unable to make flat list, invalid or not supported resource list uri: "+resourceList);
 				flatList.setStatus(Response.BAD_GATEWAY);

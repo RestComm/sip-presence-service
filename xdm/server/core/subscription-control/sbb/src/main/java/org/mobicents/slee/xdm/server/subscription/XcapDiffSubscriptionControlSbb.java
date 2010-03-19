@@ -49,6 +49,8 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 	private DataSourceSbbInterface dataSourceSbbInterface = null;
 	// private DataSourceActivityContextInterfaceFactory dataSourceACIF = null;
 
+	private static final XcapDiffSubscriptionControl XCAP_DIFF_SUBSCRIPTION_CONTROL = new XcapDiffSubscriptionControl();
+	
 	/**
 	 * JAIN-SIP provider & factories
 	 * 
@@ -116,27 +118,27 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 			int expires, String content, String contentType,
 			String contentSubtype, boolean eventList,ServerTransaction serverTransaction) {
 		// exposing to XcapDiffSubscriptionControl
-		new XcapDiffSubscriptionControl(this).isSubscriberAuthorized(
+		XCAP_DIFF_SUBSCRIPTION_CONTROL.isSubscriberAuthorized(
 				subscriber, subscriberDisplayName, notifier, key, expires,
-				content, contentType, contentSubtype,eventList,serverTransaction);
+				content, contentType, contentSubtype,eventList,serverTransaction, this);
 	}
 
 	public void removingSubscription(Subscription subscription) {
 		// delegate to XcapDiffSubscriptionControl
-		new XcapDiffSubscriptionControl(this)
-				.removingSubscription(subscription);
+		XCAP_DIFF_SUBSCRIPTION_CONTROL
+				.removingSubscription(subscription, this);
 	}
 
 	public NotifyContent getNotifyContent(Subscription subscription) {
 		// delegate to XcapDiffSubscriptionControl
-		return new XcapDiffSubscriptionControl(this)
-				.getNotifyContent(subscription);
+		return XCAP_DIFF_SUBSCRIPTION_CONTROL
+				.getNotifyContent(subscription, this);
 	}
 
 	public Object filterContentPerSubscriber(String subscriber,
 			String notifier, String eventPackage, Object unmarshalledContent) {
 		// delegate to XcapDiffSubscriptionControl
-		return new XcapDiffSubscriptionControl(this)
+		return XCAP_DIFF_SUBSCRIPTION_CONTROL
 				.filterContentPerSubscriber(subscriber, notifier, eventPackage,
 						unmarshalledContent);
 	}
@@ -214,8 +216,8 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 	public void documentUpdated(DocumentSelector documentSelector,
 			String oldETag, String newETag, String documentAsString) {
 		// delegate to XcapDiffSubscriptionControl
-		new XcapDiffSubscriptionControl(this).documentUpdated(documentSelector,
-				oldETag, newETag, documentAsString);
+		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(documentSelector,
+				oldETag, newETag, documentAsString, this);
 	}
 
 	public void elementUpdated(DocumentSelector documentSelector,

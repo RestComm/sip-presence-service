@@ -6,6 +6,8 @@ import java.util.HashMap;
 import javax.sip.ServerTransaction;
 import javax.sip.message.Response;
 import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.publication.pojo.ComposedPublication;
@@ -26,7 +28,6 @@ import org.openxdm.xcap.common.key.ElementUriKey;
 import org.openxdm.xcap.common.key.XcapUriKey;
 import org.openxdm.xcap.common.uri.DocumentSelector;
 import org.openxdm.xcap.common.uri.ParseException;
-import org.openxdm.xcap.common.uri.Parser;
 
 /**
  * Logic for the sip presence subscription control, which complements the SIP
@@ -39,14 +40,8 @@ public class PresenceSubscriptionControl {
 
 	private static Logger logger = Logger
 			.getLogger(PresenceSubscriptionControl.class);
+	
 	private static final String[] eventPackages = { "presence" };
-
-	private PresenceSubscriptionControlSbbInterface sbb;
-
-	public PresenceSubscriptionControl(
-			PresenceSubscriptionControlSbbInterface sbb) {
-		this.sbb = sbb;
-	}
 
 	public static String[] getEventPackages() {
 		return eventPackages;
@@ -56,7 +51,7 @@ public class PresenceSubscriptionControl {
 			String subscriberDisplayName, String notifier, SubscriptionKey key,
 			int expires, String content, String contentType,
 			String contentSubtype, boolean eventList, String presRulesAUID,
-			String presRulesDocumentName, ServerTransaction serverTransaction) {
+			String presRulesDocumentName, ServerTransaction serverTransaction, PresenceSubscriptionControlSbbInterface sbb) {
 
 		// get current combined rule from cmp
 		HashMap combinedRules = sbb.getCombinedRules();
@@ -114,7 +109,7 @@ public class PresenceSubscriptionControl {
 	}
 
 	public void removingSubscription(Subscription subscription,
-			String presRulesAUID, String presRulesDocumentName) {
+			String presRulesAUID, String presRulesDocumentName, PresenceSubscriptionControlSbbInterface sbb) {
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("removingSubscription(" + subscription + ")");
@@ -169,7 +164,7 @@ public class PresenceSubscriptionControl {
 	 * async get response from xdm client
 	 */
 	public void getResponse(XcapUriKey key, int responseCode, String mimetype,
-			String content) {
+			String content, PresenceSubscriptionControlSbbInterface sbb) {
 
 		DocumentSelector documentSelector = null;
 		if (key instanceof DocumentUriKey) {
@@ -180,7 +175,7 @@ public class PresenceSubscriptionControl {
 			documentSelector = ((ElementUriKey) key).getDocumentSelector();
 		} else {
 			try {
-				documentSelector = Parser.parseDocumentSelector(key
+				documentSelector = DocumentSelector.valueOf(key
 						.getResourceSelector().getDocumentSelector());
 			} catch (ParseException e) {
 				// won't happen
@@ -193,7 +188,7 @@ public class PresenceSubscriptionControl {
 
 		if (responseCode == 200) {
 			// just simulate a document update
-			documentUpdated(documentSelector, null, null, content);
+			documentUpdated(documentSelector, null, null, content, sbb);
 		} else {
 			// let's be friendly with clients without xcap, allow subscription
 			String notifierWithoutParams = getUser(documentSelector);
@@ -233,7 +228,7 @@ public class PresenceSubscriptionControl {
 	}
 
 	public void documentUpdated(DocumentSelector documentSelector,
-			String oldETag, String newETag, String documentAsString) {
+			String oldETag, String newETag, String documentAsString, PresenceSubscriptionControlSbbInterface sbb) {
 
 		if (!documentSelector.getAUID().equals(
 				"org.openmobilealliance.pres-rules")
@@ -246,7 +241,7 @@ public class PresenceSubscriptionControl {
 		String notifierWithoutParams = getUser(documentSelector);
 
 		// unmarshall doc
-		Ruleset ruleset = unmarshallRuleset(documentAsString);
+		final Ruleset ruleset = unmarshallRuleset(documentAsString, sbb.getUnmarshaller());
 		if (ruleset == null) {
 			logger
 					.error("rcvd ruleset update from xdm client but unmarshalling of ruleset failed, ignoring update");
@@ -288,7 +283,7 @@ public class PresenceSubscriptionControl {
 	/**
 	 * interface used by rules processor to get sphere for a notifier
 	 */
-	public String getSphere(String notifier) {
+	public String getSphere(String notifier, PresenceSubscriptionControlSbbInterface sbb) {
 
 		// get ridden of notifier uri params, if any
 		String notifierWithoutParams = notifier.split(";")[0];
@@ -337,7 +332,7 @@ public class PresenceSubscriptionControl {
 		return null;
 	}
 
-	public NotifyContent getNotifyContent(Subscription subscription) {
+	public NotifyContent getNotifyContent(Subscription subscription, PresenceSubscriptionControlSbbInterface sbb) {
 		try {
 			
 			ComposedPublication composedPublication = sbb
@@ -368,17 +363,13 @@ public class PresenceSubscriptionControl {
 		return unmarshalledContent;
 	}
 
-	private Ruleset unmarshallRuleset(String documentAsString) {
-		// unmarshall doc
-		StringReader stringReader = new StringReader(documentAsString);
+	private Ruleset unmarshallRuleset(String documentAsString, Unmarshaller unmarshaller) {
 		try {
-			return (Ruleset) sbb.getUnmarshaller().unmarshal(stringReader);
-		} catch (Exception e) {
+			return (Ruleset) unmarshaller.unmarshal(new StringReader(documentAsString));
+		} catch (JAXBException e) {
 			logger.error("unmarshalling of ruleset failed", e);
 			return null;
-		} finally {
-			stringReader.close();
-		}
+		}		
 	}
 
 	// --------- AUX

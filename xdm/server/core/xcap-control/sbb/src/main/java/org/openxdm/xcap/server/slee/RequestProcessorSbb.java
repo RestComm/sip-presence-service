@@ -172,7 +172,7 @@ public abstract class RequestProcessorSbb implements
 
 		try {
 			// parse document parent String
-			documentSelector = Parser.parseDocumentSelector(resourceSelector
+			documentSelector = DocumentSelector.valueOf(resourceSelector
 					.getDocumentSelector());
 			// get app usage from cache
 			appUsage = appUsageCache.borrow(documentSelector.getAUID());
@@ -562,8 +562,7 @@ public abstract class RequestProcessorSbb implements
 		AppUsage appUsage = null;
 		try {
 			// parse document parent String
-			DocumentSelector documentSelector = Parser
-					.parseDocumentSelector(resourceSelector
+			DocumentSelector documentSelector = DocumentSelector.valueOf(resourceSelector
 							.getDocumentSelector());
 			// get app usage from cache
 			appUsage = appUsageCache.borrow(documentSelector.getAUID());
@@ -809,7 +808,7 @@ public abstract class RequestProcessorSbb implements
 		try {
 
 			// parse document selector
-			documentSelector = Parser.parseDocumentSelector(resourceSelector
+			documentSelector = DocumentSelector.valueOf(resourceSelector
 					.getDocumentSelector());
 
 			// get app usage from cache

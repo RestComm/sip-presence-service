@@ -6,6 +6,7 @@ public class ParseException extends Exception {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	
 	private final String validParent;
 	
 	public ParseException(String validParent) {
@@ -18,6 +19,11 @@ public class ParseException extends Exception {
 		this.validParent = validParent;
 	}
 	
+	public ParseException(String validParent,Throwable cause) {
+		super(cause.getMessage(),cause);
+		this.validParent = validParent;
+	}
+		
 	public String getValidParent() {
 		return this.validParent;
 	}
