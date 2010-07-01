@@ -226,7 +226,6 @@ public abstract class InternalXDMClientControlSbb implements Sbb,
 				if (activity.getDocumentSelector().equals(
 						documentSelector.toString())) {
 					aci.detach(sbbContext.getSbbLocalObject());
-					activity.remove();
 					if (logger.isInfoEnabled()) {
 						logger.info("Unsubscribed document " + documentSelector);
 					}
@@ -262,7 +261,6 @@ public abstract class InternalXDMClientControlSbb implements Sbb,
 				AppUsageActivity activity = (AppUsageActivity) object;
 				if (activity.getAUID().equals(auid)) {
 					aci.detach(sbbContext.getSbbLocalObject());
-					activity.remove();
 					if (logger.isInfoEnabled()) {
 						logger.info("Unsubscribed app usage" + auid);
 					}

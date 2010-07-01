@@ -13,8 +13,8 @@ import javax.xml.bind.JAXBException;
 
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
-import org.mobicents.slee.sipevent.server.subscription.pojo.SubscriptionKey;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.mobicents.slee.xdm.server.ServerConfiguration;
 import org.mobicents.slee.xdm.server.XDMClientControlSbbLocalObject;
 import org.openxdm.xcap.client.appusage.resourcelists.jaxb.EntryType;

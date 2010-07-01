@@ -13,13 +13,13 @@ import javax.slee.facilities.TimerEvent;
 import javax.slee.facilities.TimerFacility;
 import javax.slee.facilities.TimerOptions;
 import javax.slee.facilities.TimerPreserveMissed;
+import javax.slee.facilities.Tracer;
 import javax.slee.nullactivity.NullActivity;
 import javax.slee.nullactivity.NullActivityContextInterfaceFactory;
 import javax.slee.nullactivity.NullActivityFactory;
 
-import org.apache.log4j.Logger;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription.Event;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription.Status;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Event;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
 import org.mobicents.slee.sippresence.client.PresenceClientControlParentSbbLocalObject;
 import org.mobicents.slee.sippresence.client.PresenceClientControlSbbLocalObject;
 
@@ -101,21 +101,20 @@ public abstract class RLSExamplePublisherSbb implements javax.slee.Sbb,
 					publisher, getDocument(publisher), contentType,
 					contentSubType, expires);
 		} catch (Exception e) {
-			log4j.error(e.getMessage(), e);
+			tracer.severe(e.getMessage(), e);
 			getParentSbbCMP().publisherNotStarted(publisher);
 		}
 	}
 	
 	public void newPublicationError(Object requestId, int error) {
-		log4j.info("error on mew publication: requestId=" + requestId
+		tracer.info("error on mew publication: requestId=" + requestId
 				+ ",error=" + error);	
 		
 		getParentSbbCMP().publisherNotStarted(getPublisher());
 	}
 	
-	public void newPublicationOk(Object requestId, String tag, int expires)
-			throws Exception {
-		log4j.info("publication ok: eTag=" + tag);
+	public void newPublicationOk(Object requestId, String tag, int expires) {
+		tracer.info("publication ok: eTag=" + tag);
 		// save etag in cmp
 		setETag(tag);
 		// let's set a periodic timer in a null activity to refresh the
@@ -141,20 +140,19 @@ public abstract class RLSExamplePublisherSbb implements javax.slee.Sbb,
 					"requestId", publisher, getETag(),
 					expires);
 		} catch (Exception e) {
-			log4j.error(e.getMessage(),e);		
+			tracer.severe(e.getMessage(),e);		
 		}
 	}
 
-	public void refreshPublicationOk(Object requestId, String tag, int expires)
-			throws Exception {
-		log4j.info("refreshed publication ok: requestId=" + requestId
+	public void refreshPublicationOk(Object requestId, String tag, int expires) {
+		tracer.info("refreshed publication ok: requestId=" + requestId
 				+ ",eTag=" + tag + ",expires=" + expires);
 		// update tag in cmp, it changes on refreshes too
 		setETag(tag);
 	}
 
 	public void refreshPublicationError(Object requestId, int error) {
-		log4j.info("erro when refreshing publication: requestId=" + requestId
+		tracer.info("erro when refreshing publication: requestId=" + requestId
 				+ ",error=" + error);
 	}
 
@@ -165,17 +163,17 @@ public abstract class RLSExamplePublisherSbb implements javax.slee.Sbb,
 		try {
 			getPresenceClientControlSbb().removePublication("requestId", getPublisher(), getETag());
 		} catch (Exception e) {
-			log4j.error(e.getMessage(),e);			
+			tracer.severe(e.getMessage(),e);			
 		}
 	}
 	
 	public void removePublicationError(Object requestId, int error) {
-		log4j.info("error wehn removing publication: requestId=" + requestId
+		tracer.info("error wehn removing publication: requestId=" + requestId
 				+ ",error=" + error);
 	}
 	
-	public void removePublicationOk(Object requestId) throws Exception {
-		log4j.info("publication removed!");		
+	public void removePublicationOk(Object requestId) {
+		tracer.info("publication removed!");		
 	}
 	
 	/* (non-Javadoc)
@@ -191,10 +189,9 @@ public abstract class RLSExamplePublisherSbb implements javax.slee.Sbb,
 	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#modifyPublicationOk(java.lang.Object, java.lang.String, int)
 	 */
 	@Override
-	public void modifyPublicationOk(Object requestId, String eTag, int expires)
-			throws Exception {
+	public void modifyPublicationOk(Object requestId, String eTag, int expires) {
 		// TODO Auto-generated method stub
-		
+
 	}
 	
 	/* (non-Javadoc)
@@ -284,6 +281,7 @@ public abstract class RLSExamplePublisherSbb implements javax.slee.Sbb,
 	public void setSbbContext(SbbContext sbbContext) {
 
 		this.sbbContext = sbbContext;
+		tracer = sbbContext.getTracer("RLSExamplePublisherSbb");
 		try {
 			Context context = (Context) new InitialContext()
 					.lookup("java:comp/env");
@@ -294,13 +292,12 @@ public abstract class RLSExamplePublisherSbb implements javax.slee.Sbb,
 			nullActivityFactory = (NullActivityFactory) context
 				.lookup("slee/nullactivity/factory");
 		} catch (Exception e) {
-			log4j.error("Unable to retrieve factories, facilities & providers",
+			tracer.severe("Unable to retrieve factories, facilities & providers",
 					e);
 		}
 	}
 
 	public void unsetSbbContext() {
-		log4j.info("unsetSbbContext()");
 		this.sbbContext = null;
 	}
 
@@ -332,7 +329,6 @@ public abstract class RLSExamplePublisherSbb implements javax.slee.Sbb,
 	public void sbbRolledBack(RolledBackContext sbbRolledBack) {
 	}
 
-	private static Logger log4j = Logger
-			.getLogger(RLSExamplePublisherSbb.class);
+	private Tracer tracer;
 
 }

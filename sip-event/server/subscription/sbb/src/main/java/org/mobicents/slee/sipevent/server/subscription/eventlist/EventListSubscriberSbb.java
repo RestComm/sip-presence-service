@@ -1,10 +1,7 @@
 package org.mobicents.slee.sipevent.server.subscription.eventlist;
 
-import java.util.Set;
-
 import gov.nist.javax.sip.Utils;
 
-import javax.persistence.EntityManager;
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
 import javax.slee.ChildRelation;
@@ -18,10 +15,10 @@ import org.mobicents.slee.sipevent.server.subscription.EventListSubscriberParent
 import org.mobicents.slee.sipevent.server.subscription.EventListSubscriber;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlSbbLocalObject;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
-import org.mobicents.slee.sipevent.server.subscription.pojo.SubscriptionKey;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription.Event;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription.Status;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Event;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
 
 /**
  * 
@@ -100,17 +97,20 @@ public abstract class EventListSubscriberSbb implements Sbb,
 		}
 	}
 	
-	public void resubscribe(Subscription subscription, FlatList flatList) {
-		resubscribe(subscription, flatList, null, flatList.getEntries().keySet(), null);
+	private static final String[] EMPTY_ARRAY = {};
+	
+	public void resubscribe(Subscription subscription, FlatList flatList) {		
+		resubscribe(subscription, flatList, null, flatList.getEntries().keySet().toArray(EMPTY_ARRAY), null);
 	}
 	
-	private void resubscribe(Subscription subscription, FlatList flatList, Set<String> newEntries, Set<String> oldEntries, Set<String> removedEntries) {
+	private void resubscribe(Subscription subscription, FlatList flatList, String[] newEntries, String[] oldEntries, String[] removedEntries) {
 		
 		if (logger.isDebugEnabled()) {
 			logger.debug("refreshing backend subscriptions for rls subscription "+subscription.getKey());
 		}
 		// version is incremented
 		subscription.incrementVersion();
+		subscription.store();
 		// prepare for a full state notification
 		setNotificationData(new NotificationData(subscription.getNotifierWithParams(),subscription.getVersion(),flatList,Utils.getInstance().generateTag(),Utils.getInstance().generateTag()));
 		// get subscription client child
@@ -171,17 +171,7 @@ public abstract class EventListSubscriberSbb implements Sbb,
 		if (subscription != null) {
 			// increment subscription version
 			subscription.incrementVersion();
-			EntityManager entityManager = subscription.getEntityManager();
-			try {
-				entityManager.flush();
-				entityManager.close();
-			}
-			catch (Exception e) {				
-				if (logger.isDebugEnabled()) {
-					logger.debug("failed to update rls subscription", e);
-				}
-				return null;
-			}
+			subscription.store();
 			if (logger.isDebugEnabled()) {
 				logger.debug("(before partial notification) flat list: "+getFlatList());
 			}
@@ -259,7 +249,6 @@ public abstract class EventListSubscriberSbb implements Sbb,
 		case Response.CONDITIONAL_REQUEST_FAILED:
 			// perhaps virtual subscription died, lets try to subscribe again
 			Subscription subscription = getSubscription(parentSbb, key, subscriber);
-			subscription.getEntityManager().close();
 			if (subscription != null) {
 				getSubscriptionClientControlSbb().subscribe(subscriber, subscription.getSubscriberDisplayName(), notifier, eventPackage, subscriptionId, subscription.getExpires(), null, null, null);
 			}

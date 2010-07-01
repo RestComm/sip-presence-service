@@ -10,8 +10,8 @@ package org.openxdm.xcap.server.slee.resource.datasource;
  */
 public class AppUsageActivity extends ActivityObject {
 
-	protected AppUsageActivity(String auid, DataSourceResourceAdaptor ra) {
-		super(auid,ra);		
+	protected AppUsageActivity(String auid) {
+		super(auid);		
 	}
 
 	public String getAUID() {

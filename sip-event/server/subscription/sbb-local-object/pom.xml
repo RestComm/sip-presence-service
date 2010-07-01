@@ -14,7 +14,7 @@
 	
 	<dependencies>
 		<dependency>
-			<artifactId>sip-event-subscription-control-pojo</artifactId>
+			<artifactId>sip-event-subscription-control-data</artifactId>
 			<groupId>${pom.groupId}</groupId>
 			<version>${pom.version}</version>
 		</dependency>

@@ -3,7 +3,7 @@
  */
 package org.mobicents.slee.sippresence.client;
 
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 
 /**
  * @author martins
@@ -18,8 +18,7 @@ public interface PresenceClientControlParent {
 	 * @param eTag
 	 * @param expires
 	 */
-	public void newPublicationOk(Object requestId, String eTag, int expires)
-			throws Exception;
+	public void newPublicationOk(Object requestId, String eTag, int expires);
 
 	/**
 	 * Ok Response about a refresh publication request.
@@ -28,8 +27,7 @@ public interface PresenceClientControlParent {
 	 * @param eTag
 	 * @param expires
 	 */
-	public void refreshPublicationOk(Object requestId, String eTag, int expires)
-			throws Exception;
+	public void refreshPublicationOk(Object requestId, String eTag, int expires);
 
 	/**
 	 * Ok Response about a modify publication request.
@@ -38,15 +36,14 @@ public interface PresenceClientControlParent {
 	 * @param eTag
 	 * @param expires
 	 */
-	public void modifyPublicationOk(Object requestId, String eTag, int expires)
-			throws Exception;
+	public void modifyPublicationOk(Object requestId, String eTag, int expires);
 
 	/**
 	 * Ok Response about a remove publication request.
 	 * 
 	 * @param requestId
 	 */
-	public void removePublicationOk(Object requestId) throws Exception;
+	public void removePublicationOk(Object requestId);
 
 	/**
 	 * Error Response about a new publication request.

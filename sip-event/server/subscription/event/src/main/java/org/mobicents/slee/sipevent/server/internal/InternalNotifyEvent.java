@@ -1,8 +1,7 @@
 package org.mobicents.slee.sipevent.server.internal;
 
-import java.util.UUID;
-
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
+import org.mobicents.sipevent.server.subscription.util.AbstractEvent;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 
 /**
  * Internal event that is fired on a internal subscription aci, so we can use
@@ -11,9 +10,7 @@ import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
  * @author martins
  * 
  */
-public class InternalNotifyEvent {
-
-	private final String eventId = UUID.randomUUID().toString();
+public class InternalNotifyEvent extends AbstractEvent {
 
 	private final String subscriber;
 	private final String notifier;
@@ -32,6 +29,7 @@ public class InternalNotifyEvent {
 			Subscription.Event terminationReason,
 			Subscription.Status subscriptionStatus, String content,
 			String contentType, String contentSubtype) {
+		super();
 		this.subscriber = subscriber;
 		this.notifier = notifier;
 		this.eventPackage = eventPackage;
@@ -77,20 +75,6 @@ public class InternalNotifyEvent {
 
 	public Subscription.Status getSubscriptionStatus() {
 		return subscriptionStatus;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj != null && obj.getClass() == this.getClass()) {
-			return ((InternalNotifyEvent) obj).eventId.equals(this.eventId);
-		} else {
-			return false;
-		}
-	}
-
-	@Override
-	public int hashCode() {
-		return eventId.hashCode();
 	}
 
 	private String toString = null;

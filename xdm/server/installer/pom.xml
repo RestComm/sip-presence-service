@@ -34,7 +34,7 @@
 				<!-- note: deploy order must be kept-->
 
 				<libs.dir.name>1-libs</libs.dir.name>
-				<jpa.dir.name>2-jpa</jpa.dir.name>
+				<data.dir.name>2-data</data.dir.name>
 				<beans.dir.name>3-beans</beans.dir.name>
 				<slee.dir.name>4-slee</slee.dir.name>
 			</properties>
@@ -133,28 +133,28 @@
 											<artifactId>xdms-core-datasource-pu</artifactId>
 											<version>${pom.version}</version>
 											<overWrite>true</overWrite>
-											<outputDirectory>${deploy.dir}/${jpa.dir.name}</outputDirectory>
+											<outputDirectory>${deploy.dir}/${data.dir.name}</outputDirectory>
 										</artifactItem>
 										<artifactItem>
 											<groupId>org.mobicents.slee.enabler.userprofile</groupId>
 											<artifactId>user-profile-pu</artifactId>
 											<version>${pom.version}</version>
 											<overWrite>true</overWrite>
-											<outputDirectory>${deploy.dir}/${jpa.dir.name}</outputDirectory>
+											<outputDirectory>${deploy.dir}/${data.dir.name}</outputDirectory>
 										</artifactItem>
 										<artifactItem>
 											<groupId>org.mobicents.servers.sipevent</groupId>
-											<artifactId>sip-event-publication-control-pojo</artifactId>
+											<artifactId>sip-event-publication-control-data</artifactId>
 											<version>${pom.version}</version>
 											<overWrite>true</overWrite>
-											<outputDirectory>${deploy.dir}/${jpa.dir.name}</outputDirectory>
+											<outputDirectory>${deploy.dir}/${data.dir.name}</outputDirectory>
 										</artifactItem>
 										<artifactItem>
 											<groupId>org.mobicents.servers.sipevent</groupId>
-											<artifactId>sip-event-subscription-control-pojo</artifactId>
+											<artifactId>sip-event-subscription-control-data</artifactId>
 											<version>${pom.version}</version>
 											<overWrite>true</overWrite>
-											<outputDirectory>${deploy.dir}/${jpa.dir.name}</outputDirectory>
+											<outputDirectory>${deploy.dir}/${data.dir.name}</outputDirectory>
 										</artifactItem>
 
 										<artifactItem>

@@ -27,17 +27,8 @@
         	<basic>open</basic>
 		</status>
 		<contact priority="0.8">sip:publisher[call_number]@[remote_ip]</contact>
-		<note xml:lang="en">Don't Disturb Please!</note>
-		<note xml:lang="fr">Ne derangez pas, s'il vous plait</note>
 		<timestamp>2001-10-27T16:49:29Z</timestamp>
 	</tuple>
-	<tuple id="[call_number]b">
-		<status>
-			<basic>open</basic>
-		</status>
-		<contact priority="1.0">mailto:publisher[call_number]@[remote_ip]</contact>
-	</tuple>
-	<note>I'll be in Tokyo next week</note>
 </presence>
     ]]>
 	</send>
@@ -50,7 +41,7 @@
 	
 	<!-- modify -->
 
-	<pause milliseconds="500" />
+	<pause milliseconds="20000" />
 	
   	<send retrans="500">
     <![CDATA[
@@ -89,7 +80,7 @@
 
 	<!-- refresh -->
 
-	<pause milliseconds="500" />
+	<pause milliseconds="20000" />
 	
   	<send retrans="500">
     <![CDATA[
@@ -118,7 +109,7 @@
  	 	
  	<!-- remove -->
 	
-	<pause milliseconds="500" />
+	<pause milliseconds="20000" />
  	  
 	<send retrans="500">
     <![CDATA[
@@ -140,5 +131,7 @@
 	</send>
 
  	<recv response="200" />
+ 	
+ 	<pause milliseconds="30000" />
  	
 </scenario>

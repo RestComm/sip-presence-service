@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.text.ParseException;
 
-import javax.persistence.EntityManager;
 import javax.sip.header.ContentTypeHeader;
 import javax.slee.ActivityContextInterface;
 import javax.xml.bind.JAXBException;
@@ -13,7 +12,8 @@ import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
 
 /**
  * Handles the notification of a SIP subscriber
@@ -33,7 +33,7 @@ public class InternalSubscriberNotificationHandler {
 		this.internalSubscriptionHandler = sbb;
 	}
 
-	public void notifyInternalSubscriber(EntityManager entityManager,
+	public void notifyInternalSubscriber(SubscriptionControlDataSource dataSource,
 			Subscription subscription, ActivityContextInterface aci,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 		
@@ -44,16 +44,16 @@ public class InternalSubscriberNotificationHandler {
 		}
 			
 		if (notifyContent != null) {
-			notifyInternalSubscriber(entityManager, subscription, notifyContent
+			notifyInternalSubscriber(dataSource,subscription, notifyContent
 					.getContent(), notifyContent.getContentTypeHeader(), childSbb);
 		}
 		else {
-			notifyInternalSubscriber(entityManager, subscription, null, null, childSbb);
+			notifyInternalSubscriber(dataSource,subscription, null, null, childSbb);
 		}
 		
 	}
 
-	public void notifyInternalSubscriber(EntityManager entityManager,
+	public void notifyInternalSubscriber(
 			Subscription subscription, String content,
 			ContentTypeHeader contentTypeHeader,
 			ActivityContextInterface subscriptionACI) {
@@ -78,7 +78,7 @@ public class InternalSubscriberNotificationHandler {
 			InternalNotifyEvent internalNotifyEvent = new InternalNotifyEvent(
 				subscription.getSubscriber(), subscription.getNotifier(),
 				subscription.getKey().getEventPackage(), subscription.getKey()
-						.getRealEventId(), lastEvent,
+						.getEventId(), lastEvent,
 				status, content, contentType, contentSubtype);
 
 		internalSubscriptionHandler.sbb.fireInternalNotifyEvent(
@@ -89,7 +89,7 @@ public class InternalSubscriberNotificationHandler {
 		}
 	}
 
-	public void notifyInternalSubscriber(EntityManager entityManager,
+	public void notifyInternalSubscriber(SubscriptionControlDataSource dataSource,
 			Subscription subscription, Object content,
 			ContentTypeHeader contentTypeHeader,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
@@ -101,13 +101,13 @@ public class InternalSubscriberNotificationHandler {
 							subscription.getKey().toString());
 			if (aci != null) {
 				if (!subscription.getResourceList()) {
-					notifyInternalSubscriber(entityManager, subscription,
+					notifyInternalSubscriber(subscription,
 							(content != null ? getFilteredNotifyContent(subscription, content,
 									childSbb) : null), contentTypeHeader, aci);
 				}
 				else {
 					// resource list subscription, no filtering
-					notifyInternalSubscriber(entityManager, subscription,
+					notifyInternalSubscriber(subscription,
 							(content != null ? (String)content : null), contentTypeHeader, aci);
 				}
 			} else {
@@ -115,8 +115,8 @@ public class InternalSubscriberNotificationHandler {
 				logger.warn("Unable to find subscription aci to notify "
 						+ subscription.getKey()
 						+ ". Removing subscription data");
-				internalSubscriptionHandler.sbb.removeSubscriptionData(
-						entityManager, subscription, null, null, childSbb);
+				internalSubscriptionHandler.sbb.removeSubscriptionData(dataSource,
+						subscription, null, null, childSbb);
 			}
 
 		} catch (Exception e) {

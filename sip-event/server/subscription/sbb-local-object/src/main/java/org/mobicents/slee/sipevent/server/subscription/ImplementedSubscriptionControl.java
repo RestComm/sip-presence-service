@@ -6,8 +6,8 @@ package org.mobicents.slee.sipevent.server.subscription;
 import javax.sip.ServerTransaction;
 import javax.xml.bind.Marshaller;
 
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
-import org.mobicents.slee.sipevent.server.subscription.pojo.SubscriptionKey;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 
 /**
  * @author martins

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">                                                               
+<scenario name="Mobicents SIP Presence Internal Publisher Subcriber">
+
+  	<send retrans="2000">
+    <![CDATA[
+
+      SUBSCRIBE sip:subscriber[call_number]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: subscriber[call_number] <sip:subscriber[call_number]@[local_ip]>;tag=[call_number]
+      To: subscriber <sip:subscriber[call_number]@[remote_ip]>
+      Call-ID: [call_id]
+      CSeq: 1 SUBSCRIBE
+      Contact: sip:subscriber[call_number]@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Expires: 3600
+      Event: presence.winfo
+      Accept: application/watcherinfo+xml
+      Content-Length: 0
+
+    ]]>
+	</send>
+
+ 	<recv response="200" rtd="true" rrs="true" />
+
+  	<recv request="NOTIFY" />
+
+	<send>
+	<![CDATA[
+      
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      [last_Contact:]
+      [last_Record-Route:]
+      [routes]
+      Max-Forwards: 70
+      Content-Length: 0
+      
+	]]>
+	</send>
+	
+<send retrans="2000">
+    <![CDATA[
+
+      SUBSCRIBE sip:subscriber[call_number]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: subscriber[call_number] <sip:subscriber[call_number]@[local_ip]>;tag=[call_number]
+      To: subscriber <sip:subscriber[call_number]@[remote_ip]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 2 SUBSCRIBE
+      Contact: sip:subscriber[call_number]@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Expires: 3600
+      Event: presence.winfo
+      Accept: application/watcherinfo+xml
+      Content-Length: 0
+
+    ]]>
+	</send>
+
+	<recv response="200" />
+
+  	<recv request="NOTIFY" />
+
+	<send>
+	<![CDATA[
+      
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      [last_Contact:]
+      [last_Record-Route:]
+      [routes]
+      Max-Forwards: 70
+      Content-Length: 0
+      
+	]]>
+	</send>
+	
+	<send retrans="2000">
+    <![CDATA[
+
+      SUBSCRIBE sip:subscriber[call_number]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: subscriber[call_number] <sip:subscriber[call_number]@[local_ip]>;tag=[call_number]
+      To: subscriber <sip:subscriber[call_number]@[remote_ip]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 3 SUBSCRIBE
+      Contact: sip:subscriber[call_number]@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Expires: 0
+      Event: presence.winfo
+      Accept: application/watcherinfo+xml
+      Content-Length: 0
+
+    ]]>
+	</send>
+
+	<recv response="200" />
+
+  	<recv request="NOTIFY" />
+
+	<send>
+	<![CDATA[
+      
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      [last_Contact:]
+      [last_Record-Route:]
+      [routes]
+      Max-Forwards: 70
+      Content-Length: 0
+      
+	]]>
+	</send>
+	
+</scenario>

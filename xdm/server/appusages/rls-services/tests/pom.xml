@@ -13,7 +13,7 @@
 		<dependency>
 			<artifactId>xcap-client-api</artifactId>
 			<groupId>org.mobicents.servers.sippresence</groupId>
-			<version>${pom.version}</version>
+			<version>1.0.0.BETA5</version>
 		</dependency>
 		<dependency>
 			<artifactId>xdms-appusages-rls-services-sbb</artifactId>

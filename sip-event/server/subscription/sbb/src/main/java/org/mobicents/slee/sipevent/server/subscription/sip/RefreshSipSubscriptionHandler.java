@@ -1,6 +1,5 @@
 package org.mobicents.slee.sipevent.server.subscription.sip;
 
-import javax.persistence.EntityManager;
 import javax.sip.RequestEvent;
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
@@ -10,7 +9,8 @@ import net.java.slee.resource.sip.DialogActivity;
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
 
 /**
  * Handles the refresh of a SIP subscription
@@ -43,7 +43,7 @@ public class RefreshSipSubscriptionHandler {
 	 */
 	public void refreshSipSubscription(RequestEvent event,
 			ActivityContextInterface aci, int expires,
-			Subscription subscription, EntityManager entityManager,
+			Subscription subscription, SubscriptionControlDataSource dataSource,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 
 		// cancel actual timer
@@ -69,7 +69,7 @@ public class RefreshSipSubscriptionHandler {
 			// notify subscriber
 			try {
 				sipSubscriptionHandler.getSipSubscriberNotificationHandler()
-				.createAndSendNotify(entityManager, subscription,
+				.createAndSendNotify(dataSource, subscription,
 						(DialogActivity) aci.getActivity(), childSbb);
 			} catch (Exception e) {
 				logger.error("failed to notify subscriber", e);
@@ -77,8 +77,7 @@ public class RefreshSipSubscriptionHandler {
 		}
 
 		// set new timer
-		sipSubscriptionHandler.sbb.setSubscriptionTimerAndPersistSubscription(
-				entityManager, subscription, expires + 1, aci);
+		sipSubscriptionHandler.sbb.setSubscriptionTimerAndPersistSubscription(subscription, expires + 1, aci);
 
 		if (logger.isInfoEnabled()) {
 			logger.info("Refreshed " + subscription + " for " + expires

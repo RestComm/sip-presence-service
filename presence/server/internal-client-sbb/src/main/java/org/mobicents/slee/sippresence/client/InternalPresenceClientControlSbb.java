@@ -9,12 +9,12 @@ import javax.slee.Sbb;
 import javax.slee.SbbContext;
 import javax.slee.facilities.Tracer;
 
-import org.mobicents.slee.sipevent.server.publication.PublicationClientControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.publication.PublicationClientControlSbbLocalObject;
+import org.mobicents.slee.sipevent.server.publication.Result;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlSbbLocalObject;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription.Event;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription.Status;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Event;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
 
 public abstract class InternalPresenceClientControlSbb implements Sbb,InternalPresenceClientControl {
 
@@ -51,10 +51,16 @@ public abstract class InternalPresenceClientControlSbb implements Sbb,InternalPr
 			String document, String contentType, String contentSubType,
 			int expires) {
 
-		PublicationClientControlSbbLocalObject childSbb = getPublicationClientControlSbbLocalObject();
+		final PublicationClientControlSbbLocalObject childSbb = getPublicationClientControlSbbLocalObject();
 		if (childSbb != null) {
-			childSbb.newPublication(requestId, entity, "presence", document,
+			final Result result = childSbb.newPublication(entity, "presence", document,
 					contentType, contentSubType, expires);
+			if (result.getStatusCode() < 300) {
+				getParentSbbCMP().newPublicationOk(requestId, result.getETag(), result.getExpires());
+			}
+			else {
+				getParentSbbCMP().newPublicationError(requestId, result.getStatusCode());
+			}
 		} else {
 			getParentSbbCMP().newPublicationError(requestId,
 					Response.SERVER_INTERNAL_ERROR);
@@ -69,10 +75,16 @@ public abstract class InternalPresenceClientControlSbb implements Sbb,InternalPr
 	public void refreshPublication(Object requestId, String entity,
 			String eTag, int expires) {
 
-		PublicationClientControlSbbLocalObject childSbb = getPublicationClientControlSbbLocalObject();
+		final PublicationClientControlSbbLocalObject childSbb = getPublicationClientControlSbbLocalObject();
 		if (childSbb != null) {
-			childSbb.refreshPublication(requestId, entity, "presence", eTag,
+			final Result result = childSbb.refreshPublication(entity, "presence", eTag,
 					expires);
+			if (result.getStatusCode() < 300) {
+				getParentSbbCMP().refreshPublicationOk(requestId, result.getETag(), result.getExpires());
+			}
+			else {
+				getParentSbbCMP().refreshPublicationError(requestId, result.getStatusCode());
+			}
 		} else {
 			getParentSbbCMP().refreshPublicationError(requestId,
 					Response.SERVER_INTERNAL_ERROR);
@@ -88,10 +100,16 @@ public abstract class InternalPresenceClientControlSbb implements Sbb,InternalPr
 			String document, String contentType, String contentSubType,
 			int expires) {
 
-		PublicationClientControlSbbLocalObject childSbb = getPublicationClientControlSbbLocalObject();
+		final PublicationClientControlSbbLocalObject childSbb = getPublicationClientControlSbbLocalObject();
 		if (childSbb != null) {
-			childSbb.modifyPublication(requestId, entity, "presence", eTag,
+			final Result result = childSbb.modifyPublication(entity, "presence", eTag,
 					document, contentType, contentSubType, expires);
+			if (result.getStatusCode() < 300) {
+				getParentSbbCMP().modifyPublicationOk(requestId, result.getETag(), result.getExpires());
+			}
+			else {
+				getParentSbbCMP().modifyPublicationError(requestId, result.getStatusCode());
+			}
 		} else {
 			getParentSbbCMP().modifyPublicationError(requestId,
 					Response.SERVER_INTERNAL_ERROR);
@@ -107,7 +125,14 @@ public abstract class InternalPresenceClientControlSbb implements Sbb,InternalPr
 
 		PublicationClientControlSbbLocalObject childSbb = getPublicationClientControlSbbLocalObject();
 		if (childSbb != null) {
-			childSbb.removePublication(requestId, entity, "presence", eTag);
+			
+			final int result = childSbb.removePublication(entity, "presence", eTag);
+			if (result < 300) {
+				getParentSbbCMP().removePublicationOk(requestId);
+			}
+			else {
+				getParentSbbCMP().removePublicationError(requestId, result);
+			}
 		} else {
 			getParentSbbCMP().removePublicationError(requestId,
 					Response.SERVER_INTERNAL_ERROR);
@@ -174,84 +199,6 @@ public abstract class InternalPresenceClientControlSbb implements Sbb,InternalPr
 
 	}
 	
-	// Implementation of PublicationClientControlParentSbbLocalObject :
-	// all we need to do is forward the requests to the parent sbb
-	
-	/*
-	 * (non-Javadoc)
-	 * @see org.mobicents.slee.sipevent.server.publication.PublicationClientControlParent#newPublicationOk(java.lang.Object, java.lang.String, int)
-	 */
-	public void newPublicationOk(Object requestId, String eTag, int expires)
-			throws Exception {
-
-		getParentSbbCMP().newPublicationOk(requestId, eTag, expires);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.mobicents.slee.sipevent.server.publication.PublicationClientControlParent#newPublicationError(java.lang.Object, int)
-	 */
-	public void newPublicationError(Object requestId, int error) {
-
-		getParentSbbCMP().newPublicationError(requestId, error);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.mobicents.slee.sipevent.server.publication.PublicationClientControlParent#refreshPublicationOk(java.lang.Object, java.lang.String, int)
-	 */
-	public void refreshPublicationOk(Object requestId, String eTag, int expires)
-			throws Exception {
-
-		getParentSbbCMP().refreshPublicationOk(requestId, eTag, expires);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.mobicents.slee.sipevent.server.publication.PublicationClientControlParent#refreshPublicationError(java.lang.Object, int)
-	 */
-	public void refreshPublicationError(Object requestId, int error) {
-
-		getParentSbbCMP().refreshPublicationError(requestId, error);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.mobicents.slee.sipevent.server.publication.PublicationClientControlParent#modifyPublicationOk(java.lang.Object, java.lang.String, int)
-	 */
-	public void modifyPublicationOk(Object requestId, String eTag, int expires)
-			throws Exception {
-
-		getParentSbbCMP().modifyPublicationOk(requestId, eTag, expires);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.mobicents.slee.sipevent.server.publication.PublicationClientControlParent#modifyPublicationError(java.lang.Object, int)
-	 */
-	public void modifyPublicationError(Object requestId, int error) {
-
-		getParentSbbCMP().modifyPublicationError(requestId, error);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.mobicents.slee.sipevent.server.publication.PublicationClientControlParent#removePublicationOk(java.lang.Object)
-	 */
-	public void removePublicationOk(Object requestId) throws Exception {
-
-		getParentSbbCMP().removePublicationOk(requestId);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.mobicents.slee.sipevent.server.publication.PublicationClientControlParent#removePublicationError(java.lang.Object, int)
-	 */
-	public void removePublicationError(Object requestId, int error) {
-
-		getParentSbbCMP().removePublicationError(requestId, error);
-	}
-
 	// Implementation of SubscriptionClientControlParentSbbLocalObject :
 	// all we need to do is forward the requests to the parent sbb
 
@@ -361,9 +308,6 @@ public abstract class InternalPresenceClientControlSbb implements Sbb,InternalPr
 				return null;
 			}
 			setPublicationClientControlChildSbbCMP(childSbb);
-			childSbb
-					.setParentSbb((PublicationClientControlParentSbbLocalObject) this.sbbContext
-							.getSbbLocalObject());
 		}
 		return childSbb;
 	}

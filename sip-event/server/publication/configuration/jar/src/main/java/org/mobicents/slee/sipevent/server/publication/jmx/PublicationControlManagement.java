@@ -1,5 +1,7 @@
 package org.mobicents.slee.sipevent.server.publication.jmx;
 
+import org.mobicents.slee.sipevent.server.publication.data.PublicationControlDataSource;
+
 public class PublicationControlManagement implements PublicationControlManagementMBean {
 	
 	private int defaultExpires = 3600;
@@ -7,7 +9,9 @@ public class PublicationControlManagement implements PublicationControlManagemen
 	private int minExpires = 60;
 	private String contactAddressDisplayName = "Mobicents SIP Event Server";
 	private String pChargingVectorHeaderTerminatingIOI = "mobicents.org"; 
-
+	private boolean useAlternativeValueForExpiredPublication;
+	private PublicationControlDataSource dataSource;
+	
 	private static final PublicationControlManagement INSTANCE = new PublicationControlManagement();
 	
 	public static PublicationControlManagement getInstance() {
@@ -56,5 +60,31 @@ public class PublicationControlManagement implements PublicationControlManagemen
 	public void setPChargingVectorHeaderTerminatingIOI(
 			String pChargingVectorHeaderTerminatingIOI) {
 		this.pChargingVectorHeaderTerminatingIOI = pChargingVectorHeaderTerminatingIOI;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.slee.sipevent.server.publication.jmx.PublicationControlManagementMBean#setUseAlternativeValueForExpiredPublication(boolean)
+	 */
+	@Override
+	public void setUseAlternativeValueForExpiredPublication(
+			boolean value) {
+		this.useAlternativeValueForExpiredPublication = value;
+	}
+	
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sipevent.server.publication.jmx.PublicationControlManagementMBean#isUseAlternativeValueForExpiredPublication()
+	 */
+	@Override
+	public boolean isUseAlternativeValueForExpiredPublication() {
+		return useAlternativeValueForExpiredPublication;
+	}
+
+	public void setDataSource(PublicationControlDataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+	
+	public PublicationControlDataSource getDataSource() {
+		return dataSource;
 	}
 }

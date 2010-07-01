@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.mobicents.slee.sipevent.server.subscription.pojo.SubscriptionKey;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.openxdm.xcap.common.uri.DocumentSelector;
 
 public class Subscriptions implements Serializable {

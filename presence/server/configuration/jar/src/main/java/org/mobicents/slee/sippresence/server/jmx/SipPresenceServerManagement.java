@@ -11,6 +11,7 @@ public class SipPresenceServerManagement implements SipPresenceServerManagementM
 
 	private String presRulesAUID;
 	private String presRulesDocumentName;
+	private String jaxbPackageNames;
 	
 	private static SipPresenceServerManagement INSTANCE = new SipPresenceServerManagement();
 	
@@ -59,4 +60,21 @@ public class SipPresenceServerManagement implements SipPresenceServerManagementM
 		this.presRulesDocumentName = documentName;
 	}
 
+	/**
+	 * Retrieves the package names for jaxb pojos, to be used when (un)marshalling presence content.
+	 * @return
+	 */
+	public String getJaxbPackageNames() {
+		return jaxbPackageNames;
+	}
+
+	/**
+	 * Sets the package names (separated by ':' char) for jaxb pojos, to be used when (un)marshalling
+	 * presence content. All whitespaces will be removed.
+	 * 
+	 * @param packageNames
+	 */
+	public void setJaxbPackageNames(String packageNames) {
+		this.jaxbPackageNames = packageNames.replaceAll("\\s","");
+	}
 }

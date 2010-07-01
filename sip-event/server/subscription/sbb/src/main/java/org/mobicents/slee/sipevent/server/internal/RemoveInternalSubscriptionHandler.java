@@ -1,15 +1,15 @@
 package org.mobicents.slee.sipevent.server.internal;
 
-import javax.persistence.EntityManager;
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
 
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
-import org.mobicents.slee.sipevent.server.subscription.pojo.SubscriptionKey;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription.Status;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
 
 /**
  * Handles the removal of a SIP subscription
@@ -31,19 +31,18 @@ public class RemoveInternalSubscriptionHandler {
 
 	public void removeInternalSubscription(String subscriber, String notifier,
 			String eventPackage, String subscriptionId,
-			EntityManager entityManager,
+			SubscriptionControlDataSource dataSource,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 
 		SubscriptionControlSbb sbb = internalSubscriptionHandler.sbb;
 
 		// create subscription key
 		SubscriptionKey subscriptionKey = new SubscriptionKey(
-				SubscriptionKey.NO_CALL_ID, SubscriptionKey.NO_REMOTE_TAG,
+				SubscriptionKey.NO_DIALOG_ID,
 				eventPackage, subscriptionId);
 
 		// find subscription
-		Subscription subscription = entityManager.find(Subscription.class,
-				subscriptionKey);
+		Subscription subscription = dataSource.get(subscriptionKey);
 
 		if (subscription == null) {
 			// subscription does not exists
@@ -73,12 +72,12 @@ public class RemoveInternalSubscriptionHandler {
 			internalSubscriptionHandler.sbb.getEventListControlChildSbb().removeSubscription(subscription);
 		}
 		
-		removeInternalSubscription(aci, subscription, entityManager, childSbb);
+		removeInternalSubscription(aci, subscription, dataSource, childSbb);
 		
 	}
 
 	public void removeInternalSubscription(ActivityContextInterface aci,
-			Subscription subscription, EntityManager entityManager,
+			Subscription subscription, SubscriptionControlDataSource dataSource,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 
 		// cancel timer
@@ -93,13 +92,13 @@ public class RemoveInternalSubscriptionHandler {
 
 		// notify subscriber
 		internalSubscriptionHandler.getInternalSubscriberNotificationHandler()
-		.notifyInternalSubscriber(entityManager, subscription, aci,
+		.notifyInternalSubscriber(dataSource, subscription, aci,
 				childSbb);
 
 		// notify winfo subscription(s)
 		internalSubscriptionHandler.sbb
 				.getWInfoSubscriptionHandler()
-				.notifyWinfoSubscriptions(entityManager, subscription, childSbb);
+				.notifyWinfoSubscriptions(dataSource, subscription, childSbb);
 
 		// check resulting subscription state
 		if (subscription.getStatus().equals(Subscription.Status.terminated)) {
@@ -108,7 +107,7 @@ public class RemoveInternalSubscriptionHandler {
 			}
 			// remove subscription data
 			internalSubscriptionHandler.sbb.removeSubscriptionData(
-					entityManager, subscription, null, aci, childSbb);
+					dataSource, subscription, null, aci, childSbb);
 		} else if (subscription.getStatus().equals(Subscription.Status.waiting)) {
 			if (logger.isInfoEnabled()) {
 				logger.info("Status changed for " + subscription);
@@ -121,8 +120,7 @@ public class RemoveInternalSubscriptionHandler {
 			subscription.refresh(defaultWaitingExpires);
 			// set waiting timer
 			internalSubscriptionHandler.sbb
-					.setSubscriptionTimerAndPersistSubscription(entityManager,
-							subscription, defaultWaitingExpires + 1, aci);
+					.setSubscriptionTimerAndPersistSubscription(subscription, defaultWaitingExpires + 1, aci);
 		}
 
 	}

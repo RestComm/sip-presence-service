@@ -25,8 +25,8 @@ import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.publication.PublicationControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
-import org.mobicents.slee.sipevent.server.subscription.pojo.SubscriptionKey;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.mobicents.slee.sippresence.server.jmx.SipPresenceServerManagement;
 import org.mobicents.slee.xdm.server.XDMClientControlParentSbbLocalObject;
 import org.mobicents.slee.xdm.server.XDMClientControlSbbLocalObject;
@@ -275,14 +275,7 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 	private static JAXBContext initJAXBContext() {
 		try {
 			return JAXBContext
-					.newInstance("org.mobicents.slee.sippresence.pojo.pidf"
-							+ ":org.mobicents.slee.sippresence.pojo.rpid"
-							+ ":org.mobicents.slee.sippresence.pojo.datamodel"
-							+ ":org.mobicents.slee.sippresence.pojo.commonschema"
-							+ ":org.mobicents.slee.sippresence.pojo.pidf.oma"
-							+ ":org.openxdm.xcap.client.appusage.presrules.jaxb.commonpolicy"
-							+ ":org.openxdm.xcap.client.appusage.presrules.jaxb"
-							+ ":org.openxdm.xcap.client.appusage.omapresrules.jaxb");
+					.newInstance(configuration.getJaxbPackageNames());
 		} catch (JAXBException e) {
 			logger.error("failed to create jaxb context");
 			return null;

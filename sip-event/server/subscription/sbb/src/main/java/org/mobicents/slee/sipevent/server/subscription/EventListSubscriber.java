@@ -5,9 +5,9 @@ package org.mobicents.slee.sipevent.server.subscription;
 
 import javax.slee.ActivityContextInterface;
 
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.mobicents.slee.sipevent.server.subscription.eventlist.FlatList;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
-import org.mobicents.slee.sipevent.server.subscription.pojo.SubscriptionKey;
 
 /**
  * @author martins

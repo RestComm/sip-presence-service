@@ -13,7 +13,7 @@
 	<parent>
 		<artifactId>mobicents-parent</artifactId>
 		<groupId>org.mobicents</groupId>
-		<version>2.5-SNAPSHOT</version>
+		<version>2.7</version>
 	</parent>
 		
 	<artifactId>sip-presence-parent</artifactId>
@@ -29,14 +29,14 @@
 		 
 		<module>user-profile</module>
 		
-		<module>sip-event/server/publication/pojo</module>
 		<module>sip-event/client/publication</module>
+		<module>sip-event/server/publication/data</module>
 		<module>sip-event/server/publication/configuration</module>
 		<module>sip-event/server/publication/sbb-local-object</module>
 		<module>sip-event/server/publication/library</module>
 		<module>sip-event/server/publication/sbb</module>
 	
-		<module>sip-event/server/subscription/pojo</module>
+		<module>sip-event/server/subscription/data</module>
 		<module>sip-event/client/subscription</module>
 		<module>sip-event/server/subscription/configuration</module>
 		<module>sip-event/server/subscription/event</module>
@@ -82,41 +82,45 @@
 		<sipevent.server.minExpires>60</sipevent.server.minExpires>
 		<sipevent.server.contactAddressDisplayName>Mobicents SIP Event Server</sipevent.server.contactAddressDisplayName>
 		<sipevent.server.PChargingVectorHeaderTerminatingIOI>mobicents.org</sipevent.server.PChargingVectorHeaderTerminatingIOI>
+		<sipevent.server.publication.useAlternativeValueForExpiredPublication>true</sipevent.server.publication.useAlternativeValueForExpiredPublication>
+		
 		<sipevent.server.subscription.defaultWaitingExpires>86400</sipevent.server.subscription.defaultWaitingExpires>
 		<sipevent.server.subscription.maxForwards>70</sipevent.server.subscription.maxForwards>
 		<sipevent.server.subscription.eventListSupportOn>true</sipevent.server.subscription.eventListSupportOn>
-		      
-		<!-- OTHER MOBICENTS COMPONENTS VERSIONS -->
-		<mobicents.servers.jainslee.version>2.0.0.BETA2</mobicents.servers.jainslee.version>
-		<mobicents.tools.mavenplugin.du.version>2.0.0.BETA3</mobicents.tools.mavenplugin.du.version>
+		     	
 	</properties>			
 	
 	<dependencyManagement>
 		<dependencies>		
 			<dependency>
 				<groupId>org.mobicents.servers.jainslee.core</groupId>
-				<artifactId>jar</artifactId>
-				<version>${mobicents.servers.jainslee.version}</version>
+				<artifactId>spi</artifactId>
+				<version>2.1.0.GA</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mobicents.resources</groupId>
 				<artifactId>http-servlet-ratype</artifactId>
-				<version>${mobicents.servers.jainslee.version}</version>
+				<version>2.0.0.GA</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mobicents.resources</groupId>
 				<artifactId>http-servlet-events</artifactId>
-				<version>${mobicents.servers.jainslee.version}</version>
+				<version>2.0.0.GA</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mobicents.resources</groupId>
 				<artifactId>sip11-ratype</artifactId>
-				<version>${mobicents.servers.jainslee.version}</version>
+				<version>2.1.0.GA</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mobicents.resources</groupId>
 				<artifactId>sip11-library</artifactId>
-				<version>${mobicents.servers.jainslee.version}</version>
+				<version>2.1.0.GA</version>
+			</dependency>
+			<dependency>
+				<artifactId>xcap-client-api</artifactId>
+				<groupId>org.mobicents</groupId>
+				<version>2.1.0.GA</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -131,6 +135,7 @@
 				<configuration>
 					<classpathExcludes>
 						<exclude>xml-apis:xml-apis</exclude>
+						<exclude>stax:stax-api</exclude>
 						<exclude>jtidy:jtidy</exclude>
 					</classpathExcludes>
 					<resolveTransitiveDependencies>true</resolveTransitiveDependencies>
@@ -150,22 +155,17 @@
 
 	<repositories>
 		<repository>
-			<id>jboss</id>
-			<name>JBoss Repository</name>
-			<url>http://repository.jboss.org/maven2</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>jboss-snapshots</id>
-			<name>JBoss Snapshot Repository</name>
-			<url>http://snapshots.jboss.org/maven2</url>
+			<id>jboss-public-repository-group</id>
+			<name>JBoss Public Maven Repository Group</name>
+			<url>https://repository.jboss.org/nexus/content/groups/public</url>
+			<layout>default</layout>
 			<releases>
-				<enabled>false</enabled>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
 			</releases>
 			<snapshots>
 				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
 			</snapshots>
 		</repository>
 	</repositories>

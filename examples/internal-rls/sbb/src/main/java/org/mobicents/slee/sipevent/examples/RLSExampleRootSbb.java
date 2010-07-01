@@ -2,16 +2,13 @@ package org.mobicents.slee.sipevent.examples;
 
 import java.util.Iterator;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.slee.ActivityContextInterface;
 import javax.slee.ActivityEndEvent;
 import javax.slee.ChildRelation;
 import javax.slee.RolledBackContext;
 import javax.slee.SbbContext;
-import javax.slee.serviceactivity.ServiceActivityFactory;
+import javax.slee.facilities.Tracer;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlSbbLocalObject;
 
@@ -37,29 +34,24 @@ public abstract class RLSExampleRootSbb implements javax.slee.Sbb,
 			javax.slee.serviceactivity.ServiceStartedEvent event,
 			ActivityContextInterface aci) {
 
-		// check if it's my service that is starting
-		if (serviceActivityFactory.getActivity().equals(aci.getActivity())) {
-			log4j.info("Service activated...");
+		
+			tracer.info("Service activated...");
 			try {
 				RLSExamplePublisherSbbLocalObject child  = (RLSExamplePublisherSbbLocalObject) getPublisherChildRelation().create();
 				child.setParentSbb((RLSExamplePublisherParentSbbLocalObject)this.sbbContext.getSbbLocalObject());
 				child.start(publishers[0]);
 			} catch (Exception e) {
-				log4j.error(e.getMessage(),e);
+				tracer.severe(e.getMessage(),e);
 			}
-		} else {
-			// another service activated, we don't want to receive further
-			// events on this activity
-			aci.detach(sbbContext.getSbbLocalObject());
-		}
+		
 	}
 
 	public void publisherNotStarted(String publisher) {
-		log4j.info("publisher didn't started "+publisher);		
+		tracer.info("publisher didn't started "+publisher);		
 	}
 	
 	public void publisherStarted(String publisher) {
-		log4j.info("publisher started "+publisher);
+		tracer.info("publisher started "+publisher);
 		if (publisher.equals(publishers[0])) {
 			// start the other publisher
 			try {
@@ -67,7 +59,7 @@ public abstract class RLSExampleRootSbb implements javax.slee.Sbb,
 				child.setParentSbb((RLSExamplePublisherParentSbbLocalObject)this.sbbContext.getSbbLocalObject());
 				child.start(publishers[1]);
 			} catch (Exception e) {
-				log4j.error(e.getMessage(),e);
+				tracer.severe(e.getMessage(),e);
 			}
 		}	
 		else {
@@ -76,22 +68,22 @@ public abstract class RLSExampleRootSbb implements javax.slee.Sbb,
 				child.setParentSbb((RLSExampleSubscriberParentSbbLocalObject)this.sbbContext.getSbbLocalObject());
 				child.start(publishers);				
 			} catch (Exception e) {
-				log4j.error(e.getMessage(),e);
+				tracer.severe(e.getMessage(),e);
 			}
 		}
 	}
 	
 	public void subscriberNotStarted() {
-		log4j.info("subscriber didn't started ");			
+		tracer.info("subscriber didn't started ");			
 	}
 	
 	public void subscriberStarted() {
-		log4j.info("subscriber started");	
+		tracer.info("subscriber started");	
 		
 	}
 	
 	public void subscriberStopped() {
-		log4j.info("subscriber stopped");		
+		tracer.info("subscriber stopped");		
 	}
 		
 	
@@ -104,7 +96,7 @@ public abstract class RLSExampleRootSbb implements javax.slee.Sbb,
 	public void onActivityEndEvent(ActivityEndEvent event,
 			ActivityContextInterface aci) {
 		
-		log4j.info("Service deactivated...");
+		tracer.info("Service deactivated...");
 		try {
 			try {
 				for (Iterator it = getPublisherChildRelation().iterator(); it.hasNext(); ) {
@@ -114,10 +106,10 @@ public abstract class RLSExampleRootSbb implements javax.slee.Sbb,
 					((RLSExampleSubscriberSbbLocalObject)it.next()).stop();
 				}				
 			} catch (Exception e) {
-				log4j.error(e.getMessage(),e);
+				tracer.severe(e.getMessage(),e);
 			}
 		} catch (Exception e) {
-			log4j.error(e);
+			tracer.severe("",e);
 		}
 
 	}
@@ -131,8 +123,6 @@ public abstract class RLSExampleRootSbb implements javax.slee.Sbb,
 	// --- SBB OBJECT
 
 	private SbbContext sbbContext = null; // This SBB's context
-
-	private ServiceActivityFactory serviceActivityFactory = null;
 	
 	/**
 	 * Called when an sbb object is instantied and enters the pooled state.
@@ -140,19 +130,11 @@ public abstract class RLSExampleRootSbb implements javax.slee.Sbb,
 	public void setSbbContext(SbbContext sbbContext) {
 
 		this.sbbContext = sbbContext;
-		try {
-			Context context = (Context) new InitialContext()
-					.lookup("java:comp/env");
-			serviceActivityFactory = (ServiceActivityFactory) context
-					.lookup("slee/serviceactivity/factory");
-		} catch (Exception e) {
-			log4j.error("Unable to retrieve factories, facilities & providers",
-					e);
-		}
+		tracer = sbbContext.getTracer("RLSExampleRootSbb");
+		
 	}
 
 	public void unsetSbbContext() {
-		log4j.info("unsetSbbContext()");
 		this.sbbContext = null;
 	}
 
@@ -184,7 +166,6 @@ public abstract class RLSExampleRootSbb implements javax.slee.Sbb,
 	public void sbbRolledBack(RolledBackContext sbbRolledBack) {
 	}
 
-	private static Logger log4j = Logger
-			.getLogger(RLSExampleRootSbb.class);
+	private Tracer tracer;
 
 }

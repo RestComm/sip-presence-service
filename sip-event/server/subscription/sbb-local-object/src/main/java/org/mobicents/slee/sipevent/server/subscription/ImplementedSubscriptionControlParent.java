@@ -6,7 +6,7 @@ package org.mobicents.slee.sipevent.server.subscription;
 import javax.sip.ServerTransaction;
 import javax.sip.header.ContentTypeHeader;
 
-import org.mobicents.slee.sipevent.server.subscription.pojo.SubscriptionKey;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 
 /**
  * @author martins

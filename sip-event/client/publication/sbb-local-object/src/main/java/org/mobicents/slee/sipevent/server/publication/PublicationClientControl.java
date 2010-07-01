@@ -10,30 +10,8 @@ package org.mobicents.slee.sipevent.server.publication;
 public interface PublicationClientControl {
 
 	/**
-	 * Used to set the call back sbb local object in the sbb implementing this
-	 * interface. Must be used whenever a new object of this interface is
-	 * created.
-	 * 
-	 * An example:
-	 * 
-	 * ChildRelation childRelation = getChildRelation();
-	 * PublicationClientControlSbbLocalObject childSbb =
-	 * (PublicationClientControlSbbLocalObject) childRelation.create();
-	 * childSbb.setParentSbb(
-	 * (PublicationClientControlParentSbbLocalObject)this.getSbbContext().getSbbLocalObject());
-	 * 
-	 * 
-	 * @param parent
-	 */
-	public void setParentSbb(
-			PublicationClientControlParentSbbLocalObject parentSbb);
-
-	/**
 	 * Creates a new publication for the specified Entity and SIP Event Package.
 	 * 
-	 * @param requestId
-	 *            an object that identifies the request, the child sbb will
-	 *            return it when providing the response
 	 * @param entity
 	 * @param eventPackage
 	 * @param document
@@ -41,8 +19,10 @@ public interface PublicationClientControl {
 	 * @param contentSubType
 	 * @param expires
 	 *            the time in seconds, which the publication is valid
+	 * @param callback
+	 * @return             
 	 */
-	public void newPublication(Object requestId, String entity,
+	public Result newPublication(String entity,
 			String eventPackage, String document, String contentType,
 			String contentSubType, int expires);
 
@@ -50,25 +30,21 @@ public interface PublicationClientControl {
 	 * Refreshes the publication identified by the specified Entity, SIP Event
 	 * Package and ETag.
 	 * 
-	 * @param requestId
-	 *            an object that identifies the request, the child sbb will
-	 *            return it when providing the response
 	 * @param entity
 	 * @param eventPackage
 	 * @param eTag
 	 * @param expires
 	 *            the time in seconds, which the publication is valid
+	 * @param callback
+	 * @return
 	 */
-	public void refreshPublication(Object requestId, String entity,
+	public Result refreshPublication(String entity,
 			String eventPackage, String eTag, int expires);
 
 	/**
 	 * Modifies the publication identified by the specified Entity, SIP Event
 	 * Package and ETag.
-	 * 
-	 * @param requestId
-	 *            an object that identifies the request, the child sbb will
-	 *            return it when providing the response
+	 *
 	 * @param entity
 	 * @param eventPackage
 	 * @param eTag
@@ -77,8 +53,10 @@ public interface PublicationClientControl {
 	 * @param contentSubType
 	 * @param expires
 	 *            the time in seconds, which the publication is valid
+	 * @param callback
+	 * @return
 	 */
-	public void modifyPublication(Object requestId, String entity,
+	public Result modifyPublication(String entity,
 			String eventPackage, String eTag, String document,
 			String contentType, String contentSubType, int expires);
 
@@ -86,14 +64,13 @@ public interface PublicationClientControl {
 	 * Removes the publication identified by the specified Entity, SIP Event
 	 * Package and ETag.
 	 * 
-	 * @param requestId
-	 *            an object that identifies the request, the child sbb will
-	 *            return it when providing the response
 	 * @param entity
 	 * @param eventPackage
 	 * @param eTag
+	 * @param callback
+	 * @return status code for the response
 	 */
-	public void removePublication(Object requestId, String entity,
+	public int removePublication(String entity,
 			String eventPackage, String eTag);
 
 }

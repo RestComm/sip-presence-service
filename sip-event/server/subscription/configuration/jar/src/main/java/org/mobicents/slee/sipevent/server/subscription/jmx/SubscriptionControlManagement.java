@@ -1,5 +1,7 @@
 package org.mobicents.slee.sipevent.server.subscription.jmx;
 
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
+
 public class SubscriptionControlManagement implements
 		SubscriptionControlManagementMBean {
 
@@ -11,7 +13,8 @@ public class SubscriptionControlManagement implements
 	private String contactAddressDisplayName = "Mobicents SIP Event Server";
 	private boolean eventListSupportOn = true;
 	private String pChargingVectorHeaderTerminatingIOI = "mobicents.org";
-
+	private SubscriptionControlDataSource dataSource;
+	
 	private static final SubscriptionControlManagement INSTANCE = new SubscriptionControlManagement();
 	
 	public static SubscriptionControlManagement getInstance() {
@@ -187,5 +190,13 @@ public class SubscriptionControlManagement implements
 	public void setPChargingVectorHeaderTerminatingIOI(
 			String pChargingVectorHeaderTerminatingIOI) {
 		this.pChargingVectorHeaderTerminatingIOI = pChargingVectorHeaderTerminatingIOI;
+	}
+	
+	public void setDataSource(SubscriptionControlDataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+	
+	public SubscriptionControlDataSource getDataSource() {
+		return dataSource;
 	}
 }

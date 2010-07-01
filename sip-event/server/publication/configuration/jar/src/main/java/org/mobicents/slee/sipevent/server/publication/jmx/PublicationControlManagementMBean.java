@@ -72,4 +72,18 @@ public interface PublicationControlManagementMBean {
 	 */
 	public void setPChargingVectorHeaderTerminatingIOI(
 			String chargingVectorHeaderTerminatingIOI);
+	
+	/**
+	 * Indicates if an alternative value will be used for expired/removed publications.
+	 * @return
+	 */
+	public boolean isUseAlternativeValueForExpiredPublication();
+	
+	/**
+	 * Defines if an alternative value will be used for expired/removed publications.
+	 * @param value
+	 */
+	public void setUseAlternativeValueForExpiredPublication(
+			boolean value);
+	
 }

@@ -10,10 +10,10 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.log4j.Logger;
-import org.mobicents.slee.sipevent.server.publication.pojo.ComposedPublication;
+import org.mobicents.slee.sipevent.server.publication.data.ComposedPublication;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
-import org.mobicents.slee.sipevent.server.subscription.pojo.SubscriptionKey;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.mobicents.slee.sippresence.pojo.datamodel.Person;
 import org.mobicents.slee.sippresence.pojo.pidf.Presence;
 import org.mobicents.slee.sippresence.pojo.rpid.Sphere;
@@ -52,14 +52,14 @@ public class PresenceSubscriptionControl {
 			int expires, String content, String contentType,
 			String contentSubtype, boolean eventList, String presRulesAUID,
 			String presRulesDocumentName, ServerTransaction serverTransaction, PresenceSubscriptionControlSbbInterface sbb) {
-
+		
 		// get current combined rule from cmp
 		HashMap combinedRules = sbb.getCombinedRules();
 		if (combinedRules == null) {
 			combinedRules = new HashMap();
 		}
 		PresRuleCMPKey cmpKey = new PresRuleCMPKey(subscriber, notifier, key
-				.getEventPackage(), key.getRealEventId());
+				.getEventPackage(), key.getEventId());
 		OMAPresRule combinedRule = (OMAPresRule) combinedRules.get(cmpKey);
 
 		if (combinedRule == null) {
@@ -105,6 +105,10 @@ public class PresenceSubscriptionControl {
 					subscriberDisplayName, notifier, key, expires,
 					combinedRule.getSubHandling().getResponseCode(),eventList, serverTransaction);
 		}
+		/*
+		sbb.getParentSbbCMP().newSubscriptionAuthorization(subscriber,
+				subscriberDisplayName, notifier, key, expires,
+				Response.OK,eventList,serverTransaction);*/
 
 	}
 
@@ -124,7 +128,7 @@ public class PresenceSubscriptionControl {
 			PresRuleCMPKey cmpKey = new PresRuleCMPKey(subscription
 					.getSubscriber(), subscription.getNotifier(), subscription
 					.getKey().getEventPackage(), subscription.getKey()
-					.getRealEventId());
+					.getEventId());
 			if (combinedRules.remove(cmpKey) != null) {
 				if (logger.isDebugEnabled()) {
 					logger.debug("removed rule from combined rules map ("

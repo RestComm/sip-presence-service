@@ -16,10 +16,6 @@
 			<groupId>org.mobicents.servers.sipevent</groupId>
 			<version>${pom.version}</version>
 		</dependency>
-		<dependency>
-			<artifactId>log4j</artifactId>
-			<groupId>log4j</groupId>
-		</dependency>
 	</dependencies>
 		
 </project>

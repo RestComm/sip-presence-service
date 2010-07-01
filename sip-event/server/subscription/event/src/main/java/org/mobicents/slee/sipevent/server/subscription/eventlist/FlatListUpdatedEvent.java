@@ -1,8 +1,8 @@
 package org.mobicents.slee.sipevent.server.subscription.eventlist;
 
 import java.util.Set;
-import java.util.UUID;
 
+import org.mobicents.sipevent.server.subscription.util.AbstractEvent;
 import org.mobicents.slee.sipevent.server.subscription.eventlist.FlatList;
 
 /**
@@ -10,50 +10,35 @@ import org.mobicents.slee.sipevent.server.subscription.eventlist.FlatList;
  * @author martins
  * 
  */
-public class FlatListUpdatedEvent {
-
-	private final String eventId = UUID.randomUUID().toString();
+public class FlatListUpdatedEvent  extends AbstractEvent {
 
 	private final FlatList flatList;
-	private final Set<String> oldEntries;
-	private final Set<String> removedEntries;
-	private final Set<String> newEntries;
+	private final String[] oldEntries;
+	private final String[] removedEntries;
+	private final String[] newEntries;
+	
+	private static final String[] EMPTY_ARRAY = {};
 	
 	public FlatListUpdatedEvent(FlatList flatList,Set<String> newEntries, Set<String> oldEntries, Set<String> removedEntries) {
 		this.flatList = flatList;
-		this.newEntries = newEntries;
-		this.oldEntries = oldEntries;
-		this.removedEntries = removedEntries;
+		this.newEntries = newEntries.toArray(EMPTY_ARRAY);
+		this.oldEntries = oldEntries.toArray(EMPTY_ARRAY);
+		this.removedEntries = removedEntries.toArray(EMPTY_ARRAY);
 	}
 
 	public FlatList getFlatList() {
 		return flatList;
 	}
 	
-	public Set<String> getNewEntries() {
+	public String[] getNewEntries() {
 		return newEntries;
 	}
 	
-	public Set<String> getOldEntries() {
+	public String[] getOldEntries() {
 		return oldEntries;
 	}
 	
-	public Set<String> getRemovedEntries() {
+	public String[] getRemovedEntries() {
 		return removedEntries;
 	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		if (obj != null && obj.getClass() == this.getClass()) {
-			return ((FlatListUpdatedEvent) obj).eventId.equals(this.eventId);
-		} else {
-			return false;
-		}
-	}
-
-	@Override
-	public int hashCode() {
-		return eventId.hashCode();
-	}
-
 }

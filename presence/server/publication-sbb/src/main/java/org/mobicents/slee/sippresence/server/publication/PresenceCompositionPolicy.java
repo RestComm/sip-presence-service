@@ -9,6 +9,7 @@ import java.util.List;
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 
+import org.mobicents.slee.sipevent.server.publication.StateComposer;
 import org.mobicents.slee.sippresence.pojo.commonschema.NoteT;
 import org.mobicents.slee.sippresence.pojo.datamodel.Device;
 import org.mobicents.slee.sippresence.pojo.datamodel.Person;
@@ -19,8 +20,22 @@ import org.mobicents.slee.sippresence.pojo.pidf.Status;
 import org.mobicents.slee.sippresence.pojo.pidf.Tuple;
 import org.mobicents.slee.sippresence.pojo.pidf.oma.ServiceDescription;
 
-public class PresenceCompositionPolicy {
+public class PresenceCompositionPolicy implements StateComposer {
 
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sipevent.server.publication.StateComposer#compose(java.lang.Object, java.lang.Object)
+	 */
+	@Override
+	public Object compose(Object state1, Object state2) {
+		if (state1 == null) {
+			return state2;
+		}
+		if (state2 == null) {
+			return state1;
+		}
+		return compose((Presence)state1, (Presence)state2);
+	}
+	
 	/**
 	 * 
 	 * @param presence the new state to add to the composition
@@ -81,7 +96,7 @@ public class PresenceCompositionPolicy {
 	private List<Tuple> composeTuples(List<Tuple> tuples,List<Tuple> otherTuples) {
 		
 		ArrayList<Tuple> result = new ArrayList<Tuple>();
-		// process all from tuples trying to match each with othertuples
+		// process all from tuples trying to match each with other tuples
 		for (Iterator<Tuple> tuplesIt = tuples.iterator(); tuplesIt.hasNext(); ) {
 			Tuple tuple = tuplesIt.next();
 			for (Iterator<Tuple> otherTuplesIt = otherTuples.iterator(); otherTuplesIt.hasNext(); ) {
@@ -297,9 +312,9 @@ public class PresenceCompositionPolicy {
 			Object anysObject = anysIt.next();
 			for (Iterator<?> otherAnysIt = otherAnys.iterator(); otherAnysIt.hasNext(); ) {
 				Object otherAnysObject = otherAnysIt.next();
-				if (anysObject instanceof JAXBElement) {
+				if (anysObject instanceof JAXBElement<?>) {
 					JAXBElement<?> anysElement = (JAXBElement<?>) anysObject;
-					if (otherAnysObject instanceof JAXBElement) {
+					if (otherAnysObject instanceof JAXBElement<?>) {
 						JAXBElement<?> otherAnysElement = (JAXBElement<?>) otherAnysObject;
 						if (anysElement.getName().equals(otherAnysElement.getName())) {
 							// same element type, check for conflict
@@ -346,7 +361,7 @@ public class PresenceCompositionPolicy {
 							}
 						}
 						else {
-							Object composedObject = compose(anysObject, otherAnysObject);
+							Object composedObject = composeObject(anysObject, otherAnysObject);
 							if (composedObject != null) {
 								result.add(composedObject);
 								anysIt.remove();
@@ -371,7 +386,7 @@ public class PresenceCompositionPolicy {
 	 * @param otherAnysObject
 	 * @return
 	 */
-	private Object compose(Object anysObject, Object otherAnysObject) {
+	private Object composeObject(Object anysObject, Object otherAnysObject) {
 		if (anysObject instanceof ServiceDescription) {
 			ServiceDescription anysServiceDescription = (ServiceDescription) anysObject;
 			ServiceDescription otherAnysServiceDescription = (ServiceDescription) otherAnysObject;

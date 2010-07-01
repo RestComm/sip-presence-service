@@ -1,6 +1,7 @@
 package org.mobicents.slee.sipevent.server.subscription.sip;
 
-import javax.persistence.EntityManager;
+import gov.nist.javax.sip.message.SIPRequest;
+
 import javax.sip.Dialog;
 import javax.sip.RequestEvent;
 import javax.sip.ServerTransaction;
@@ -16,8 +17,9 @@ import net.java.slee.resource.sip.DialogActivity;
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
-import org.mobicents.slee.sipevent.server.subscription.pojo.SubscriptionKey;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 
 /**
  * Handles the creation of a new SIP subscription
@@ -50,7 +52,7 @@ public class NewSipSubscriptionHandler {
 	 */
 	public void newSipSubscription(RequestEvent event,
 			ActivityContextInterface aci, String eventPackage, String eventId,
-			int expires, EntityManager entityManager,
+			int expires, SubscriptionControlDataSource dataSource,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 
 		// get subscription data from request
@@ -78,7 +80,7 @@ public class NewSipSubscriptionHandler {
 		if (dialog == null) {
 			try {
 				dialog = sipSubscriptionHandler.sbb.getSipProvider()
-						.getNewDialog(event.getServerTransaction());
+						.getNewDialog(event.getServerTransaction());				
 			} catch (Exception e) {
 				logger.error("Can't create dialog", e);
 				// cleanup
@@ -97,8 +99,10 @@ public class NewSipSubscriptionHandler {
 			}
 		}
 
-		SubscriptionKey key = new SubscriptionKey(dialog.getCallId()
-				.getCallId(), dialog.getRemoteTag(), eventPackage, eventId);
+		// if dialog id is null (cause it's a new dialog and no response was sent yet) then build it manually 
+		String dialogId = dialog.getDialogId() != null ? dialog.getDialogId() : ((SIPRequest) event.getRequest()).getDialogId(
+				true, dialog.getLocalTag());
+		SubscriptionKey key = new SubscriptionKey(dialogId, eventPackage, eventId);
 		
 		if (sipSubscriptionHandler.sbb.getConfiguration().getEventListSupportOn()) {
 			// we need to find out if the notifier is a resource list
@@ -107,11 +111,11 @@ public class NewSipSubscriptionHandler {
 			switch (rlsResponse) {
 			case Response.NOT_FOUND:
 				// the notifier is not a resource list, proceed with normal authorization means
-				authorizeNewSipSubscription(event, aci, subscriber, subscriberDisplayName, notifier, key, expires, content, contentType, contentSubtype, false, entityManager, childSbb);
+				authorizeNewSipSubscription(event, aci, subscriber, subscriberDisplayName, notifier, key, expires, content, contentType, contentSubtype, false, dataSource, childSbb);
 				break;
 			case Response.OK:
 				// the notifier is a resource list
-				authorizeNewSipSubscription(event, aci, subscriber, subscriberDisplayName, notifier, key, expires, content, contentType, contentSubtype, true, entityManager, childSbb);
+				authorizeNewSipSubscription(event, aci, subscriber, subscriberDisplayName, notifier, key, expires, content, contentType, contentSubtype, true, dataSource, childSbb);
 				break;			
 			default:
 				// the rls request validation returned an error
@@ -128,7 +132,7 @@ public class NewSipSubscriptionHandler {
 			}
 		}
 		else {
-			authorizeNewSipSubscription(event, aci, subscriber, subscriberDisplayName, notifier, key, expires, content, contentType, contentSubtype, false, entityManager, childSbb);
+			authorizeNewSipSubscription(event, aci, subscriber, subscriberDisplayName, notifier, key, expires, content, contentType, contentSubtype, false, dataSource, childSbb);
 		}
 	}
 
@@ -150,7 +154,7 @@ public class NewSipSubscriptionHandler {
 	 */
 	public void authorizeNewSipSubscription(RequestEvent event,
 			ActivityContextInterface aci, String subscriber, String subscriberDisplayName, String notifier, SubscriptionKey key, int expires, String content,
-			String contentType, String contentSubtype, boolean eventList, EntityManager entityManager,
+			String contentType, String contentSubtype, boolean eventList,SubscriptionControlDataSource dataSource,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 		
 		// ask authorization
@@ -160,7 +164,7 @@ public class NewSipSubscriptionHandler {
 			newSipSubscriptionAuthorization(event.getServerTransaction(), aci,
 					subscriber, subscriberDisplayName, notifier, key,
 					expires, (subscriber.equals(notifier) ? Response.OK
-							: Response.FORBIDDEN), eventList, entityManager, childSbb);
+							: Response.FORBIDDEN), eventList, dataSource,childSbb);
 		} else {
 			childSbb.isSubscriberAuthorized(subscriber, subscriberDisplayName, notifier, key, expires, content,
 					contentType, contentSubtype, eventList, event.getServerTransaction());
@@ -184,7 +188,7 @@ public class NewSipSubscriptionHandler {
 			ServerTransaction serverTransaction,
 			ActivityContextInterface serverTransactionACI, String subscriber,
 			String subscriberDisplayName, String notifier, SubscriptionKey key,
-			int expires, int responseCode, boolean eventList, EntityManager entityManager,
+			int expires, int responseCode, boolean eventList,SubscriptionControlDataSource dataSource,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 
 		DialogActivity dialog = (DialogActivity) serverTransaction.getDialog();
@@ -243,13 +247,13 @@ public class NewSipSubscriptionHandler {
 		Subscription.Status initialStatus = responseCode == Response.ACCEPTED ? Subscription.Status.pending
 				: Subscription.Status.active;
 		Subscription subscription = new Subscription(key, subscriber, notifier,
-				initialStatus, subscriberDisplayName, expires, eventList);
+				initialStatus, subscriberDisplayName, expires, eventList,dataSource);
 
 		if (!eventList || (responseCode == Response.ACCEPTED)) {
 			// single resource or pending subscription (no notify content), notify subscriber
 			try {
 				sipSubscriptionHandler.getSipSubscriberNotificationHandler()
-				.createAndSendNotify(entityManager, subscription, dialog,
+				.createAndSendNotify(dataSource, subscription, dialog,
 						childSbb);
 			} catch (Exception e) {
 				logger.error("failed to notify subscriber", e);
@@ -259,7 +263,7 @@ public class NewSipSubscriptionHandler {
 		// notify winfo subscribers
 		sipSubscriptionHandler.sbb
 				.getWInfoSubscriptionHandler()
-				.notifyWinfoSubscriptions(entityManager, subscription, childSbb);
+				.notifyWinfoSubscriptions(dataSource, subscription, childSbb);
 
 		// bind name for dialog aci
 		try {
@@ -270,8 +274,7 @@ public class NewSipSubscriptionHandler {
 		}
 
 		// set new timer
-		sipSubscriptionHandler.sbb.setSubscriptionTimerAndPersistSubscription(
-				entityManager, subscription, expires + 1, dialogAci);
+		sipSubscriptionHandler.sbb.setSubscriptionTimerAndPersistSubscription(subscription, expires + 1, dialogAci);
 
 		if (eventList && (responseCode == Response.OK))  {
 			// it's a resource list and active subscription, delegate to the event list control for further process of the new subscription
@@ -279,7 +282,7 @@ public class NewSipSubscriptionHandler {
 				// sip subscription
 				sipSubscriptionHandler
 				.getRemoveSipSubscriptionHandler()
-				.removeSipSubscription(dialogAci, subscription, entityManager, childSbb);
+				.removeSipSubscription(dialogAci, subscription, dataSource,childSbb);
 			}
 		}
 		

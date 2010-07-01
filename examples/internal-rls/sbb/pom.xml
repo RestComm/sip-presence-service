@@ -31,10 +31,6 @@
 			<artifactId>sip-event-client-subscription-sbb-local-object</artifactId>
 			<version>${pom.version}</version>				
 		</dependency>
-		<dependency>
-			<artifactId>log4j</artifactId>
-			<groupId>log4j</groupId>
-		</dependency>
 	</dependencies>
 	
 </project>

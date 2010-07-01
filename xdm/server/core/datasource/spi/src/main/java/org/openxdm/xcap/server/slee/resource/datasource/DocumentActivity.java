@@ -11,8 +11,8 @@ import org.openxdm.xcap.common.uri.DocumentSelector;
  */
 public class DocumentActivity extends ActivityObject {
 	
-	public DocumentActivity(DocumentSelector documentSelector, DataSourceResourceAdaptor ra) {
-		super(documentSelector.toString(),ra);
+	public DocumentActivity(DocumentSelector documentSelector) {
+		super(documentSelector.toString());
 	}
 
 	public String getDocumentSelector() {

@@ -7,7 +7,7 @@ import javax.sip.address.URI;
 import javax.sip.header.ContentTypeHeader;
 import javax.sip.header.Header;
 
-import org.mobicents.slee.sipevent.server.publication.pojo.ComposedPublication;
+import org.mobicents.slee.sipevent.server.publication.data.ComposedPublication;
 
 /**
  * @author martins
@@ -15,6 +15,11 @@ import org.mobicents.slee.sipevent.server.publication.pojo.ComposedPublication;
  */
 public interface PublicationControl extends PublicationClientControl {
 
+	/**
+	 * Initiates the publication control interface.
+	 */
+	public void init();
+	
 	/**
 	 * Retrieves the composed publication for the specified entity and event
 	 * package.

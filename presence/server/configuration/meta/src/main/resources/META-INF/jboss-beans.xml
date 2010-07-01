@@ -17,7 +17,22 @@
       
       <!-- the name of the document to be used to retrieve the notifier's pres rules doc, from the XDMS -->
       <property name="presRulesDocumentName">${presence.server.notifier.presrules.documentName}</property>
-            	      
+		
+	  <!-- 
+	  	the package names (separated by ':' char) for jaxb pojos, 
+	  	to be used when (un)marshalling presence content.
+	  	All whitespaces will be removed. 
+	  -->	
+	  <property name="jaxbPackageNames">
+	  	org.mobicents.slee.sippresence.pojo.pidf:
+	  	org.mobicents.slee.sippresence.pojo.rpid:
+	  	org.mobicents.slee.sippresence.pojo.datamodel:
+	  	org.mobicents.slee.sippresence.pojo.commonschema:
+	  	org.mobicents.slee.sippresence.pojo.pidf.oma:
+	  	org.openxdm.xcap.client.appusage.presrules.jaxb.commonpolicy:
+	  	org.openxdm.xcap.client.appusage.presrules.jaxb:
+	  	org.openxdm.xcap.client.appusage.omapresrules.jaxb
+	  </property>	            	      
    </bean>
    
 </deployment>

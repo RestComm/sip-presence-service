@@ -3,10 +3,8 @@ package org.mobicents.slee.sipevent.server.subscription.winfo;
 import java.io.StringWriter;
 import java.math.BigInteger;
 import java.text.ParseException;
-import java.util.Iterator;
 import java.util.List;
 
-import javax.persistence.EntityManager;
 import javax.sip.Dialog;
 import javax.sip.header.ContentTypeHeader;
 import javax.sip.message.Request;
@@ -18,7 +16,8 @@ import javax.xml.bind.Marshaller;
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
 import org.mobicents.slee.sipevent.server.subscription.winfo.pojo.Watcher;
 import org.mobicents.slee.sipevent.server.subscription.winfo.pojo.WatcherList;
 import org.mobicents.slee.sipevent.server.subscription.winfo.pojo.Watcherinfo;
@@ -40,96 +39,79 @@ public class WInfoSubscriptionHandler {
 		this.sbb = sbb;
 	}
 
-	public void notifyWinfoSubscriptions(EntityManager entityManager,
-			Subscription subscription,
+	public void notifyWinfoSubscriptions(SubscriptionControlDataSource dataSource,Subscription subscription,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 
 		if (!subscription.getKey().getEventPackage().endsWith(".winfo")) {
-			// lookup persistent data fr subscriptions
-			List winfoSubscriptions = entityManager.createNamedQuery(Subscription.JPA_NAMED_QUERY_SELECT_SUBSCRIPTIONS_FROM_NOTIFIER_AND_EVENTPACKAGE)
-					.setParameter("notifier", subscription.getNotifier())
-					.setParameter("eventPackage",
-							subscription.getKey().getEventPackage() + ".winfo")
-					.getResultList();
-			// process result
-			if (!winfoSubscriptions.isEmpty()) {
-				for (Iterator it = winfoSubscriptions.iterator(); it.hasNext();) {
-					Subscription winfoSubscription = (Subscription) it.next();
-					if (winfoSubscription.getStatus().equals(
-							Subscription.Status.active)) {
+			
+			for (Subscription winfoSubscription : dataSource
+					.getSubscriptionsByNotifierAndEventPackage(subscription
+							.getNotifier(), subscription.getKey()
+							.getEventPackage()
+							+ ".winfo")) {
 
-						try {
-							// get subscription aci
-							ActivityContextInterface winfoAci = sbb
-									.getActivityContextNamingfacility().lookup(
-											winfoSubscription.getKey()
-													.toString());
-							if (winfoAci != null) {
-								// increment subscription version
-								winfoSubscription.incrementVersion();
-								// get winfo notify content and content type
-								// header
-								String partialWInfoContent = getPartialWatcherInfoContent(
-										winfoSubscription, subscription);
-								ContentTypeHeader winfoContentHeader = getWatcherInfoContentHeader();
-								if (winfoSubscription.getKey()
-										.isInternalSubscription()) {
-									// internal subscription
-									sbb
-											.getInternalSubscriptionHandler()
-											.getInternalSubscriberNotificationHandler()
-											.notifyInternalSubscriber(entityManager,
-													subscription,
-													partialWInfoContent,
-													winfoContentHeader,
-													winfoAci);
-								} else {
-									// sip subscription
-									Dialog winfoDialog = (Dialog) winfoAci
-											.getActivity();
-									// create notify
-									Request notify = sbb
-											.getSipSubscribeHandler()
-											.getSipSubscriberNotificationHandler()
-											.createNotify(winfoDialog,
-													winfoSubscription);
-									// add content
-									notify.setContent(partialWInfoContent,
-											winfoContentHeader);
-									// send notify in dialog related with
-									// subscription
-									winfoDialog.sendRequest(sbb
-											.getSipProvider()
-											.getNewClientTransaction(notify));
-									if (logger.isDebugEnabled()) {
-										logger.debug("Request sent:\n"
-												+ notify.toString());
-									}
-								}
-								// persist subscription
-								entityManager.persist(winfoSubscription);
-							} else {
-								// aci is gone, cleanup subscription
-								logger
-										.warn("Unable to find subscription aci to notify subscription "
-												+ winfoSubscription.getKey()
-												+ ". Removing subscription data");
+				if (winfoSubscription.getStatus().equals(
+						Subscription.Status.active)) {
+
+					try {
+						// get subscription aci
+						ActivityContextInterface winfoAci = sbb
+								.getActivityContextNamingfacility().lookup(
+										winfoSubscription.getKey().toString());
+						if (winfoAci != null) {
+							// increment subscription version
+							winfoSubscription.incrementVersion();
+							// get winfo notify content and content type
+							// header
+							String partialWInfoContent = getPartialWatcherInfoContent(
+									winfoSubscription, subscription);
+							ContentTypeHeader winfoContentHeader = getWatcherInfoContentHeader();
+							if (winfoSubscription.getKey()
+									.isInternalSubscription()) {
+								// internal subscription
 								sbb
-										.removeSubscriptionData(
-												entityManager,
-												winfoSubscription, null, null,
-												childSbb);
+										.getInternalSubscriptionHandler()
+										.getInternalSubscriberNotificationHandler()
+										.notifyInternalSubscriber(subscription,
+												partialWInfoContent,
+												winfoContentHeader, winfoAci);
+							} else {
+								// sip subscription
+								Dialog winfoDialog = (Dialog) winfoAci
+										.getActivity();
+								// create notify
+								Request notify = sbb.getSipSubscribeHandler()
+										.getSipSubscriberNotificationHandler()
+										.createNotify(winfoDialog,
+												winfoSubscription);
+								// add content
+								notify.setContent(partialWInfoContent,
+										winfoContentHeader);
+								// send notify in dialog related with
+								// subscription
+								winfoDialog.sendRequest(sbb.getSipProvider()
+										.getNewClientTransaction(notify));
+								if (logger.isDebugEnabled()) {
+									logger.debug("Request sent:\n"
+											+ notify.toString());
+								}
 							}
-						} catch (Exception e) {
+							// update subscription storage
+							winfoSubscription.store();
+						} else {
+							// aci is gone, cleanup subscription
 							logger
-									.error("failed to notify winfo subscriber",
-											e);
+									.warn("Unable to find subscription aci to notify subscription "
+											+ winfoSubscription.getKey()
+											+ ". Removing subscription data");
+							sbb.removeSubscriptionData(dataSource,winfoSubscription, null,
+									null, childSbb);
 						}
+					} catch (Exception e) {
+						logger.error("failed to notify winfo subscriber", e);
 					}
-
 				}
 			}
-			entityManager.flush();
 		}
 	}
 
@@ -227,8 +209,7 @@ public class WInfoSubscriptionHandler {
 	/*
 	 * generates full watcher info doc
 	 */
-	public String getFullWatcherInfoContent(EntityManager entityManager,
-			Subscription winfoSubscription) {
+	public String getFullWatcherInfoContent(SubscriptionControlDataSource dataSource,Subscription winfoSubscription) {
 
 		// create watcher info
 		Watcherinfo watcherinfo = new Watcherinfo();
@@ -243,13 +224,9 @@ public class WInfoSubscriptionHandler {
 				.indexOf(".winfo"));
 		watcherList.setPackage(eventPackage);
 		// get watcher subscriptions
-		List resultList = entityManager.createNamedQuery(Subscription.JPA_NAMED_QUERY_SELECT_SUBSCRIPTIONS_FROM_NOTIFIER_AND_EVENTPACKAGE).setParameter(
-				"eventPackage", eventPackage).setParameter("notifier",
-				winfoSubscription.getNotifier()).getResultList();
 		// add a watcher element for each
 		List<Watcher> watchers = watcherList.getWatcher();
-		for (Iterator i = resultList.iterator(); i.hasNext();) {
-			Subscription subscription = (Subscription) i.next();
+		for(Subscription subscription : dataSource.getSubscriptionsByNotifierAndEventPackage(winfoSubscription.getNotifier(), eventPackage)) {
 			// create and add watcher to watcher info list
 			watchers.add(createWInfoWatcher(subscription));
 		}

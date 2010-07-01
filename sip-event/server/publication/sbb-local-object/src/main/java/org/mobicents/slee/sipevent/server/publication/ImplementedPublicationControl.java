@@ -6,12 +6,11 @@ package org.mobicents.slee.sipevent.server.publication;
 import javax.sip.address.URI;
 import javax.sip.header.ContentTypeHeader;
 import javax.sip.header.Header;
+import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 
-import org.mobicents.slee.sipevent.server.publication.pojo.ComposedPublication;
-import org.mobicents.slee.sipevent.server.publication.pojo.Publication;
+import org.mobicents.slee.sipevent.server.publication.data.ComposedPublication;
+import org.mobicents.slee.sipevent.server.publication.data.Publication;
 
 /**
  * @author martins
@@ -47,33 +46,25 @@ public interface ImplementedPublicationControl {
 
 	/**
 	 * Notifies subscribers about a publication update for the specified entity
-	 * regarding the specified evtnt package.
+	 * regarding the specified event package.
 	 * 
 	 * @param composedPublication
 	 */
 	public void notifySubscribers(ComposedPublication composedPublication);
 
 	/**
-	 * Retrieves a JAXB Unmarshaller to parse a publication content.
+	 * Retrieves the associated JAXB Context, needed to work with publication content.
 	 * 
 	 * @return
 	 */
-	public Unmarshaller getUnmarshaller();
+	public JAXBContext getJaxbContext();
 
 	/**
-	 * Retrieves a JAXB Marshaller to convert a JAXBElement to a String.
+	 * Retrieves the {@link StateComposer} concrete impl, used to combine publications.
 	 * 
-	 * @return
+	 * @return 
 	 */
-	public Marshaller getMarshaller();
-
-	/**
-	 * Combines a new publication with the current composed publication.
-	 * 
-	 * @return the updated composed publication
-	 */
-	public ComposedPublication combinePublication(Publication publication,
-			ComposedPublication composedPublication);
+	public StateComposer getStateComposer();
 
 	/**
 	 * Checks if this server is responsible for the resource publishing state.
@@ -89,7 +80,7 @@ public interface ImplementedPublicationControl {
 	 * @return
 	 */
 	public boolean authorizePublication(String entity,
-			JAXBElement unmarshalledContent);
+			JAXBElement<?> unmarshalledContent);
 
 	/**
 	 * 

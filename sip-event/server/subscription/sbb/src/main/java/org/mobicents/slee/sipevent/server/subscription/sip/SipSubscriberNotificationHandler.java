@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.text.ParseException;
 
-import javax.persistence.EntityManager;
 import javax.sip.Dialog;
 import javax.sip.SipException;
 import javax.sip.TransactionDoesNotExistException;
@@ -27,7 +26,8 @@ import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
 
 /**
  * Handles the notification of a SIP subscriber
@@ -49,7 +49,7 @@ public class SipSubscriberNotificationHandler {
 
 	public void notifySipSubscriber(Object content,
 			ContentTypeHeader contentTypeHeader, Subscription subscription,
-			EntityManager entityManager,
+			SubscriptionControlDataSource dataSource,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 
 		try {
@@ -78,7 +78,7 @@ public class SipSubscriberNotificationHandler {
 						+ subscription.getKey()
 						+ ". Removing subscription data");
 				sipSubscriptionHandler.sbb.removeSubscriptionData(
-						entityManager, subscription, null, null, childSbb);
+						dataSource, subscription, null, null, childSbb);
 			}
 
 		} catch (Exception e) {
@@ -125,7 +125,7 @@ public class SipSubscriberNotificationHandler {
 	 * concrete implementation component, and then sends the request to the
 	 * subscriber
 	 */
-	public void createAndSendNotify(EntityManager entityManager,
+	public void createAndSendNotify(SubscriptionControlDataSource dataSource,
 			Subscription subscription, DialogActivity dialog,
 			ImplementedSubscriptionControlSbbLocalObject childSbb)
 			throws TransactionDoesNotExistException, SipException,
@@ -138,12 +138,11 @@ public class SipSubscriberNotificationHandler {
 			if (subscription.getKey().getEventPackage().endsWith(".winfo")) {
 				// winfo content, increment version before adding the content
 				subscription.incrementVersion();
-				entityManager.persist(subscription);
-				entityManager.flush();
+				subscription.store();
 				notify.setContent(
 						sipSubscriptionHandler.sbb
 								.getWInfoSubscriptionHandler()
-								.getFullWatcherInfoContent(entityManager,
+								.getFullWatcherInfoContent(dataSource,
 										subscription),
 						sipSubscriptionHandler.sbb
 								.getWInfoSubscriptionHandler()
@@ -182,8 +181,8 @@ public class SipSubscriberNotificationHandler {
 			EventHeader eventHeader = sipSubscriptionHandler.sbb
 					.getHeaderFactory().createEventHeader(
 							subscription.getKey().getEventPackage());
-			if (subscription.getKey().getRealEventId() != null)
-				eventHeader.setEventId(subscription.getKey().getRealEventId());
+			if (subscription.getKey().getEventId() != null)
+				eventHeader.setEventId(subscription.getKey().getEventId());
 			notify.setHeader(eventHeader);
 			// add max forwards header
 			notify.setHeader(sipSubscriptionHandler.sbb.getHeaderFactory()

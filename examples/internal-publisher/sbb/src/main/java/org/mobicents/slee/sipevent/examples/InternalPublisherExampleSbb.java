@@ -13,15 +13,12 @@ import javax.slee.TransactionRequiredLocalException;
 import javax.slee.facilities.TimerEvent;
 import javax.slee.facilities.TimerFacility;
 import javax.slee.facilities.TimerOptions;
-import javax.slee.facilities.TimerPreserveMissed;
-import javax.slee.serviceactivity.ServiceActivity;
-import javax.slee.serviceactivity.ServiceActivityContextInterfaceFactory;
-import javax.slee.serviceactivity.ServiceActivityFactory;
+import javax.slee.facilities.Tracer;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.publication.PublicationClientControlParent;
 import org.mobicents.slee.sipevent.server.publication.PublicationClientControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.publication.PublicationClientControlSbbLocalObject;
+import org.mobicents.slee.sipevent.server.publication.Result;
 
 /**
  * Example of an application that uses
@@ -68,9 +65,6 @@ public abstract class InternalPublisherExampleSbb implements javax.slee.Sbb,
 			childSbb = (PublicationClientControlSbbLocalObject) getPublicationControlChildRelation()
 					.create();
 			setPublicationControlChildSbbCMP(childSbb);
-			childSbb
-					.setParentSbb((PublicationClientControlParentSbbLocalObject) this.sbbContext
-							.getSbbLocalObject());
 		}
 		return childSbb;
 	}
@@ -89,79 +83,44 @@ public abstract class InternalPublisherExampleSbb implements javax.slee.Sbb,
 			ActivityContextInterface aci) {
 
 		// check if it's my service that is starting
-		if (serviceActivityFactory.getActivity().equals(aci.getActivity())) {
-			log4j.info("Service activated, publishing state...");
+		
+		tracer.info("Service activated, publishing state...");
 			try {
-				getPublicationControlChildSbb().newPublication(
-						entity + eventPackage, entity, eventPackage, document,
+				final Result result = getPublicationControlChildSbb().newPublication(
+						entity, eventPackage, document,
 						contentType, contentSubType, expires);
+				if (result.getStatusCode() == 200) {
+					tracer.info("publication ok: eTag=" + result.getETag());
+					// save etag in cmp
+					setETag(result.getETag());
+					// set refresh timer
+					timerFacility.setTimer(aci, null, System.currentTimeMillis() + expires
+							* 1000, expires * 1000, 0, new TimerOptions());
+				}
+				else {
+					tracer.info("error on mew publication: error=" + result.getStatusCode());
+				}
 			} catch (Exception e) {
-				log4j.error(e);
-			}
-		} else {
-			// another service activated, we don't want to receive further
-			// events on this activity
-			aci.detach(sbbContext.getSbbLocalObject());
-		}
-	}
-
-	public void newPublicationOk(Object requestId, String tag, int expires)
-			throws Exception {
-		log4j.info("publication ok: eTag=" + tag);
-		// save etag in cmp
-		setETag(tag);
-		// let's set a periodic timer in the service activity, that originated
-		// this sbb entity (onServiceStartedEvent()...), to refresh the
-		// publication
-		TimerOptions timerOptions = new TimerOptions();
-		timerOptions.setPersistent(true);
-		timerOptions.setPreserveMissed(TimerPreserveMissed.ALL);
-		ServiceActivity serviceActivity = serviceActivityFactory.getActivity();
-		ActivityContextInterface aci = null;
-		try {
-			aci = serviceActivityContextInterfaceFactory
-					.getActivityContextInterface(serviceActivity);
-		} catch (Exception e) {
-			log4j.error("Failed to retreive service activity aci", e);
-			try {
-				getPublicationControlChildSbb().refreshPublication(requestId,
-						entity, eventPackage, tag, expires);
-			} catch (Exception f) {
-				log4j.error("Dude, now I can't get the child sbb!!", f);
-			}
-			return;
-		}
-		timerFacility.setTimer(aci, null, System.currentTimeMillis() + expires
-				* 1000, expires * 1000, 0, timerOptions);
-	}
-
-	public void newPublicationError(Object requestId, int error) {
-		log4j.info("error on mew publication: requestId=" + requestId
-				+ ",error=" + error);
+				tracer.severe("failed to create publication",e);
+			}		
 	}
 
 	public void onTimerEvent(TimerEvent event, ActivityContextInterface aci) {
 		// refresh publication
 		try {
-			getPublicationControlChildSbb().refreshPublication(
-					entity + eventPackage, entity, eventPackage, getETag(),
+			final Result result = getPublicationControlChildSbb().refreshPublication(entity, eventPackage, getETag(),
 					expires);
+			if (result.getStatusCode() == 200) {
+				tracer.info("refreshed publication ok: eTag=" + result.getETag() + ",expires=" + result.getExpires());
+				// update tag in cmp, it changes on refreshes too
+				setETag(result.getETag());
+			}
+			else {
+				tracer.info("error when refreshing publication: error=" + result.getStatusCode());
+			}
 		} catch (Exception e) {
-			log4j.error(e);
+			tracer.severe("failed to refresh publication",e);
 		}
-	}
-
-	public void refreshPublicationOk(Object requestId, String tag, int expires)
-			throws Exception {
-		log4j.info("refreshed publication ok: requestId=" + requestId
-				+ ",eTag=" + tag + ",expires=" + expires);
-		// update tag in cmp, it changes on refreshes too
-		setETag(tag);
-	}
-
-	public void refreshPublicationError(Object requestId, int error) {
-		log4j.info("erro when refreshing publication: requestId=" + requestId
-				+ ",error=" + error);
 	}
 
 	/**
@@ -173,37 +132,15 @@ public abstract class InternalPublisherExampleSbb implements javax.slee.Sbb,
 	public void onActivityEndEvent(ActivityEndEvent event,
 			ActivityContextInterface aci) {
 		if (getETag() != null) {
-			log4j.info("Service deactivated, removing publication...");
+			tracer.info("Service deactivated, removing publication...");
 			try {
-				getPublicationControlChildSbb().removePublication(
-						entity + eventPackage, entity, eventPackage, getETag());
+				getPublicationControlChildSbb().removePublication(entity, eventPackage, getETag());
 			} catch (Exception e) {
-				log4j.error(e);
+				tracer.severe("failed to remove publication",e);
 			}
 		} else {
-			log4j.info("Service deactivated, no published state to remove.");
+			tracer.info("Service deactivated, no published state to remove.");
 		}
-	}
-
-	public void removePublicationOk(Object requestId) throws Exception {
-		log4j.info("publication removed!");
-	}
-
-	public void removePublicationError(Object requestId, int error) {
-		log4j.info("error wehn removing publication: requestId=" + requestId
-				+ ",error=" + error);
-	}
-
-	// --- OTHER CALLBACKS FROM PUBLICATION CONTROL, WHICH ARE NOT USED
-
-	public void modifyPublicationOk(Object requestId, String tag, int expires)
-			throws Exception {
-		log4j.info("publication modification ok");
-	}
-
-	public void modifyPublicationError(Object requestId, int error) {
-		log4j.info("error when modifying publication: requestId=" + requestId
-				+ ",error=" + error);
 	}
 
 	// --- SBB OBJECT LIFECYCLE
@@ -211,8 +148,6 @@ public abstract class InternalPublisherExampleSbb implements javax.slee.Sbb,
 	private SbbContext sbbContext = null; // This SBB's context
 
 	private TimerFacility timerFacility = null;
-	private ServiceActivityFactory serviceActivityFactory = null;
-	private ServiceActivityContextInterfaceFactory serviceActivityContextInterfaceFactory = null;
 
 	/**
 	 * Called when an sbb object is instantied and enters the pooled state.
@@ -220,23 +155,21 @@ public abstract class InternalPublisherExampleSbb implements javax.slee.Sbb,
 	public void setSbbContext(SbbContext sbbContext) {
 
 		this.sbbContext = sbbContext;
+		tracer = sbbContext.getTracer("InternalPublisherExampleSbb");
+
 		try {
 			Context context = (Context) new InitialContext()
 					.lookup("java:comp/env");
 			timerFacility = (TimerFacility) context
 					.lookup("slee/facilities/timer");
-			serviceActivityFactory = (ServiceActivityFactory) context
-					.lookup("slee/serviceactivity/factory");
-			serviceActivityContextInterfaceFactory = (ServiceActivityContextInterfaceFactory) context
-					.lookup("slee/serviceactivity/activitycontextinterfacefactory");
+	
 		} catch (Exception e) {
-			log4j.error("Unable to retrieve factories, facilities & providers",
+			tracer.severe("Unable to retrieve factories, facilities & providers",
 					e);
 		}
 	}
 
 	public void unsetSbbContext() {
-		log4j.info("unsetSbbContext()");
 		this.sbbContext = null;
 	}
 
@@ -268,7 +201,6 @@ public abstract class InternalPublisherExampleSbb implements javax.slee.Sbb,
 	public void sbbRolledBack(RolledBackContext sbbRolledBack) {
 	}
 
-	private static Logger log4j = Logger
-			.getLogger(InternalPublisherExampleSbb.class);
+	private Tracer tracer;
 
 }

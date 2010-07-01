@@ -4,8 +4,14 @@
 	
 	<!-- MOBICENTS SIP PRESENCE SERVICE: SIP EVENT PUBLICATION CONTROL XML CONFIGURATION -->
 	
+	<bean name="Mobicents.SipPresence.SipEvent.PublicationControlDataSource" class="org.mobicents.slee.sipevent.server.publication.data.PublicationControlDataSource">      
+		<constructor>
+     		<parameter><inject bean="Mobicents.JAINSLEE.Cache"/></parameter>			
+     	</constructor>	      
+   	</bean>
+
 	<!-- Gets the singleton and registers it as JMX MBean -->
-	
+   
 	<bean name="Mobicents.SipPresence.SipEvent.PublicationControlManagement" class="org.mobicents.slee.sipevent.server.publication.jmx.PublicationControlManagement">
       
       <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="org.mobicents.slee:sippresence=SipEventPublicationControl",exposedInterface=org.mobicents.slee.sipevent.server.publication.jmx.PublicationControlManagementMBean.class,registerDirectly=true)</annotation>
@@ -17,7 +23,8 @@
       <property name="minExpires">${sipevent.server.minExpires}</property>
       <property name="contactAddressDisplayName">${sipevent.server.contactAddressDisplayName}</property>
       <property name="PChargingVectorHeaderTerminatingIOI">${sipevent.server.PChargingVectorHeaderTerminatingIOI}</property>
-            	      
+      <property name="useAlternativeValueForExpiredPublication">${sipevent.server.publication.useAlternativeValueForExpiredPublication}</property>
+      <property name="dataSource"><inject bean="Mobicents.SipPresence.SipEvent.PublicationControlDataSource"/></property>
    </bean>
    
 </deployment>

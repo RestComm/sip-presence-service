@@ -35,8 +35,8 @@ import org.mobicents.slee.sipevent.server.subscription.EventListSubscriptionCont
 import org.mobicents.slee.sipevent.server.subscription.EventListSubscriptionControl;
 import org.mobicents.slee.sipevent.server.subscription.FlatListMakerParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.FlatListMakerSbbLocalObject;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
-import org.mobicents.slee.sipevent.server.subscription.pojo.SubscriptionKey;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.mobicents.slee.xdm.server.XDMClientControlParentSbbLocalObject;
 import org.mobicents.slee.xdm.server.XDMClientControlSbbLocalObject;
 import org.openxdm.xcap.client.appusage.rlsservices.jaxb.RlsServices;

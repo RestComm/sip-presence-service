@@ -3,7 +3,7 @@
  */
 package org.mobicents.slee.sipevent.server.subscription;
 
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 
 /**
  * @author martins

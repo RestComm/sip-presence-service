@@ -307,7 +307,7 @@ public abstract class AbstractDataSourceResourceAdaptor implements DataSourceRes
 		final ActivityHandle activityHandle = new ActivityHandle(auid);
 		AppUsageActivity activity = (AppUsageActivity) activities.get(activityHandle);
 		if (activity == null) {
-			activity = new AppUsageActivity(auid,this);
+			activity = new AppUsageActivity(auid);
 			final AppUsageActivity anotherActivity = (AppUsageActivity) activities.putIfAbsent(activityHandle, activity);
 			if (anotherActivity != null) {
 				activity = anotherActivity;
@@ -333,7 +333,7 @@ public abstract class AbstractDataSourceResourceAdaptor implements DataSourceRes
 		ActivityHandle activityHandle = new ActivityHandle(documentSelector.toString());
 		DocumentActivity activity = (DocumentActivity) activities.get(activityHandle);
 		if (activity == null) {
-			activity = new DocumentActivity(documentSelector,this);
+			activity = new DocumentActivity(documentSelector);
 			DocumentActivity anotherActivity = (DocumentActivity) activities.putIfAbsent(activityHandle, activity);
 			if (anotherActivity != null) {
 				activity = anotherActivity;

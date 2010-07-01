@@ -19,9 +19,6 @@
         <sbb-classes>
             <sbb-abstract-class reentrant="True">
                 <sbb-abstract-class-name>org.mobicents.slee.sipevent.server.publication.SipPublicationControlSbb</sbb-abstract-class-name>
-                <cmp-field>
-                	<cmp-field-name>publicationControlChildSbbCMP</cmp-field-name>
-                </cmp-field>    
                 <get-child-relation-method>                	
                 	<sbb-alias-ref>childSbb</sbb-alias-ref>
                 	<get-child-relation-method-name>getPublicationControlChildRelation</get-child-relation-method-name>
@@ -40,18 +37,18 @@
                 <event-type-vendor>net.java.slee</event-type-vendor>
 				<event-type-version>1.2</event-type-version>
             </event-type-ref>
-            <initial-event-select variable="ActivityContext" />
+            <initial-event-selector-method-name>iesPublish</initial-event-selector-method-name>
         </event>
         
-        <!-- event event-direction="Receive" initial-event="True">
+        <event event-direction="Receive" initial-event="True">
             <event-name>Options</event-name>
             <event-type-ref>
                 <event-type-name>javax.sip.message.Request.OPTIONS</event-type-name>
-                <event-type-vendor>javax.sip</event-type-vendor>
-                <event-type-version>1.1</event-type-version>
+                <event-type-vendor>net.java.slee</event-type-vendor>
+                <event-type-version>1.2</event-type-version>
             </event-type-ref>
             <initial-event-select variable="ActivityContext" />
-        </event-->
+        </event>
         
         <event event-direction="Receive" initial-event="True">
             <event-name>ServiceStartedEvent</event-name>
@@ -120,13 +117,7 @@
        
         <sbb-classes>
             <sbb-abstract-class reentrant="True">
-                <sbb-abstract-class-name>org.mobicents.slee.sipevent.server.publication.PublicationControlSbb</sbb-abstract-class-name>
-                <cmp-field>
-                	<cmp-field-name>parentSbbCMP</cmp-field-name>
-                </cmp-field>    
-                <cmp-field>
-                	<cmp-field-name>implementedChildSbbCMP</cmp-field-name>
-                </cmp-field>    
+                <sbb-abstract-class-name>org.mobicents.slee.sipevent.server.publication.PublicationControlSbb</sbb-abstract-class-name>   
                 <get-child-relation-method>                	
                 	<sbb-alias-ref>childSbb</sbb-alias-ref>
                 	<get-child-relation-method-name>getImplementedSbbChildRelation</get-child-relation-method-name>

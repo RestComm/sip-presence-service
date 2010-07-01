@@ -4,6 +4,12 @@
 	
 	<!-- MOBICENTS SIP PRESENCE SERVICE: SIP EVENT SUBSCRIPTION CONTROL XML CONFIGURATION -->
 	
+	<bean name="Mobicents.SipPresence.SipEvent.SubscriptionControlDataSource" class="org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource">      
+		<constructor>
+     		<parameter><inject bean="Mobicents.JAINSLEE.Cache"/></parameter>			
+     	</constructor>	      
+   	</bean>
+   	
 	<!-- Gets the singleton and registers it as JMX MBean -->
 	
 	<bean name="Mobicents.SipPresence.SipEvent.SubscriptionControlManagement" class="org.mobicents.slee.sipevent.server.subscription.jmx.SubscriptionControlManagement">
@@ -20,6 +26,7 @@
       <property name="contactAddressDisplayName">${sipevent.server.contactAddressDisplayName}</property>
       <property name="eventListSupportOn">${sipevent.server.subscription.eventListSupportOn}</property>
       <property name="PChargingVectorHeaderTerminatingIOI">${sipevent.server.PChargingVectorHeaderTerminatingIOI}</property>
+      <property name="dataSource"><inject bean="Mobicents.SipPresence.SipEvent.SubscriptionControlDataSource"/></property>
       			      
    </bean>
    

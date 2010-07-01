@@ -14,7 +14,7 @@
 	
 	<dependencies>
 		<dependency>
-			<artifactId>sip-event-publication-control-pojo</artifactId>
+			<artifactId>sip-event-publication-control-data</artifactId>
 			<groupId>${pom.groupId}</groupId>
 			<version>${pom.version}</version>
 		</dependency>		

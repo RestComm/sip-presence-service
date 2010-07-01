@@ -13,17 +13,16 @@ import javax.slee.TransactionRequiredLocalException;
 import javax.slee.facilities.TimerEvent;
 import javax.slee.facilities.TimerFacility;
 import javax.slee.facilities.TimerOptions;
-import javax.slee.facilities.TimerPreserveMissed;
+import javax.slee.facilities.Tracer;
 import javax.slee.serviceactivity.ServiceActivity;
 import javax.slee.serviceactivity.ServiceActivityContextInterfaceFactory;
 import javax.slee.serviceactivity.ServiceActivityFactory;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlParent;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlSbbLocalObject;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription.Event;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription.Status;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Event;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
 
 /**
  * Example of an application that uses
@@ -81,8 +80,7 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 			ActivityContextInterface aci) {
 
 		// check if it's my service that is starting
-		if (serviceActivityFactory.getActivity().equals(aci.getActivity())) {
-			log4j.info("Service activated, subscribing state...");
+			tracer.info("Service activated, subscribing state...");
 			try {
 				// create sub id
 				String subscriptionId = subscriber + ":" + notifier + ":"
@@ -94,38 +92,31 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 						notifier, eventPackage, subscriptionId, expires, null,
 						null, null);
 			} catch (Exception e) {
-				log4j.error(e);
+				tracer.severe("",e);
 			}
-		} else {
-			// another service activated, we don't want to receive further
-			// events on this activity
-			aci.detach(sbbContext.getSbbLocalObject());
-		}
 	}
 
 	public void subscribeOk(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int expires,
 			int responseCode) {
-		log4j.info("subscribe ok: responseCode=" + responseCode + ",expires="
+		tracer.info("subscribe ok: responseCode=" + responseCode + ",expires="
 				+ expires);
 		// let's set a periodic timer in the service activity, that originated
 		// this sbb entity (onServiceStartedEvent()...), to refresh the
 		// subscription
 		TimerOptions timerOptions = new TimerOptions();
-		timerOptions.setPersistent(true);
-		timerOptions.setPreserveMissed(TimerPreserveMissed.ALL);
 		ServiceActivity serviceActivity = serviceActivityFactory.getActivity();
 		ActivityContextInterface aci = null;
 		try {
 			aci = serviceActivityContextInterfaceFactory
 					.getActivityContextInterface(serviceActivity);
 		} catch (Exception e) {
-			log4j.error("Failed to retreive service activity aci", e);
+			tracer.severe("Failed to retreive service activity aci", e);
 			try {
 				getSubscriptionControlChildSbb().unsubscribe(subscriber,
 						notifier, eventPackage, subscriptionId);
 			} catch (Exception f) {
-				log4j.error("Dude, now I can't get the child sbb!!", f);
+				tracer.severe("Dude, now I can't get the child sbb!!", f);
 			}
 			return;
 		}
@@ -135,7 +126,7 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 
 	public void subscribeError(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int error) {
-		log4j.info("error on subscribe: error=" + error);
+		tracer.info("error on subscribe: error=" + error);
 	}
 
 	public void notifyEvent(String subscriber, String notifier,
@@ -150,7 +141,7 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 				+ "\n+-- Subscription terminationReason: " + terminationReason
 				+ "\n+-- Content Type: " + contentType + '/' + contentSubtype
 				+ "\n+-- Content:\n\n" + content;
-		log4j.info(notification);
+		tracer.info(notification);
 
 	}
 
@@ -160,19 +151,19 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 			getSubscriptionControlChildSbb().resubscribe(subscriber, notifier,
 					eventPackage, getSubscriptionId(), expires);
 		} catch (Exception e) {
-			log4j.error(e);
+			tracer.severe("",e);
 		}
 	}
 
 	public void resubscribeOk(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int expires) {
-		log4j.info("resubscribe Ok : expires=" + expires);
+		tracer.info("resubscribe Ok : expires=" + expires);
 
 	}
 
 	public void resubscribeError(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int error) {
-		log4j.info("error on resubscribe: error=" + error);
+		tracer.info("error on resubscribe: error=" + error);
 	}
 
 	/**
@@ -184,27 +175,27 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 	public void onActivityEndEvent(ActivityEndEvent event,
 			ActivityContextInterface aci) {
 		if (getSubscriptionId() != null) {
-			log4j.info("Service deactivated, removing subscription...");
+			tracer.info("Service deactivated, removing subscription...");
 			try {
 				getSubscriptionControlChildSbb().unsubscribe(subscriber,
 						notifier, eventPackage, getSubscriptionId());
 			} catch (Exception e) {
-				log4j.error(e);
+				tracer.severe("",e);
 			}
 		} else {
-			log4j.info("Service deactivated, no subscription to remove.");
+			tracer.info("Service deactivated, no subscription to remove.");
 		}
 	}
 
 	public void unsubscribeOk(String subscriber, String notifier,
 			String eventPackage, String subscriptionId) {
-		log4j.info("unsubscribe Ok");
+		tracer.info("unsubscribe Ok");
 
 	}
 
 	public void unsubscribeError(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int error) {
-		log4j.info("error on unsubscribe: error=" + error);
+		tracer.info("error on unsubscribe: error=" + error);
 	}
 
 	// --- SBB OBJECT
@@ -221,23 +212,23 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 	public void setSbbContext(SbbContext sbbContext) {
 
 		this.sbbContext = sbbContext;
+		this.tracer = sbbContext.getTracer("InternalSubscriberExampleSbb");
 		try {
 			Context context = (Context) new InitialContext()
 					.lookup("java:comp/env");
 			timerFacility = (TimerFacility) context
 					.lookup("slee/facilities/timer");
 			serviceActivityFactory = (ServiceActivityFactory) context
-					.lookup("slee/serviceactivity/factory");
+				.lookup("slee/serviceactivity/factory");
 			serviceActivityContextInterfaceFactory = (ServiceActivityContextInterfaceFactory) context
-					.lookup("slee/serviceactivity/activitycontextinterfacefactory");
+				.lookup("slee/serviceactivity/activitycontextinterfacefactory");
 		} catch (Exception e) {
-			log4j.error("Unable to retrieve factories, facilities & providers",
+			tracer.severe("Unable to retrieve factories, facilities & providers",
 					e);
 		}
 	}
 
 	public void unsetSbbContext() {
-		log4j.info("unsetSbbContext()");
 		this.sbbContext = null;
 	}
 
@@ -269,7 +260,6 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 	public void sbbRolledBack(RolledBackContext sbbRolledBack) {
 	}
 
-	private static Logger log4j = Logger
-			.getLogger(InternalSubscriberExampleSbb.class);
+	private Tracer tracer;
 
 }

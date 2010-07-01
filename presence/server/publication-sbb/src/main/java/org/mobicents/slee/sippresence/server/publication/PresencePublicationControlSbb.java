@@ -1,9 +1,5 @@
 package org.mobicents.slee.sippresence.server.publication;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sip.address.URI;
@@ -21,15 +17,14 @@ import javax.slee.TransactionRequiredLocalException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 
 import net.java.slee.resource.sip.SleeSipProvider;
 
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.publication.ImplementedPublicationControl;
-import org.mobicents.slee.sipevent.server.publication.pojo.ComposedPublication;
-import org.mobicents.slee.sipevent.server.publication.pojo.Publication;
+import org.mobicents.slee.sipevent.server.publication.StateComposer;
+import org.mobicents.slee.sipevent.server.publication.data.ComposedPublication;
+import org.mobicents.slee.sipevent.server.publication.data.Publication;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sippresence.pojo.pidf.Basic;
 import org.mobicents.slee.sippresence.pojo.pidf.Presence;
@@ -49,17 +44,11 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 	private static Logger logger = Logger
 			.getLogger(PresencePublicationControlSbb.class);
 	private final static String[] eventPackages = { "presence" };
-
-	/**
-	 * SbbObject's sbb context
-	 */
-	private SbbContext sbbContext;
-
+	
 	/**
 	 * SbbObject's context setting
 	 */
 	public void setSbbContext(SbbContext sbbContext) {
-		this.sbbContext = sbbContext;
 	}
 
 	private HeaderFactory headerFactory;
@@ -112,16 +101,6 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 					.createContentTypeHeader(
 							composedPublication.getContentType(),
 							composedPublication.getContentSubType());
-			if (composedPublication.getDocument() != null
-					&& composedPublication.getUnmarshalledContent() == null) {
-				// content needs to unmarshalled
-				StringReader stringReader = new StringReader(
-						composedPublication.getDocument());
-				composedPublication
-						.setUnmarshalledContent((JAXBElement) getUnmarshaller()
-								.unmarshal(stringReader));
-				stringReader.close();
-			}
 			childSbb.notifySubscribers(composedPublication
 					.getComposedPublicationKey().getEntity(),
 					composedPublication.getComposedPublicationKey()
@@ -137,8 +116,9 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 	 * (non-Javadoc)
 	 * @see org.mobicents.slee.sipevent.server.publication.ImplementedPublicationControl#authorizePublication(java.lang.String, javax.xml.bind.JAXBElement)
 	 */
+	@SuppressWarnings("unchecked")
 	public boolean authorizePublication(String requestEntity,
-			JAXBElement unmarshalledContent) {
+			JAXBElement<?> unmarshalledContent) {
 		// returns true if request uri matches entity (stripped from pres:
 		// prefix if found) inside pidf doc
 		String entity = ((JAXBElement<Presence>) unmarshalledContent)
@@ -199,135 +179,39 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 		}
 	}
 
-	public Unmarshaller getUnmarshaller() {
-		try {
-			return jaxbContext.createUnmarshaller();
-		} catch (JAXBException e) {
-			logger.error("failed to create unmarshaller", e);
-			return null;
-		}
-	}
-
-	public Marshaller getMarshaller() {
-		try {
-			return jaxbContext.createMarshaller();
-		} catch (JAXBException e) {
-			logger.error("failed to create unmarshaller", e);
-			return null;
-		}
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sipevent.server.publication.ImplementedPublicationControl#getJaxbContext()
+	 */
+	@Override
+	public JAXBContext getJaxbContext() {
+		return jaxbContext;
 	}
 
 	private static final PresenceCompositionPolicy presenceCompositionPolicy = new PresenceCompositionPolicy();
 	
-	private JAXBElement unmarshall(String marshalledContent, Unmarshaller unmarshaller) {
-		StringReader stringReader = new StringReader(marshalledContent);
-		JAXBElement jaxbElement = null;
-		try {
-			jaxbElement = (JAXBElement) unmarshaller.unmarshal(stringReader);
-		} catch (JAXBException e) {
-			logger.error("failed to unmarshall presence content", e);
-		}
-		stringReader.close();
-		return jaxbElement;		
-	}
-	
-	private String marshall(Presence presence, Marshaller marshaller) {
-		StringWriter stringWriter = new StringWriter();
-		String result = null;
-		try {
-			marshaller.marshal(presence, stringWriter);
-			result = stringWriter.toString();
-		} catch (JAXBException e) {
-			logger.error("failed to marshall presence content", e);
-		}
-		try {
-			stringWriter.close();
-		} catch (IOException e) {
-			logger.error("failed to close string writer", e);
-		}
-		return result;		
-	}
-	
-	public ComposedPublication combinePublication(Publication publication,
-			ComposedPublication composedPublication) {
-		
-		Unmarshaller unmarshaller = null;
-		Marshaller marshaller = null;
-		try {
-			unmarshaller = jaxbContext.createUnmarshaller();
-			marshaller = jaxbContext.createMarshaller();
-		} catch (JAXBException e) {
-			logger.error("failed to create unmarshaller", e);
-			return null;
-		}
-		
-		JAXBElement publicationUnmarshalledContent = publication.getUnmarshalledContent();
-		if (publicationUnmarshalledContent == null) {
-			publicationUnmarshalledContent = unmarshall(publication.getDocument(), unmarshaller);
-			publication.setUnmarshalledContent(publicationUnmarshalledContent);
-		}
-		JAXBElement composedpublicationUnmarshalledContent = composedPublication.getUnmarshalledContent();
-		if (composedpublicationUnmarshalledContent == null) {
-			composedpublicationUnmarshalledContent = unmarshall(composedPublication.getDocument(), unmarshaller);			
-		}
-		if (publicationUnmarshalledContent != null && composedpublicationUnmarshalledContent != null) {
-			Presence composedPresence = presenceCompositionPolicy.compose((Presence)publicationUnmarshalledContent.getValue(), (Presence)composedpublicationUnmarshalledContent.getValue());
-			composedpublicationUnmarshalledContent.setValue(composedPresence);
-			composedPublication.setUnmarshalledContent(composedpublicationUnmarshalledContent);
-			composedPublication.setDocument(marshall(composedPresence, marshaller));
-			
-		}
-		return composedPublication;
+	/* (non-Javadoc)
+	 * @see org.mobicents.slee.sipevent.server.publication.ImplementedPublicationControl#getStateComposer()
+	 */
+	@Override
+	public StateComposer getStateComposer() {
+		return presenceCompositionPolicy;
 	}
 
 	public Publication getAlternativeValueForExpiredPublication(
 			Publication publication) {
-		JAXBElement element = publication.getUnmarshalledContent();
-		if (element == null) {
-			StringReader stringReader = new StringReader(publication
-					.getDocument());
-			try {
-				element = (JAXBElement) getUnmarshaller().unmarshal(
-						stringReader);
-			} catch (Exception e) {
-				logger.error("failed to unmarshall publication", e);
-				return null;
-			} finally {
-				stringReader.close();
-			}
-			publication.setUnmarshalledContent(element);
+		final Presence presence = (Presence)  publication.getUnmarshalledContent().getValue();
+		for (Tuple tuple : presence.getTuple()) {
+			tuple.getAny().clear();
+			tuple.getNote().clear();
+			tuple.setTimestamp(null);
+			Status status = new Status();
+			status.setBasic(Basic.CLOSED);
+			tuple.setStatus(status);
 		}
-		if (element.getValue() instanceof Presence) {
-			Presence presence = (Presence) element.getValue();
-			for (Tuple tuple : presence.getTuple()) {
-				tuple.getAny().clear();
-				tuple.getNote().clear();
-				tuple.setTimestamp(null);
-				Status status = new Status();
-				status.setBasic(Basic.CLOSED);
-				tuple.setStatus(status);
-			}
-			presence.getAny().clear();
-			presence.getNote().clear();
-			// marshall new content
-			StringWriter stringWriter = new StringWriter();
-			try {
-				getMarshaller().marshal(element, stringWriter);
-				publication.setDocument(stringWriter.toString());
-			} catch (Exception e) {
-				logger.error("failed to marshall alternative publication", e);
-				return null;
-			} finally {
-				try {
-					stringWriter.close();
-				} catch (IOException e) {
-					// ignore
-				}
-			}
-			return publication;
-		} else {
-			return null;
-		}
+		presence.getAny().clear();
+		presence.getNote().clear();
+		publication.setDocument(null);
+		return publication;		
 	}
 
 	public boolean isResponsibleForResource(URI uri) {
@@ -365,7 +249,6 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 	}
 
 	public void unsetSbbContext() {
-		this.sbbContext = null;
 	}
 
 }

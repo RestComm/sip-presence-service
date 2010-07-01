@@ -5,14 +5,9 @@ import gov.nist.javax.sip.header.ims.PChargingVectorHeader;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
-import javax.sip.ListeningPoint;
 import javax.sip.RequestEvent;
 import javax.sip.ServerTransaction;
-import javax.sip.address.Address;
-import javax.sip.address.AddressFactory;
-import javax.sip.address.SipURI;
 import javax.sip.address.URI;
-import javax.sip.header.ContactHeader;
 import javax.sip.header.ContentTypeHeader;
 import javax.sip.header.EventHeader;
 import javax.sip.header.ExpiresHeader;
@@ -25,6 +20,7 @@ import javax.slee.ActivityContextInterface;
 import javax.slee.ActivityEndEvent;
 import javax.slee.ChildRelation;
 import javax.slee.CreateException;
+import javax.slee.InitialEventSelector;
 import javax.slee.RolledBackContext;
 import javax.slee.Sbb;
 import javax.slee.SbbContext;
@@ -48,21 +44,12 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 
 	private static Logger logger = Logger.getLogger(SipPublicationControlSbb.class);	
 	
-	/**
-	 * JAIN-SIP provider & factories
-	 * 
-	 * @return
-	 */
+	// JAIN-SIP provider & factories
 	private SleeSipProvider sipProvider;
-	private AddressFactory addressFactory;
 	private MessageFactory messageFactory;
 	private HeaderFactory headerFactory;
-	
-	/**
-	 * SbbObject's sbb context
-	 */
+
 	protected SbbContext sbbContext;
-	
 	private Context jndiContext;
 	
 	/**
@@ -72,9 +59,8 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 		this.sbbContext=sbbContext;
 		// retrieve factories, facilities & providers
 		try {
-			jndiContext = (Context) new InitialContext().lookup("java:comp/env");			
+			jndiContext = (Context) new InitialContext().lookup("java:comp/env");
 			sipProvider = (SleeSipProvider)jndiContext.lookup("slee/resources/jainsip/1.2/provider");      
-			addressFactory = sipProvider.getAddressFactory();
 			headerFactory = sipProvider.getHeaderFactory();
 			messageFactory = sipProvider.getMessageFactory();
 		}
@@ -86,21 +72,14 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 	// --- INTERNAL CHILD SBB
 	
 	public abstract ChildRelation getPublicationControlChildRelation();
-	public abstract PublicationControlSbbLocalObject getPublicationControlChildSbbCMP();
-	public abstract void setPublicationControlChildSbbCMP(PublicationControlSbbLocalObject value);
+	
 	private PublicationControlSbbLocalObject getPublicationControlChildSbb() {
-		PublicationControlSbbLocalObject childSbb = getPublicationControlChildSbbCMP();
-		if (childSbb == null) {
-			try {
-				childSbb = (PublicationControlSbbLocalObject) getPublicationControlChildRelation().create();
-			} catch (Exception e) {
-				logger.error("Failed to create child sbb",e);
-				return null;
-			}
-			setPublicationControlChildSbbCMP(childSbb);
-			childSbb.setParentSbb((PublicationClientControlParentSbbLocalObject)this.sbbContext.getSbbLocalObject());
-		}
-		return childSbb;
+		try {
+			return (PublicationControlSbbLocalObject) getPublicationControlChildRelation().create();
+		} catch (Exception e) {
+			logger.error("Failed to create child sbb",e);
+			return null;
+		}		
 	}
 	
 	// -- CONFIGURATION	
@@ -113,8 +92,21 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 		return PublicationControlManagement.getInstance();
 	}
 	
+	/**
+	 * Initial event selector method for the PUBLISH event, defines the 
+	 * presentity as the custom name.
+	 *  
+	 * @param ies
+	 * @return
+	 */
+	public InitialEventSelector iesPublish(InitialEventSelector ies) {
+		final RequestEvent event = (RequestEvent) ies.getEvent();
+		ies.setCustomName(event.getRequest().getRequestURI().toString());
+		return ies;
+	}
+	
 	// ----------- EVENT HANDLERS
-
+	
 	/**
 	 * PUBLISH event processing
 	 * 
@@ -140,16 +132,13 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 				// create response
 				Response response = messageFactory.createResponse(Response.SERVER_INTERNAL_ERROR,event.getRequest());
 				event.getServerTransaction().sendResponse(response);
-				if (logger.isDebugEnabled()) {
-					logger.debug("Response sent:\n"+response.toString());
-				}
 			}
 			catch (Exception f) {
 				logger.error("Can't send error response!",f);
 			}
 			return;
 		}
-		
+				
 		/*
 		 * The presence of a body and the SIP-If-Match header field
 		 * determine the specific operation that the request is performing,
@@ -210,13 +199,36 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 								// refresh or modification of publication
 								if (event.getRequest().getContentLength().getContentLength() == 0) {
 									// refreshing a publication
-									childSbb.refreshPublication(event, entity, eventPackage, sipIfMatchHeader.getETag(), expires);
+									final Result result = childSbb.refreshPublication(entity, eventPackage, sipIfMatchHeader.getETag(), expires);
+									if (result.getStatusCode() < 300) {
+										try {
+											sendOkResponse(event, result.getETag(), result.getExpires());
+										}
+										catch (Exception e) {
+											logger.error("Error sending response to SIP client, removing related publication",e);
+											childSbb.removePublication(entity, eventPackage, result.getETag());
+										}
+									}
+									else {
+										sendErrorResponse(result.getStatusCode(), event.getRequest(), event.getServerTransaction(), eventPackage, childSbb);
+									}
 								}
 								else {
 									ContentTypeHeader contentTypeHeader = (ContentTypeHeader) event.getRequest().getHeader(ContentTypeHeader.NAME);
 									if (childSbb.acceptsContentType(eventPackage,contentTypeHeader)) {
 										// modification	
-										childSbb.modifyPublication(event, entity, eventPackage, sipIfMatchHeader.getETag(), new String(event.getRequest().getRawContent()), contentTypeHeader.getContentType(), contentTypeHeader.getContentSubType(), expires);
+										final Result result =  childSbb.modifyPublication(entity, eventPackage, sipIfMatchHeader.getETag(), new String(event.getRequest().getRawContent()), contentTypeHeader.getContentType(), contentTypeHeader.getContentSubType(), expires);
+										if (result.getStatusCode() < 300) {
+											try {
+												sendOkResponse(event, result.getETag(), result.getExpires());
+											} catch (Exception e) {
+												logger.error("Error sending response to SIP client, removing related publication",e);
+												childSbb.removePublication(entity, eventPackage, result.getETag());
+											}
+										}
+										else {
+											sendErrorResponse(result.getStatusCode(), event.getRequest(), event.getServerTransaction(), eventPackage, childSbb);
+										}
 									}
 									else {
 										// unsupported media type, send the ones supported
@@ -229,7 +241,18 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 								if (event.getRequest().getContentLength().getContentLength() != 0) {
 									ContentTypeHeader contentTypeHeader = (ContentTypeHeader) event.getRequest().getHeader(ContentTypeHeader.NAME);
 									if (childSbb.acceptsContentType(eventPackage,contentTypeHeader)) {
-										childSbb.newPublication(event, entityURI.toString(), eventPackage, new String(event.getRequest().getRawContent()), contentTypeHeader.getContentType(), contentTypeHeader.getContentSubType(), expires);
+										final Result result = childSbb.newPublication(entityURI.toString(), eventPackage, new String(event.getRequest().getRawContent()), contentTypeHeader.getContentType(), contentTypeHeader.getContentSubType(), expires);
+										if (result.getStatusCode() < 300) {
+											try {
+												sendOkResponse(event, result.getETag(), result.getExpires());
+											} catch (Exception e) {
+												logger.error("Error sending response to SIP client, removing related publication",e);
+												childSbb.removePublication(entity, eventPackage, result.getETag());
+											}
+										}
+										else {
+											sendErrorResponse(result.getStatusCode(), event.getRequest(), event.getServerTransaction(), eventPackage, childSbb);
+										}
 									}
 									else {
 										// unsupported media type, send the one supported
@@ -254,7 +277,17 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 						SIPIfMatchHeader sipIfMatchHeader = (SIPIfMatchHeader)event.getRequest().getHeader(SIPIfMatchHeader.NAME);
 						if (sipIfMatchHeader != null) {
 							// remove publication
-							childSbb.removePublication(event, entity, eventPackage, sipIfMatchHeader.getETag());														
+							int result = childSbb.removePublication(entity, eventPackage, sipIfMatchHeader.getETag());
+							if (result < 300) {
+								try {
+									sendOkResponse(event, null, -1);
+								} catch (Exception e) {
+									logger.error("Error sending response to SIP client",e);
+								}
+							}
+							else {
+								sendErrorResponse(result, event.getRequest(), event.getServerTransaction(), eventPackage, childSbb);
+							}
 						}
 						else {
 							// send Bad Request since removal requires etag
@@ -285,8 +318,8 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 
 	public void onOptions(RequestEvent requestEvent, ActivityContextInterface aci) {
 		
-		if (logger.isInfoEnabled()) {
-			logger.info("Processing OPTIONS request");
+		if (logger.isDebugEnabled()) {
+			logger.debug("Processing OPTIONS request");
 		}
 		aci.detach(this.sbbContext.getSbbLocalObject());
 		/*
@@ -346,7 +379,8 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 	}
 	
 	public void onServiceStartedEvent(ServiceStartedEvent event, ActivityContextInterface aci) {
-		// we just want to stay attached to this service activity, to receive the activity end event on service deactivation				
+		// init the child sbb 
+		getPublicationControlChildSbb().init();		
 	}
 	
 	public void onActivityEndEvent(ActivityEndEvent event, ActivityContextInterface aci) {
@@ -361,42 +395,10 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 				logger.error("Faield to shutdown publication control",e);
 			}
 		}
+		else {
+			logger.error("Hmm why am I attached to "+aci.getActivity());
+		}
 	}
-	
-	// ----------- CALL BACK METHODS FOR CHILD SBB
-	
-	public void modifyPublicationError(Object requestId, int error) {
-		sendErrorResponse(requestId,error);
-	}
-	
-	public void modifyPublicationOk(Object requestId, String tag, int expires) throws Exception {
-		sendOkResponse((RequestEvent)requestId, tag, expires);
-	}
-	
-	public void newPublicationError(Object requestId, int error) {
-		sendErrorResponse(requestId,error);
-	}
-	
-	public void newPublicationOk(Object requestId, String tag,int expires) throws Exception {
-		sendOkResponse((RequestEvent)requestId, tag, expires);
-	}
-	
-	public void refreshPublicationError(Object requestId, int error) {
-		sendErrorResponse(requestId,error);
-	}
-	
-	public void refreshPublicationOk(Object requestId, String tag, int expires) throws Exception {
-		sendOkResponse((RequestEvent)requestId, tag, expires);
-	}
-	
-	public void removePublicationError(Object requestId, int error) {
-		sendErrorResponse(requestId,error);
-	}
-	
-	public void removePublicationOk(Object requestId) throws Exception {
-		sendOkResponse((RequestEvent)requestId, null, -1);
-	}
-	
 	
 	// ----------- AUX METHODS
 	
@@ -405,63 +407,28 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 		Response response = messageFactory.createResponse(Response.OK, event.getRequest());
 		if (eTag != null) response.addHeader(headerFactory.createSIPETagHeader(eTag));
 		if (expires != -1) response.addHeader(headerFactory.createExpiresHeader(expires));
-		// Both 2xx response to SUBSCRIBE and NOTIFY need a Contact
-		if (response.getHeader(ContactHeader.NAME) != null) {
-			response.removeHeader(ContactHeader.NAME);
-		}
-		
+				
 		/* aayush..started adding here: (Ref issue #567)
 		 * The PUBLISH request had a P-charging-vector header
 		 * that consisted of an ICID and an orig-ioi parameter.The PS
 		 * needs to preserve that header and needs to add a term-ioi
 		 * parameter pointing to its own domain name:*/
-        
 		// 1. Get the header as received from the request:
-		PChargingVectorHeader pcv = (PChargingVectorHeader) 
+		final PChargingVectorHeader pcv = (PChargingVectorHeader) 
 		event.getRequest().getHeader(PChargingVectorHeader.NAME);
-		
 		// 2. In case the request is received from a non-IMS VoIP network,P-charging-Vector wont be there,so check for pcv!=null
-		if(pcv!=null) 
-		{
-		pcv.setTerminatingIOI(getConfiguration().getPChargingVectorHeaderTerminatingIOI());
-		response.addHeader(pcv);
+		if (pcv!=null) {
+			pcv.setTerminatingIOI(getConfiguration().getPChargingVectorHeaderTerminatingIOI());
+			response.addHeader(pcv);
 		}
 		
 		// Also need to add the P-Charging-Function-Addresses header
 		// as received from the PUBLISH request in the 200 OK being sent:
-		
-		// 1. Get the header from the request:
-		PChargingFunctionAddressesHeader pcfa = (PChargingFunctionAddressesHeader) 
+		final PChargingFunctionAddressesHeader pcfa = (PChargingFunctionAddressesHeader) 
 		event.getRequest().getHeader(PChargingFunctionAddressesHeader.NAME);
+		if (pcfa!=null) response.addHeader(pcfa);
 		
-		// 2. Add the header without any changes:
-		if(pcfa!=null)
-		response.addHeader(pcfa);
-		// end of additions...aayush.
-		
-		try {
-			ListeningPoint listeningPoint = sipProvider.getListeningPoint("udp");
-			Address address = addressFactory.createAddress(
-					getConfiguration().getContactAddressDisplayName()+ " <sip:"
-					+ listeningPoint.getIPAddress() + ">");
-			((SipURI) address.getURI()).setPort(listeningPoint.getPort());
-			response.addHeader(headerFactory.createContactHeader(address));
-		} catch (Exception e) {
-			logger.error("Can't add contact header", e);
-		}
 		event.getServerTransaction().sendResponse(response);
-		if (logger.isDebugEnabled()) {
-			logger.debug("Response sent:\n"+response.toString());		
-		}
-	}
-	
-	private void sendErrorResponse(Object requestId, int error) {
-
-		RequestEvent event = (RequestEvent) requestId;
-		sendErrorResponse(error, event.getRequest(), event
-				.getServerTransaction(), ((EventHeader) event.getRequest()
-				.getHeader(EventHeader.NAME)).getEventType(),
-				getPublicationControlChildSbb());
 	}
 	
 	/*
@@ -497,9 +464,6 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 			}
 
 			serverTransaction.sendResponse(response);
-			if (logger.isDebugEnabled()) {
-				logger.debug("Response sent:\n"+response.toString());
-			}
 		}
 		catch (Exception e) {
 			logger.error("Can't send response!",e);

@@ -5,9 +5,8 @@ package org.mobicents.slee.sipevent.server.subscription;
 
 import javax.sip.RequestEvent;
 
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.xdm.server.XDMClientControlParent;
-import org.mobicents.slee.xdm.server.XDMClientControlParentSbbLocalObject;
 
 /**
  * @author martins

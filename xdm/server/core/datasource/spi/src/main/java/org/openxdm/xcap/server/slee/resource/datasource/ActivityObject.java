@@ -1,17 +1,11 @@
 package org.openxdm.xcap.server.slee.resource.datasource;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 public class ActivityObject {
 
-	protected DataSourceResourceAdaptor ra;
-	protected AtomicInteger timesCreated;
 	protected final String id;
 	
-	protected ActivityObject(String id,DataSourceResourceAdaptor ra) {
+	protected ActivityObject(String id) {
 		this.id = id;
-		this.ra = ra;
-		timesCreated = new AtomicInteger(1);
 	}
 	
 	public int hashCode() {
@@ -26,15 +20,5 @@ public class ActivityObject {
 		}
 		return false;
 	}
-	
-	protected void created() {
-		timesCreated.incrementAndGet();
-	}
-	
-	public void remove() {
-		if (timesCreated.decrementAndGet() == 0) {
-			ra.endActivity(new ActivityHandle(id));
-		}
-	}
-	
+		
 }

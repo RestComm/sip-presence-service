@@ -9,4 +9,11 @@
 	
 	<artifactId>sip-event-publication-control-configuration-jar</artifactId>
 	
+	<dependencies>
+		<dependency>
+			<groupId>${pom.groupId}</groupId>
+			<artifactId>sip-event-publication-control-data</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+	</dependencies>
 </project>

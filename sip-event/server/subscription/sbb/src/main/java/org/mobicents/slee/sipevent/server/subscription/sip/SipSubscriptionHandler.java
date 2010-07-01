@@ -5,7 +5,6 @@ import gov.nist.javax.sip.header.ims.PChargingVectorHeader;
 
 import java.text.ParseException;
 
-import javax.persistence.EntityManager;
 import javax.sip.Dialog;
 import javax.sip.ListeningPoint;
 import javax.sip.RequestEvent;
@@ -22,7 +21,9 @@ import javax.slee.ActivityContextInterface;
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 
 /**
  * Handler for SIP SUBSCRIBE events.
@@ -93,7 +94,7 @@ public class SipSubscriptionHandler {
 			return;
 		}
 
-		EntityManager entityManager = sbb.getEntityManager();
+		final SubscriptionControlDataSource dataSource = sbb.getConfiguration().getDataSource();
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("Processing SUBSCRIBE request...");
@@ -134,15 +135,11 @@ public class SipSubscriptionHandler {
 							newSipSubscriptionHandler.newSipSubscription(event,
 									aci, eventPackage,
 									eventHeader.getEventId(), expires,
-									entityManager, childSbb);
+									dataSource, childSbb);
 						} else {
 							String eventId = eventHeader.getEventId();
 							// trying to create or refresh a subscription
-							Subscription subscription = Subscription
-									.getSubscription(entityManager, dialog
-											.getCallId().getCallId(), dialog
-											.getRemoteTag(), eventPackage,
-											eventId);
+							Subscription subscription = dataSource.get(new SubscriptionKey(dialog.getDialogId(), eventPackage, eventId));
 							if (subscription != null) {
 								// subscription exists
 								if (subscription.getStatus().equals(
@@ -153,7 +150,7 @@ public class SipSubscriptionHandler {
 									refreshSipSubscriptionHandler
 											.refreshSipSubscription(event, aci,
 													expires, subscription,
-													entityManager, childSbb);
+													dataSource, childSbb);
 								} else {
 									// subscription status does not permits
 									// refresh
@@ -168,7 +165,7 @@ public class SipSubscriptionHandler {
 								newSipSubscriptionHandler.newSipSubscription(
 										event, aci, eventPackage, eventHeader
 												.getEventId(), expires,
-										entityManager, childSbb);
+										dataSource, childSbb);
 							}
 						}
 					} else {
@@ -185,10 +182,7 @@ public class SipSubscriptionHandler {
 					if (dialog != null) {
 						String eventId = eventHeader.getEventId();
 						// trying to remove a subscription
-						Subscription subscription = Subscription
-								.getSubscription(entityManager, dialog
-										.getCallId().getCallId(), dialog
-										.getRemoteTag(), eventPackage, eventId);
+						Subscription subscription = dataSource.get(new SubscriptionKey(dialog.getDialogId(), eventPackage, eventId));
 						if (subscription != null) {
 							if (subscription.getStatus().equals(
 									Subscription.Status.active)
@@ -213,7 +207,7 @@ public class SipSubscriptionHandler {
 								}
 								removeSipSubscriptionHandler
 								.removeSipSubscription(aci,
-										subscription, entityManager,
+										subscription, dataSource,
 										childSbb);
 							} else {
 								// subscription does exists but status does
@@ -253,9 +247,6 @@ public class SipSubscriptionHandler {
 			sendResponse(Response.BAD_REQUEST, event.getRequest(), event
 					.getServerTransaction(), childSbb);
 		}
-
-		entityManager.flush();
-		entityManager.close();
 
 	}
 

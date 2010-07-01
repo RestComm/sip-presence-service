@@ -11,11 +11,11 @@ import javax.xml.bind.Unmarshaller;
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
 import org.mobicents.slee.sipevent.server.subscription.eventlist.FlatList;
 import org.mobicents.slee.sipevent.server.subscription.eventlist.MultiPart;
 import org.mobicents.slee.sipevent.server.subscription.eventlist.NotificationData;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription;
-import org.mobicents.slee.sipevent.server.subscription.pojo.Subscription.Status;
 import org.openxdm.xcap.client.appusage.resourcelists.jaxb.EntryType;
 import org.openxdm.xcap.client.appusage.resourcelists.jaxb.EntryType.DisplayName;
 
@@ -44,9 +44,7 @@ public class NotificationDataTest {
 		}
 		
 		String notifier = "sip:notifier@example.com";
-		Subscription subscription = new Subscription();
-		subscription.setNotifier(notifier);
-		subscription.setStatus(Status.active);
+		Subscription subscription = new Subscription(null,null,notifier,Status.active,null,0,false,null);
 		
 		NotificationData notificationData = new NotificationData(subscription.getNotifierWithParams(),subscription.getVersion(),flatList,"rlmiCid","50UBfW7LSCVLtggUPe5z");
 		MultiPart multiPart = null;
