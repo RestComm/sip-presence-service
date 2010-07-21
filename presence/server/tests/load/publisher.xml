@@ -2,7 +2,15 @@
 <!DOCTYPE scenario SYSTEM "sipp.dtd">                                                               
 <scenario name="Mobicents SIP Presence functional Tests - Publication">
 
-	<!-- publish -->
+	<!-- config time between requests -->
+	
+	<nop>
+		<action>
+			<assign assign_to="wait_period" value="10000" />
+		</action>	
+	</nop>
+	
+	<!-- initial publish -->
 	
   	<send retrans="500">
     <![CDATA[
@@ -39,9 +47,9 @@
 	 	</action>	
  	</recv>
 	
-	<!-- modify -->
+	<!-- refresh 1 -->
 
-	<pause seconds="300" />
+	<pause variable="wait_period" />
 	
   	<send retrans="500">
     <![CDATA[
@@ -57,30 +65,20 @@
       Event: presence
       SIP-If-Match: [$etag]
       [routes]
-      Content-Type: application/pidf+xml
-      Content-Length: [len]
-
-<?xml version="1.0" encoding="UTF-8"?>
-<presence xmlns="urn:ietf:params:xml:ns:pidf"
-	entity="sip:[field0]@[remote_ip]">
-	<tuple id="[call_number]a">
-		<status>
-        	<basic>closed</basic>
-		</status>
-	</tuple>
-</presence>
-    ]]>
+      Content-Length: 0
+      
+      ]]>
 	</send>
 
- 	<recv response="200" rtd="true" rrs="true">
+ 	<recv response="200">
 	 	<action>
 	 		<ereg regexp=".*" search_in="hdr" header="SIP-ETag:" assign_to="etag" />
 	 	</action>	
  	</recv>
+ 	
+ 	<!-- refresh 2 -->
 
-	<!-- refresh -->
-
-	<pause seconds="300" />
+	<pause variable="wait_period" />
 	
   	<send retrans="500">
     <![CDATA[
@@ -101,7 +99,191 @@
       ]]>
 	</send>
 
- 	<recv response="200" rtd="true" rrs="true">
+ 	<recv response="200">
+	 	<action>
+	 		<ereg regexp=".*" search_in="hdr" header="SIP-ETag:" assign_to="etag" />
+	 	</action>	
+ 	</recv>
+ 	
+ 	<!-- refresh 3 -->
+
+	<pause variable="wait_period" />
+	
+  	<send retrans="500">
+    <![CDATA[
+
+      PUBLISH sip:[field0]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: [field0] <sip:[field0]@[local_ip]>;tag=[call_number]
+      To: [field0] <sip:[field0]@[remote_ip]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 4 PUBLISH
+      Max-Forwards: 70
+      Expires: 3600
+      Event: presence
+      SIP-If-Match: [$etag]
+      [routes]
+      Content-Length: 0
+      
+      ]]>
+	</send>
+
+ 	<recv response="200">
+	 	<action>
+	 		<ereg regexp=".*" search_in="hdr" header="SIP-ETag:" assign_to="etag" />
+	 	</action>	
+ 	</recv>
+ 	
+ 	<!-- refresh 4 -->
+
+	<pause variable="wait_period" />
+	
+  	<send retrans="500">
+    <![CDATA[
+
+      PUBLISH sip:[field0]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: [field0] <sip:[field0]@[local_ip]>;tag=[call_number]
+      To: [field0] <sip:[field0]@[remote_ip]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 5 PUBLISH
+      Max-Forwards: 70
+      Expires: 3600
+      Event: presence
+      SIP-If-Match: [$etag]
+      [routes]
+      Content-Length: 0
+      
+      ]]>
+	</send>
+
+ 	<recv response="200">
+	 	<action>
+	 		<ereg regexp=".*" search_in="hdr" header="SIP-ETag:" assign_to="etag" />
+	 	</action>	
+ 	</recv>
+ 	
+	<!-- modify -->
+
+	<pause variable="wait_period" />
+	
+  	<send retrans="500">
+    <![CDATA[
+
+      PUBLISH sip:[field0]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: [field0] <sip:[field0]@[local_ip]>;tag=[call_number]
+      To: [field0] <sip:[field0]@[remote_ip]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 6 PUBLISH
+      Max-Forwards: 70
+      Expires: 3600
+      Event: presence
+      SIP-If-Match: [$etag]
+      [routes]
+      Content-Type: application/pidf+xml
+      Content-Length: [len]
+
+<?xml version="1.0" encoding="UTF-8"?>
+<presence xmlns="urn:ietf:params:xml:ns:pidf"
+	entity="sip:[field0]@[remote_ip]">
+	<tuple id="[call_number]a">
+		<status>
+        	<basic>closed</basic>
+		</status>
+	</tuple>
+</presence>
+    ]]>
+	</send>
+
+ 	<recv response="200">
+	 	<action>
+	 		<ereg regexp=".*" search_in="hdr" header="SIP-ETag:" assign_to="etag" />
+	 	</action>	
+ 	</recv>
+
+	<!-- refresh 5 -->
+
+	<pause variable="wait_period" />
+	
+  	<send retrans="500">
+    <![CDATA[
+
+      PUBLISH sip:[field0]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: [field0] <sip:[field0]@[local_ip]>;tag=[call_number]
+      To: [field0] <sip:[field0]@[remote_ip]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 7 PUBLISH
+      Max-Forwards: 70
+      Expires: 3600
+      Event: presence
+      SIP-If-Match: [$etag]
+      [routes]
+      Content-Length: 0
+      
+      ]]>
+	</send>
+
+ 	<recv response="200">
+	 	<action>
+	 		<ereg regexp=".*" search_in="hdr" header="SIP-ETag:" assign_to="etag" />
+	 	</action>	
+ 	</recv>
+ 	
+ 	<!-- refresh 6 -->
+
+	<pause variable="wait_period" />
+	
+  	<send retrans="500">
+    <![CDATA[
+
+      PUBLISH sip:[field0]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: [field0] <sip:[field0]@[local_ip]>;tag=[call_number]
+      To: [field0] <sip:[field0]@[remote_ip]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 8 PUBLISH
+      Max-Forwards: 70
+      Expires: 3600
+      Event: presence
+      SIP-If-Match: [$etag]
+      [routes]
+      Content-Length: 0
+      
+      ]]>
+	</send>
+
+ 	<recv response="200">
+	 	<action>
+	 		<ereg regexp=".*" search_in="hdr" header="SIP-ETag:" assign_to="etag" />
+	 	</action>	
+ 	</recv>
+ 	 
+ 	<!-- refresh 7 -->
+
+	<pause variable="wait_period" />
+	
+  	<send retrans="500">
+    <![CDATA[
+
+      PUBLISH sip:[field0]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+      From: [field0] <sip:[field0]@[local_ip]>;tag=[call_number]
+      To: [field0] <sip:[field0]@[remote_ip]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: 9 PUBLISH
+      Max-Forwards: 70
+      Expires: 3600
+      Event: presence
+      SIP-If-Match: [$etag]
+      [routes]
+      Content-Length: 0
+      
+      ]]>
+	</send>
+
+ 	<recv response="200">
 	 	<action>
 	 		<ereg regexp=".*" search_in="hdr" header="SIP-ETag:" assign_to="etag" />
 	 	</action>	
@@ -109,7 +291,7 @@
  	 	
  	<!-- remove -->
 	
-	<pause seconds="300" />
+	<pause variable="wait_period" />
  	  
 	<send retrans="500">
     <![CDATA[
@@ -119,7 +301,7 @@
       From: [field0] <sip:[field0]@[local_ip]>;tag=[call_number]
       To: [field0] <sip:[field0]@[remote_ip]>[peer_tag_param]
       Call-ID: [call_id]
-      CSeq: 4 PUBLISH
+      CSeq: 10 PUBLISH
       Max-Forwards: 70
       Expires: 0
       Event: presence
@@ -132,6 +314,6 @@
 
  	<recv response="200" />
  	
- 	<pause seconds="30" />
+	<pause milliseconds="30000" />
  	
 </scenario>

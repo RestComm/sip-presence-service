@@ -69,7 +69,7 @@ public class RemoveInternalSubscriptionHandler {
 				subscriptionId);
 
 		if (subscription.getResourceList()) {
-			internalSubscriptionHandler.sbb.getEventListControlChildSbb().removeSubscription(subscription);
+			internalSubscriptionHandler.sbb.getEventListSubscriptionHandler().removeSubscription(subscription);
 		}
 		
 		removeInternalSubscription(aci, subscription, dataSource, childSbb);
@@ -84,31 +84,21 @@ public class RemoveInternalSubscriptionHandler {
 		internalSubscriptionHandler.sbb.getTimerFacility().cancelTimer(
 				subscription.getTimerID());
 
-		if (!subscription.getStatus().equals(Status.terminated) && !subscription.getStatus().equals(Status.waiting)) {
+		if (subscription.getStatus() != Status.terminated && subscription.getStatus() != Status.waiting) {
 			// change subscription state
 			subscription.setStatus(Subscription.Status.terminated);
 			subscription.setLastEvent(null);
 		}
 
-		// notify subscriber
-		internalSubscriptionHandler.getInternalSubscriberNotificationHandler()
-		.notifyInternalSubscriber(dataSource, subscription, aci,
-				childSbb);
-
-		// notify winfo subscription(s)
-		internalSubscriptionHandler.sbb
-				.getWInfoSubscriptionHandler()
-				.notifyWinfoSubscriptions(dataSource, subscription, childSbb);
-
 		// check resulting subscription state
-		if (subscription.getStatus().equals(Subscription.Status.terminated)) {
+		if (subscription.getStatus() == Subscription.Status.terminated) {
 			if (logger.isInfoEnabled()) {
 				logger.info("Status changed for " + subscription);
 			}
 			// remove subscription data
 			internalSubscriptionHandler.sbb.removeSubscriptionData(
 					dataSource, subscription, null, aci, childSbb);
-		} else if (subscription.getStatus().equals(Subscription.Status.waiting)) {
+		} else if (subscription.getStatus() == Subscription.Status.waiting) {
 			if (logger.isInfoEnabled()) {
 				logger.info("Status changed for " + subscription);
 			}
@@ -122,6 +112,16 @@ public class RemoveInternalSubscriptionHandler {
 			internalSubscriptionHandler.sbb
 					.setSubscriptionTimerAndPersistSubscription(subscription, defaultWaitingExpires + 1, aci);
 		}
+
+		// notify winfo subscription(s)
+		internalSubscriptionHandler.sbb
+				.getWInfoSubscriptionHandler()
+				.notifyWinfoSubscriptions(dataSource, subscription, childSbb);
+
+		// notify subscriber
+		internalSubscriptionHandler.getInternalSubscriberNotificationHandler()
+		.notifyInternalSubscriber( subscription, aci,
+				childSbb);
 
 	}
 

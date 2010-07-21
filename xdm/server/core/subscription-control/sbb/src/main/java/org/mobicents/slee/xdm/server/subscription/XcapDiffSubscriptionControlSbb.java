@@ -23,6 +23,7 @@ import net.java.slee.resource.sip.SleeSipProvider;
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
+import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.mobicents.slee.xdm.server.XDMClientControlParentSbbLocalObject;
@@ -114,7 +115,7 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 	}
 
 	public void isSubscriberAuthorized(String subscriber,
-			String subscriberDisplayName, String notifier, SubscriptionKey key,
+			String subscriberDisplayName, Notifier notifier, SubscriptionKey key,
 			int expires, String content, String contentType,
 			String contentSubtype, boolean eventList,ServerTransaction serverTransaction) {
 		// exposing to XcapDiffSubscriptionControl
@@ -136,7 +137,7 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 	}
 
 	public Object filterContentPerSubscriber(String subscriber,
-			String notifier, String eventPackage, Object unmarshalledContent) {
+			Notifier notifier, String eventPackage, Object unmarshalledContent) {
 		// delegate to XcapDiffSubscriptionControl
 		return XCAP_DIFF_SUBSCRIPTION_CONTROL
 				.filterContentPerSubscriber(subscriber, notifier, eventPackage,

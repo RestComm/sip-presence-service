@@ -1,0 +1,45 @@
+package org.mobicents.slee.sipevent.server.rlscache;
+
+import javax.slee.resource.ActivityHandle;
+
+import org.openxdm.xcap.common.uri.DocumentSelector;
+
+public class ResourceListActivityHandle implements ActivityHandle {
+
+	public final static Class<?> TYPE = ResourceListActivityHandle.class;
+	
+	private final DocumentSelector documentSelector;
+		
+	public ResourceListActivityHandle(DocumentSelector documentSelector) {
+		if (documentSelector == null) {
+			throw new NullPointerException("null document selector");
+		}
+		this.documentSelector = documentSelector;
+	}
+	
+	public DocumentSelector getDocumentSelector() {
+		return documentSelector;
+	}
+
+	@Override
+	public int hashCode() {
+		return documentSelector.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ResourceListActivityHandle other = (ResourceListActivityHandle) obj;
+		return this.documentSelector.equals(other.documentSelector);
+	}
+		
+	@Override
+	public String toString() {
+		return new StringBuilder("ResourceListActivityHandle[ds=").append(documentSelector).append("]").toString();
+	}
+}

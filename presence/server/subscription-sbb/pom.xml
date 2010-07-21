@@ -31,20 +31,10 @@
 			<version>${pom.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.mobicents.servers.xdm</groupId>
-			<artifactId>xdm-client-sbb-local-object</artifactId>
+			<artifactId>sip-presence-server-pres-rules-cache-ratype</artifactId>
+			<groupId>${pom.groupId}</groupId>
 			<version>${pom.version}</version>
-		</dependency>
-		<dependency>
-			<artifactId>client-appusages-pres-rules</artifactId>
-			<groupId>org.mobicents.servers.xdm</groupId>
-			<version>${pom.version}</version>
-		</dependency>
-		<dependency>
-			<artifactId>client-appusages-oma-pres-rules</artifactId>
-			<groupId>org.mobicents.servers.xdm</groupId>
-			<version>${pom.version}</version>
-		</dependency>	
+		</dependency>			
 	</dependencies>
 	
 </project>

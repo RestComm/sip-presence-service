@@ -23,14 +23,7 @@
         	<sbb-alias>publicationChildSbb</sbb-alias>
        </sbb-ref>
        
-       <sbb-ref>
-       		<sbb-name>InternalXDMClientControlSbb</sbb-name>
-        	<sbb-vendor>org.mobicents</sbb-vendor>
-        	<sbb-version>1.0</sbb-version>
-        	<sbb-alias>xdmClientChildSbb</sbb-alias>
-       </sbb-ref>
-       
-        <sbb-classes>
+       <sbb-classes>
             <sbb-abstract-class reentrant="True">
                 <sbb-abstract-class-name>org.mobicents.slee.sippresence.server.subscription.PresenceSubscriptionControlSbb</sbb-abstract-class-name>
                 <cmp-field>
@@ -39,20 +32,12 @@
                 <cmp-field>
                 	<cmp-field-name>parentSbbCMP</cmp-field-name>
                 </cmp-field>
-                 <cmp-field>
-                	<cmp-field-name>xDMClientControlChildSbbCMP</cmp-field-name>
-                </cmp-field>
-                 <cmp-field>
+                <cmp-field>
                 	<cmp-field-name>publicationControlChildSbbCMP</cmp-field-name>
                 </cmp-field>
                 <get-child-relation-method>                	
                 	<sbb-alias-ref>publicationChildSbb</sbb-alias-ref>
                 	<get-child-relation-method-name>getPublicationControlChildRelation</get-child-relation-method-name>
-                	<default-priority>0</default-priority>
-                </get-child-relation-method>
-                 <get-child-relation-method>                	
-                	<sbb-alias-ref>xdmClientChildSbb</sbb-alias-ref>
-                	<get-child-relation-method-name>getXDMClientControlChildRelation</get-child-relation-method-name>
                 	<default-priority>0</default-priority>
                 </get-child-relation-method>                        
 	        </sbb-abstract-class>
@@ -61,6 +46,15 @@
             </sbb-local-interface>	   
         </sbb-classes>            
 		
+		<event event-direction="Receive" initial-event="False">
+            <event-name>RulesetUpdatedEvent</event-name>
+            <event-type-ref>
+                <event-type-name>RulesetUpdatedEvent</event-type-name>
+				<event-type-vendor>org.mobicents</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+            </event-type-ref>            
+        </event>
+        
         <resource-adaptor-type-binding>
 			<resource-adaptor-type-ref>
 				<resource-adaptor-type-name>
@@ -85,7 +79,24 @@
 				</resource-adaptor-entity-link>
 			</resource-adaptor-entity-binding>
 		</resource-adaptor-type-binding>
-
+		
+		<resource-adaptor-type-binding>
+            <resource-adaptor-type-ref>
+                <resource-adaptor-type-name>PresRulesCacheResourceAdaptorType</resource-adaptor-type-name>
+                <resource-adaptor-type-vendor>org.mobicents</resource-adaptor-type-vendor>
+                <resource-adaptor-type-version>1.0</resource-adaptor-type-version>
+            </resource-adaptor-type-ref>  
+            <activity-context-interface-factory-name>
+				slee/resources/presence/presrulescache/1.0/acif
+			</activity-context-interface-factory-name>          
+            <resource-adaptor-entity-binding>
+                <resource-adaptor-object-name>
+                	slee/resources/presence/presrulescache/1.0/sbbinterface
+             	</resource-adaptor-object-name>
+                <resource-adaptor-entity-link>PresRulesCacheRA</resource-adaptor-entity-link>
+            </resource-adaptor-entity-binding>
+        </resource-adaptor-type-binding>
+        
 	</sbb>
     
 </sbb-jar>

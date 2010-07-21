@@ -1,30 +1,36 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<!DOCTYPE event-jar PUBLIC "-//Sun Microsystems, Inc.//DTD JAIN SLEE Event 1.0//EN" "http://java.sun.com/dtd/slee-event-jar_1_0.dtd">
+<!DOCTYPE event-jar PUBLIC "-//Sun Microsystems, Inc.//DTD JAIN SLEE Event 1.1//EN" "http://java.sun.com/dtd/slee-event-jar_1_1.dtd">
 
 <event-jar>
 
+	<library-ref>
+        <library-name>sip-event-server-subscription-library</library-name>
+		<library-vendor>org.mobicents.servers.sipevent</library-vendor>
+		<library-version>1.0</library-version>
+    </library-ref>
+    
 	<event-definition>
-		<event-type-name>InternalNotifyEvent</event-type-name>
+		<event-type-name>NotifyEvent</event-type-name>
 		<event-type-vendor>org.mobicents.slee.sipevent</event-type-vendor>
 		<event-type-version>1.0</event-type-version>
-		<event-class-name>org.mobicents.slee.sipevent.server.internal.InternalNotifyEvent</event-class-name>
+		<event-class-name>org.mobicents.slee.sipevent.server.subscription.NotifyEvent</event-class-name>
 	</event-definition>
 
 	<event-definition>
-		<event-type-name>FlatListUpdatedEvent</event-type-name>
+		<event-type-name>WInfoNotifyEvent</event-type-name>
 		<event-type-vendor>org.mobicents.slee.sipevent</event-type-vendor>
 		<event-type-version>1.0</event-type-version>
-		<event-class-name>org.mobicents.slee.sipevent.server.subscription.eventlist.FlatListUpdatedEvent</event-class-name>
+		<event-class-name>org.mobicents.slee.sipevent.server.subscription.WInfoNotifyEvent</event-class-name>
 	</event-definition>
-	
+
 	<event-definition>
-		<event-type-name>FlatListRemovedEvent</event-type-name>
+		<event-type-name>TerminateSubscriptionEvent</event-type-name>
 		<event-type-vendor>org.mobicents.slee.sipevent</event-type-vendor>
 		<event-type-version>1.0</event-type-version>
-		<event-class-name>org.mobicents.slee.sipevent.server.subscription.eventlist.FlatListRemovedEvent</event-class-name>
+		<event-class-name>org.mobicents.slee.sipevent.server.subscription.TerminateSubscriptionEvent</event-class-name>
 	</event-definition>
-	
+		
 </event-jar>
 
 

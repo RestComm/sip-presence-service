@@ -86,7 +86,7 @@ public class RefreshSipSubscriptionHandler {
 		
 		if (subscription.getResourceList()) {
 			// it's a resource list subscription thus pas control to rls
-			sipSubscriptionHandler.sbb.getEventListControlChildSbb().refreshSubscription(subscription);
+			sipSubscriptionHandler.sbb.getEventListSubscriptionHandler().refreshSubscription(subscription);
 		}
 	}
 

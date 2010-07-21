@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">                                                               
+<scenario name="Presence Subscriber">
+	
+	<nop>
+   		<action>
+      		<assign assign_to="counter" value="0"/>
+     		<assignstr assign_to="expires" value="3600" />      		
+  		</action>
+ 	</nop>
+    
+	<label id="loop_begin" />
+	
+	 <nop>
+    	<action>
+      		<add assign_to="counter" value="1"/>
+      		<test assign_to="not_last_round" variable="counter" compare="less_than" value="3"/>
+    	</action>
+  	</nop>
+  	
+  	<nop test="not_last_round" next="send_request" />
+   	
+ 	<nop>
+   		<action>
+     		<assignstr assign_to="expires" value="0" />      		
+  		</action>
+ 	</nop>
+ 	
+ 	<label id="send_request" />
+ 			
+	<send retrans="2000">
+    <![CDATA[
+      	
+      SUBSCRIBE sip:[field0]@[remote_ip] SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=z9hG4bK-[pid]-[call_number]-[$counter]
+      From: [field0 file="users.csv"] <sip:[field0 file="users.csv"]@[local_ip]>;tag=[call_number]
+      To: [field0] <sip:[field0]@[remote_ip]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: [cseq] SUBSCRIBE
+      Contact: sip:[field0 file="users.csv"]@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Expires: [$expires]
+      Event: presence
+      Accept: application/pidf+xml
+      Content-Length: 0
+
+    ]]>
+	</send>
+
+ 	<recv response="200"/>	
+		 	
+  	<recv request="NOTIFY"/>
+		
+	<send>
+	<![CDATA[
+      
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      [last_Contact:]
+      [last_Record-Route:]
+      [routes]
+      Max-Forwards: 70
+      Content-Length: 0
+      
+	]]>
+	</send>
+	
+	<pause milliseconds="20000" />
+		
+	<nop next="loop_begin" test="not_last_round"/>
+	
+	<pause milliseconds="15000" />
+		
+</scenario>

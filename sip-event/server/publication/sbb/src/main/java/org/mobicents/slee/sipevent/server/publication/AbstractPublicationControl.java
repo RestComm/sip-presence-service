@@ -632,6 +632,8 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 					unmarshalledContent.getName(), unmarshalledContent
 							.getDeclaredType(), unmarshalledContent.getScope(),
 					composedPublicationUnmarshalledContentValue));
+			composedPublication.setContentSubType(publication.getContentSubType());
+			composedPublication.setContentType(publication.getContentType());
 			composedPublication.forceDocumentUpdate();
 			// update
 			dataSource.update(composedPublication);

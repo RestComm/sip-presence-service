@@ -17,6 +17,7 @@ import net.java.slee.resource.sip.DialogActivity;
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
+import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
@@ -61,8 +62,8 @@ public class NewSipSubscriptionHandler {
 		String subscriber = fromAddress.getURI().toString();
 		String subscriberDisplayName = fromAddress.getDisplayName();
 		
-		String notifier = event.getRequest().getRequestURI().toString();
-		
+		Notifier notifier = new Notifier(event.getRequest().getRequestURI().toString());
+				
 		// get content
 		String content = null;
 		String contentType = null;
@@ -106,7 +107,7 @@ public class NewSipSubscriptionHandler {
 		
 		if (sipSubscriptionHandler.sbb.getConfiguration().getEventListSupportOn()) {
 			// we need to find out if the notifier is a resource list
-			int rlsResponse = sipSubscriptionHandler.sbb.getEventListControlChildSbb().validateSubscribeRequest(subscriber, notifier,eventPackage,event);
+			int rlsResponse = sipSubscriptionHandler.sbb.getEventListSubscriptionHandler().validateSubscribeRequest(subscriber, notifier,eventPackage,event);
 
 			switch (rlsResponse) {
 			case Response.NOT_FOUND:
@@ -153,7 +154,7 @@ public class NewSipSubscriptionHandler {
 	 * @param childSbb
 	 */
 	public void authorizeNewSipSubscription(RequestEvent event,
-			ActivityContextInterface aci, String subscriber, String subscriberDisplayName, String notifier, SubscriptionKey key, int expires, String content,
+			ActivityContextInterface aci, String subscriber, String subscriberDisplayName, Notifier notifier, SubscriptionKey key, int expires, String content,
 			String contentType, String contentSubtype, boolean eventList,SubscriptionControlDataSource dataSource,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 		
@@ -163,11 +164,19 @@ public class NewSipSubscriptionHandler {
 			// notifier are the same
 			newSipSubscriptionAuthorization(event.getServerTransaction(), aci,
 					subscriber, subscriberDisplayName, notifier, key,
-					expires, (subscriber.equals(notifier) ? Response.OK
+					expires, (subscriber.equals(notifier.getUri()) ? Response.OK
 							: Response.FORBIDDEN), eventList, dataSource,childSbb);
 		} else {
-			childSbb.isSubscriberAuthorized(subscriber, subscriberDisplayName, notifier, key, expires, content,
+			if (notifier.isPresList() && subscriber.equals(notifier.getUri())) {
+				// no need to auth a subscription to subscriber's own pres list
+				newSipSubscriptionAuthorization(event.getServerTransaction(), aci,
+						subscriber, subscriberDisplayName, notifier, key,
+						expires, Response.OK, eventList, dataSource,childSbb);
+			}
+			else {
+				childSbb.isSubscriberAuthorized(subscriber, subscriberDisplayName, notifier, key, expires, content,
 					contentType, contentSubtype, eventList, event.getServerTransaction());
+			}
 		}
 	}
 	
@@ -187,7 +196,7 @@ public class NewSipSubscriptionHandler {
 	public void newSipSubscriptionAuthorization(
 			ServerTransaction serverTransaction,
 			ActivityContextInterface serverTransactionACI, String subscriber,
-			String subscriberDisplayName, String notifier, SubscriptionKey key,
+			String subscriberDisplayName, Notifier notifier, SubscriptionKey key,
 			int expires, int responseCode, boolean eventList,SubscriptionControlDataSource dataSource,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 
@@ -278,7 +287,7 @@ public class NewSipSubscriptionHandler {
 
 		if (eventList && (responseCode == Response.OK))  {
 			// it's a resource list and active subscription, delegate to the event list control for further process of the new subscription
-			if (!sipSubscriptionHandler.sbb.getEventListControlChildSbb().createSubscription(subscription)) {
+			if (!sipSubscriptionHandler.sbb.getEventListSubscriptionHandler().createSubscription(subscription)) {
 				// sip subscription
 				sipSubscriptionHandler
 				.getRemoveSipSubscriptionHandler()

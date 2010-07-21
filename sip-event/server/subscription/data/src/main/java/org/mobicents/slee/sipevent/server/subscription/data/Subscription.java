@@ -37,12 +37,7 @@ public class Subscription implements Serializable {
 	/**
 	 * the notifier
 	 */
-	private final String notifier;
-	
-	/**
-	 * the notifier uri params
-	 */
-	private final String notifierParams;
+	private final Notifier notifier;
 	
 	/**
 	 * the current status of the subscription
@@ -104,12 +99,7 @@ public class Subscription implements Serializable {
 	/**
 	 * if true the subscription if for a resource list
 	 */
-	private final Boolean resourceList;
-	
-	/**
-	 * notifier uri with params
-	 */
-	private transient String notifierWithParams;
+	private boolean resourceList;
 	
 	private transient SubscriptionControlDataSource dataSource;
 	
@@ -125,19 +115,10 @@ public class Subscription implements Serializable {
 	 * @param expires
 	 * @param resourceList
 	 */
-	public Subscription(SubscriptionKey key, String subscriber, String notifier, Status status, String subscriberDisplayName, int expires, boolean resourceList, SubscriptionControlDataSource dataSource) {
+	public Subscription(SubscriptionKey key, String subscriber, Notifier notifier, Status status, String subscriberDisplayName, int expires, boolean resourceList, SubscriptionControlDataSource dataSource) {
 		this.key = key;
 		this.subscriber = subscriber;
-		int index = notifier.indexOf(';');
-		this.notifierWithParams = notifier;
-		if (index > 0) {
-			this.notifier = notifier.substring(0,index);
-			this.notifierParams = notifier.substring(index);			
-		}
-		else {
-			this.notifier = notifier;
-			this.notifierParams = null;
-		}
+		this.notifier = notifier;
 		this.status = status;
 		if (status.equals(Status.active)){
 			this.lastEvent = Event.approved;
@@ -151,7 +132,7 @@ public class Subscription implements Serializable {
 		this.expires = expires;
 		this.subscriberDisplayName = subscriberDisplayName;
 		this.version = 0;
-		this.resourceList = Boolean.valueOf(resourceList);
+		this.resourceList = resourceList;
 		this.dataSource = dataSource;
 	}
 	
@@ -236,24 +217,8 @@ public class Subscription implements Serializable {
 		return subscriber;
 	}
 
-	public String getNotifier() {
+	public Notifier getNotifier() {
 		return notifier;
-	}
-
-	public String getNotifierParams() {
-		return notifierParams;
-	}
-		
-	public String getNotifierWithParams() {
-		if (notifierWithParams == null) {
-			if (notifierParams == null) {
-				notifierWithParams = notifier;
-			}
-			else {
-				notifierWithParams = notifier + notifierParams;
-			}
-		}
-		return notifierWithParams;
 	}
 	
 	public Status getStatus() {
@@ -320,8 +285,12 @@ public class Subscription implements Serializable {
 		this.version++;
 	}
 	
-	public Boolean getResourceList() {
+	public boolean getResourceList() {
 		return resourceList;
+	}
+	
+	public void setResourceList(boolean resourceList) {
+		this.resourceList = resourceList;
 	}
 	
 	@Override

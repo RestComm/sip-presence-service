@@ -31,7 +31,6 @@ public enum SubHandlingAction {
 			return Response.OK;
 		case block:
 			return Response.FORBIDDEN;
-		case confirm:
 		default:
 			return Response.ACCEPTED;
 		}

@@ -7,6 +7,7 @@ import javax.slee.nullactivity.NullActivity;
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
+import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
@@ -30,7 +31,7 @@ public class NewInternalSubscriptionHandler {
 	}
 
 	public void newInternalSubscription(String subscriber,
-			String subscriberDisplayName, String notifier, String eventPackage,
+			String subscriberDisplayName, Notifier notifier, String eventPackage,
 			String subscriptionId, int expires, String content,
 			String contentType, String contentSubtype, boolean eventList,
 			SubscriptionControlDataSource dataSource,
@@ -51,7 +52,7 @@ public class NewInternalSubscriptionHandler {
 		} else {
 			// expires is > 0 but < min expires, respond (Interval
 			// Too Brief) with Min-Expires = MINEXPIRES
-			sbb.getParentSbbCMP().subscribeError(subscriber, notifier,
+			sbb.getParentSbbCMP().subscribeError(subscriber, notifier.getUri(),
 					eventPackage, subscriptionId, Response.INTERVAL_TOO_BRIEF);
 			return;
 		}
@@ -65,7 +66,7 @@ public class NewInternalSubscriptionHandler {
 
 		if (subscription != null) {
 			// subscription exists
-			sbb.getParentSbbCMP().subscribeError(subscriber, notifier,
+			sbb.getParentSbbCMP().subscribeError(subscriber, notifier.getUri(),
 					eventPackage, subscriptionId,
 					Response.CONDITIONAL_REQUEST_FAILED);
 		} else {
@@ -73,19 +74,27 @@ public class NewInternalSubscriptionHandler {
 		}
 	}
 
-	private void authorizeNewInternalSubscription(String subscriber, String subscriberDisplayName, String notifier, SubscriptionKey key, int expires, String content, String contentType, String contentSubtype, boolean eventList, SubscriptionControlDataSource dataSource, ImplementedSubscriptionControlSbbLocalObject childSbb) {
+	private void authorizeNewInternalSubscription(String subscriber, String subscriberDisplayName, Notifier notifier, SubscriptionKey key, int expires, String content, String contentType, String contentSubtype, boolean eventList, SubscriptionControlDataSource dataSource, ImplementedSubscriptionControlSbbLocalObject childSbb) {
 		// ask authorization
 		if (key.getEventPackage().endsWith(".winfo")) {
 			// winfo package, only accept subscriptions when subscriber and
 			// notifier are the same
 			newInternalSubscriptionAuthorization(subscriber,
 					subscriberDisplayName, notifier, key,
-					expires, (subscriber.equals(notifier) ? Response.OK
+					expires, (subscriber.equals(notifier.getUri()) ? Response.OK
 							: Response.FORBIDDEN), eventList, dataSource, childSbb);
 		} else {
-			childSbb.isSubscriberAuthorized(subscriber,
+			if (notifier.isPresList() && subscriber.equals(notifier.getUri())) {
+				// self subscribe to a pres list, no need to auth
+				newInternalSubscriptionAuthorization(subscriber,
+						subscriberDisplayName, notifier, key,
+						expires, Response.OK, eventList, dataSource, childSbb);
+			}
+			else { 
+				childSbb.isSubscriberAuthorized(subscriber,
 					subscriberDisplayName, notifier, key,
 					expires, content, contentType, contentSubtype,eventList,null);
+			}
 		}
 	}
 	/**
@@ -103,7 +112,7 @@ public class NewInternalSubscriptionHandler {
 	 * @param childSbb
 	 */
 	public void newInternalSubscriptionAuthorization(String subscriber,
-			String subscriberDisplayName, String notifier,
+			String subscriberDisplayName, Notifier notifier,
 			SubscriptionKey subscriptionKey, int expires, int responseCode,
 			boolean eventList, SubscriptionControlDataSource dataSource,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
@@ -127,7 +136,7 @@ public class NewInternalSubscriptionHandler {
 						subscriptionKey.toString());
 			} catch (Exception e) {
 				logger.error("Failed to create internal subscription aci", e);
-				sbb.getParentSbbCMP().subscribeError(subscriber, notifier,
+				sbb.getParentSbbCMP().subscribeError(subscriber, notifier.getUri(),
 						subscriptionKey.getEventPackage(),
 						subscriptionKey.getEventId(),
 						Response.SERVER_INTERNAL_ERROR);
@@ -135,11 +144,11 @@ public class NewInternalSubscriptionHandler {
 			}
 			aci.attach(sbb.getSbbContext().getSbbLocalObject());
 			// inform parent
-			sbb.getParentSbbCMP().subscribeOk(subscriber, notifier,
+			sbb.getParentSbbCMP().subscribeOk(subscriber, notifier.getUri(),
 					subscriptionKey.getEventPackage(),
 					subscriptionKey.getEventId(), expires, responseCode);
 		} else {
-			sbb.getParentSbbCMP().subscribeError(subscriber, notifier,
+			sbb.getParentSbbCMP().subscribeError(subscriber, notifier.getUri(),
 					subscriptionKey.getEventPackage(),
 					subscriptionKey.getEventId(), responseCode);
 			if (logger.isInfoEnabled()) {
@@ -161,7 +170,7 @@ public class NewInternalSubscriptionHandler {
 		if (!eventList || (responseCode == Response.ACCEPTED)) {
 			// notify subscriber
 			internalSubscriptionHandler.getInternalSubscriberNotificationHandler()
-			.notifyInternalSubscriber(dataSource, subscription, aci,
+			.notifyInternalSubscriber(subscription, aci,
 					childSbb);
 		}
 		
@@ -174,7 +183,7 @@ public class NewInternalSubscriptionHandler {
 
 		if (eventList && (responseCode == Response.OK)) {
 			// resource list and active subscription, ask the event list control child to create the subscription 
-			if (!internalSubscriptionHandler.sbb.getEventListControlChildSbb().createSubscription(subscription)) {
+			if (!internalSubscriptionHandler.sbb.getEventListSubscriptionHandler().createSubscription(subscription)) {
 				internalSubscriptionHandler.getRemoveInternalSubscriptionHandler().removeInternalSubscription(aci, subscription, dataSource, childSbb);
 			}
 		}

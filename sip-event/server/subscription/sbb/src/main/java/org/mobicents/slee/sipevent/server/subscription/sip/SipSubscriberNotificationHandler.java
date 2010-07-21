@@ -49,38 +49,22 @@ public class SipSubscriberNotificationHandler {
 
 	public void notifySipSubscriber(Object content,
 			ContentTypeHeader contentTypeHeader, Subscription subscription,
-			SubscriptionControlDataSource dataSource,
+			ActivityContextInterface dialogACI,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 
 		try {
-			// get subscription dialog
-			ActivityContextInterface dialogACI = sipSubscriptionHandler.sbb
-					.getActivityContextNamingfacility().lookup(
-							subscription.getKey().toString());
-			if (dialogACI != null) {
-				DialogActivity dialog = (DialogActivity) dialogACI.getActivity();
-				// create notify
-				Request notify = createNotify(dialog, subscription);
-				// add content
-				if (content != null) {
-					notify = setNotifyContent(subscription, notify, content,
-							contentTypeHeader, childSbb);
-				}
-				
-				// ....aayush added code here (with ref issue #567)
-				notify.addHeader(addPChargingVectorHeader());
-				
-				// send notify in dialog related with subscription
-				dialog.sendRequest(notify);				
-			} else {
-				// clean up
-				logger.warn("Unable to find dialog aci to notify subscription "
-						+ subscription.getKey()
-						+ ". Removing subscription data");
-				sipSubscriptionHandler.sbb.removeSubscriptionData(
-						dataSource, subscription, null, null, childSbb);
+			DialogActivity dialog = (DialogActivity) dialogACI.getActivity();
+			// create notify
+			Request notify = createNotify(dialog, subscription);
+			// add content
+			if (content != null) {
+				notify = setNotifyContent(subscription, notify, content,
+						contentTypeHeader, childSbb);
 			}
-
+			// ....aayush added code here (with ref issue #567)
+			notify.addHeader(addPChargingVectorHeader());
+			// send notify in dialog related with subscription
+			dialog.sendRequest(notify);							
 		} catch (Exception e) {
 			logger.error("failed to notify subscriber", e);
 		}
@@ -91,7 +75,7 @@ public class SipSubscriberNotificationHandler {
 			ImplementedSubscriptionControlSbbLocalObject childSbb)
 			throws JAXBException, ParseException, IOException {
 
-		if (!subscription.getResourceList()) {
+		if (!subscription.getResourceList() && !subscription.getKey().isWInfoSubscription()) {
 			// filter content per subscriber (notifier rules)
 			Object filteredContent = childSbb.filterContentPerSubscriber(
 					subscription.getSubscriber(), subscription.getNotifier(),
@@ -105,7 +89,7 @@ public class SipSubscriberNotificationHandler {
 			stringWriter.close();
 		}
 		else {
-			// resource list subscription, no filtering
+			// resource list or winfo subscription, no filtering
 			if (content instanceof JAXBElement<?>) {
 				// marshall content to string
 				StringWriter stringWriter = new StringWriter();

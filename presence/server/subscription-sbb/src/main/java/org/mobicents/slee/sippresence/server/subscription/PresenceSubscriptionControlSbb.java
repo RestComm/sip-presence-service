@@ -1,7 +1,6 @@
 package org.mobicents.slee.sippresence.server.subscription;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -14,6 +13,7 @@ import javax.slee.CreateException;
 import javax.slee.RolledBackContext;
 import javax.slee.Sbb;
 import javax.slee.SbbContext;
+import javax.slee.SbbLocalObject;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -25,15 +25,13 @@ import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.publication.PublicationControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
+import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.mobicents.slee.sippresence.server.jmx.SipPresenceServerManagement;
-import org.mobicents.slee.xdm.server.XDMClientControlParentSbbLocalObject;
-import org.mobicents.slee.xdm.server.XDMClientControlSbbLocalObject;
-import org.openxdm.xcap.common.key.XcapUriKey;
-import org.openxdm.xcap.common.uri.AttributeSelector;
-import org.openxdm.xcap.common.uri.DocumentSelector;
-import org.openxdm.xcap.common.uri.NodeSelector;
+import org.mobicents.slee.sippresence.server.presrulescache.PresRulesActivityContextInterfaceFactory;
+import org.mobicents.slee.sippresence.server.presrulescache.PresRulesSbbInterface;
+import org.mobicents.slee.sippresence.server.presrulescache.RulesetUpdatedEvent;
 
 /**
  * Implemented Subscription control child sbb for a SIP Presence Server.
@@ -61,7 +59,10 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 	// private AddressFactory addressFactory;
 	// private MessageFactory messageFactory;
 	protected HeaderFactory headerFactory;
-
+	
+	protected PresRulesSbbInterface presRulesSbbInterface;
+	protected PresRulesActivityContextInterfaceFactory presRulesACIF;
+	
 	/**
 	 * SbbObject's sbb context
 	 */
@@ -80,7 +81,11 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 					.lookup("slee/resources/jainsip/1.2/provider");
 			// addressFactory = sipProvider.getAddressFactory();
 			headerFactory = sipProvider.getHeaderFactory();
-			// messageFactory = sipProvider.getMessageFactory();			
+			// messageFactory = sipProvider.getMessageFactory();
+			presRulesSbbInterface = (PresRulesSbbInterface) context
+				.lookup("slee/resources/presence/presrulescache/1.0/sbbinterface");
+			presRulesACIF = (PresRulesActivityContextInterfaceFactory) context
+				.lookup("slee/resources/presence/presrulescache/1.0/acif");
 		} catch (NamingException e) {
 			logger.error("Can't set sbb context.", e);
 		}
@@ -107,7 +112,7 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 	}
 
 	public void isSubscriberAuthorized(String subscriber,
-			String subscriberDisplayName, String notifier, SubscriptionKey key,
+			String subscriberDisplayName, Notifier notifier, SubscriptionKey key,
 			int expires, String content, String contentType,
 			String contentSubtype, boolean eventList, ServerTransaction serverTransaction) {
 		
@@ -128,12 +133,16 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 	}
 
 	public Object filterContentPerSubscriber(String subscriber,
-			String notifier, String eventPackage, Object unmarshalledContent) {
+			Notifier notifier, String eventPackage, Object unmarshalledContent) {
 		return presenceSubscriptionControl
 				.filterContentPerSubscriber(subscriber, notifier, eventPackage,
 						unmarshalledContent);
 	}
 
+	public void onRulesetUpdatedEvent(RulesetUpdatedEvent event, ActivityContextInterface aci) {
+		presenceSubscriptionControl.rulesetUpdated(event.getDocumentSelector(),event.getRuleset(),this);
+	}
+	
 	public Marshaller getMarshaller() {
 		try {
 			return jaxbContext.createMarshaller();
@@ -142,7 +151,20 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 			return null;
 		}
 	}
-
+	
+	public PresRulesActivityContextInterfaceFactory getPresRulesACIF() {
+		return presRulesACIF;
+	}
+	
+	public PresRulesSbbInterface getPresRulesSbbInterface() {
+		return presRulesSbbInterface;
+	}
+	
+	@Override
+	public SbbLocalObject getSbbLocalObject() {
+		return sbbContext.getSbbLocalObject();
+	}
+	
 	// ------------ PresenceSubscriptionControlSbbLocalObject
 
 	// --- PUBLICATION CHILD SBB
@@ -168,32 +190,6 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 		return childSbb;
 	}
 
-	// --- XDM CLIENT CHILD SBB
-	public abstract ChildRelation getXDMClientControlChildRelation();
-
-	public abstract XDMClientControlSbbLocalObject getXDMClientControlChildSbbCMP();
-
-	public abstract void setXDMClientControlChildSbbCMP(
-			XDMClientControlSbbLocalObject value);
-
-	public XDMClientControlSbbLocalObject getXDMClientControlSbb() {
-		XDMClientControlSbbLocalObject childSbb = getXDMClientControlChildSbbCMP();
-		if (childSbb == null) {
-			try {
-				childSbb = (XDMClientControlSbbLocalObject) getXDMClientControlChildRelation()
-						.create();
-			} catch (Exception e) {
-				logger.error("Failed to create child sbb", e);
-				return null;
-			}
-			setXDMClientControlChildSbbCMP(childSbb);
-			childSbb
-					.setParentSbb((XDMClientControlParentSbbLocalObject) this.sbbContext
-							.getSbbLocalObject());
-		}
-		return childSbb;
-	}
-
 	// --- COMBINED RULES CMP
 	public abstract void setCombinedRules(HashMap rules);
 
@@ -210,51 +206,6 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 			logger.error("failed to create unmarshaller", e);
 			return null;
 		}
-	}
-
-	// ------------ XDMClientControlParentSbbLocalObject
-
-	/**
-	 * async get response from xdm client
-	 */
-	public void getResponse(XcapUriKey key, int responseCode, String mimetype,
-			String content, String tag) {
-		presenceSubscriptionControl.getResponse(key, responseCode,
-				mimetype, content,this);
-	}
-
-	/**
-	 * a pres-rules doc subscribed was updated
-	 */
-	public void documentUpdated(DocumentSelector documentSelector,
-			String oldETag, String newETag, String documentAsString) {
-		presenceSubscriptionControl.documentUpdated(documentSelector,
-				oldETag, newETag, documentAsString,this);
-	}
-
-	// atm only processing update per doc "granularity"
-	public void attributeUpdated(DocumentSelector documentSelector,
-			NodeSelector nodeSelector, AttributeSelector attributeSelector,
-			Map<String, String> namespaces, String oldETag, String newETag,
-			String documentAsString, String attributeValue) {
-		documentUpdated(documentSelector, oldETag, newETag, documentAsString);
-	}
-
-	public void elementUpdated(DocumentSelector documentSelector,
-			NodeSelector nodeSelector, Map<String, String> namespaces,
-			String oldETag, String newETag, String documentAsString,
-			String elementAsString) {
-		documentUpdated(documentSelector, oldETag, newETag, documentAsString);
-	}
-
-	// unused methods from xdm client sbb
-
-	public void deleteResponse(XcapUriKey key, int responseCode, String responseContent, String tag) {
-		throw new UnsupportedOperationException();
-	}
-
-	public void putResponse(XcapUriKey key, int responseCode, String responseContent, String tag) {
-		throw new UnsupportedOperationException();
 	}
 
 	// ---------- PublishedSphereSource

@@ -203,7 +203,7 @@ public class SipSubscriptionHandler {
 								}
 								// remove subscription
 								if (subscription.getResourceList()) {
-									sbb.getEventListControlChildSbb().removeSubscription(subscription);
+									sbb.getEventListSubscriptionHandler().removeSubscription(subscription);
 								}
 								removeSipSubscriptionHandler
 								.removeSipSubscription(aci,

@@ -2,6 +2,9 @@ package org.mobicents.slee.sippresence.server.subscription.rules;
 
 import java.io.Serializable;
 
+import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
+
 public class PresRuleCMPKey implements Serializable {
 
 	/**
@@ -10,74 +13,39 @@ public class PresRuleCMPKey implements Serializable {
 	private static final long serialVersionUID = -1212963002333839692L;
 	
 	private final String subscriber;
-	private final String notifier;
-	private final String eventPackage;
-	private final String eventId;
+	private final Notifier notifier;
+	private final SubscriptionKey subscriptionKey;
 	
-	private final String notifierWithoutParams;
-	private final String notifierParams;
-	
-	public PresRuleCMPKey(String subscriber, String notifier, String eventPackage,String eventId) {
-		super();
+	public PresRuleCMPKey(String subscriber, Notifier notifier, SubscriptionKey subscriptionKey) {
 		this.subscriber = subscriber;
 		this.notifier = notifier;
-		int index = notifier.indexOf(';');
-		if (index > 0) {
-			notifierWithoutParams = notifier.substring(0,index);
-			notifierParams = notifier.substring(index);
-		}
-		else {
-			notifierWithoutParams = notifier;
-			notifierParams = null;
-		}
-		this.eventPackage = eventPackage;
-		if (eventId != null) {
-			this.eventId = eventId;
-		}
-		else {
-			this.eventId = "<";
-		}
+		this.subscriptionKey = subscriptionKey;
 	}
 	
-	public String getEventId() {
-		if (eventId == "<") {
-			return null;
-		}
-		else {
-			return eventId;
-		}
-	}
-	
-	public String getEventPackage() {
-		return eventPackage;
+	public Notifier getNotifier() {
+		return notifier;
 	}
 	
 	public String getSubscriber() {
 		return subscriber;
 	}
 	
-	public String getNotifier() {
-		return notifier;
+	public SubscriptionKey getSubscriptionKey() {
+		return subscriptionKey;
 	}
 	
-	public String getNotifierWithoutParams() {
-		return notifierWithoutParams;
-	}	
 	
-	public String getNotifierParams() {		
-		return notifierParams;
-	}
 	
 	@Override
 	public int hashCode() {
-		return ((subscriber.hashCode()*31+notifierWithoutParams.hashCode())*31 + eventPackage.hashCode())*31+eventId.hashCode();
+		return subscriptionKey.hashCode();
 	}
 	
 	@Override
 	public boolean equals(Object obj) {
 		if(obj != null && obj.getClass() == this.getClass()) {
 			PresRuleCMPKey other = (PresRuleCMPKey)obj;
-			return this.subscriber.equals(other.subscriber) && this.notifierWithoutParams.equals(other.notifierWithoutParams) && this.eventPackage.equals(other.eventPackage) && this.eventId.equals(other.eventId);
+			return this.subscriptionKey.equals(other.subscriptionKey);
 		}
 		else {
 			return false;
@@ -86,6 +54,6 @@ public class PresRuleCMPKey implements Serializable {
 	
 	@Override
 	public String toString() {
-		return "PresRuleCMPKey{ subscriber = "+subscriber+" , notifier = "+notifier+" , eventPackage = "+eventPackage+" , eventId = "+eventId+" }";
+		return "PresRuleCMPKey{ subscriber = "+subscriber+" , subscriptionKey = "+subscriptionKey+" }";
 	}
 }

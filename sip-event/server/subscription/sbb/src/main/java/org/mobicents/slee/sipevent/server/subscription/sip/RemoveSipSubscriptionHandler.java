@@ -53,7 +53,7 @@ public class RemoveSipSubscriptionHandler {
 		sipSubscriptionHandler.sbb.getTimerFacility().cancelTimer(
 				subscription.getTimerID());
 
-		if (!subscription.getStatus().equals(Status.terminated) && !subscription.getStatus().equals(Status.waiting)) {
+		if (subscription.getStatus() != Status.terminated && subscription.getStatus() != Status.waiting) {
 			// change subscription state
 			subscription.setStatus(Subscription.Status.terminated);
 			subscription.setLastEvent(null);
@@ -62,6 +62,11 @@ public class RemoveSipSubscriptionHandler {
 		// get dialog from aci
 		DialogActivity dialog = (DialogActivity) aci.getActivity();
 
+		// notify winfo subscription(s)
+		sipSubscriptionHandler.sbb
+		.getWInfoSubscriptionHandler()
+		.notifyWinfoSubscriptions(dataSource, subscription, childSbb);
+		
 		// notify subscriber
 		try {
 			sipSubscriptionHandler.getSipSubscriberNotificationHandler()
@@ -70,20 +75,16 @@ public class RemoveSipSubscriptionHandler {
 		} catch (Exception e) {
 			logger.error("failed to notify subscriber", e);
 		}
-		// notify winfo subscription(s)
-		sipSubscriptionHandler.sbb
-		.getWInfoSubscriptionHandler()
-		.notifyWinfoSubscriptions(dataSource, subscription, childSbb);
-
+		
 		// check resulting subscription state
-		if (subscription.getStatus().equals(Subscription.Status.terminated)) {
+		if (subscription.getStatus() == Subscription.Status.terminated) {
 			if (logger.isInfoEnabled()) {
 				logger.info("Status changed for " + subscription);
 			}
 			// remove subscription data
 			sipSubscriptionHandler.sbb.removeSubscriptionData(dataSource,
 					subscription, dialog, aci, childSbb);
-		} else if (subscription.getStatus().equals(Subscription.Status.waiting)) {
+		} else if (subscription.getStatus() == Subscription.Status.waiting) {
 			if (logger.isInfoEnabled()) {
 				logger.info("Status changed for " + subscription);
 			}
@@ -118,7 +119,7 @@ public class RemoveSipSubscriptionHandler {
 							+ " data due to error on notify response.");
 				}
 				if (!subscription.getResourceList()) {
-					sipSubscriptionHandler.sbb.getEventListControlChildSbb().removeSubscription(subscription);
+					sipSubscriptionHandler.sbb.getEventListSubscriptionHandler().removeSubscription(subscription);
 				}
 				sipSubscriptionHandler.sbb.removeSubscriptionData(
 						dataSource, subscription, dialog,

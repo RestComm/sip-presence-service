@@ -50,7 +50,7 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 
 	String presenceDomain = System.getProperty("bind.address","127.0.0.1");
 	String subscriber = "sip:carol@"+presenceDomain;
-	String notifier = "sip:mybuddies@"+presenceDomain;;
+	String notifier = "sip:carol@"+presenceDomain+";pres-list=Default";
 	String eventPackage = "presence";
 	String contentType = "application";
 	String contentSubType = "pidf+xml";
@@ -166,7 +166,7 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 		try {
 			XDMClientControlSbbLocalObject xdm = getXDMClientControlSbb();
 			// insert the document
-			xdm.put(new UserDocumentUriKey("rls-services",subscriber,"index"), "application/rls-services+xml", getRlsServices(entryURIs).getBytes("UTF-8"),null);			
+			xdm.put(new UserDocumentUriKey("rls-services",notifier,"index"), "application/rls-services+xml", getRlsServices(entryURIs).getBytes("UTF-8"),null);			
 		} catch (Exception e) {
 			tracer.severe(e.getMessage(), e);
 			getParentSbbCMP().subscriberNotStarted();
@@ -216,7 +216,7 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 	
 	private void deleteRlsServices() {
 		try {
-			getXDMClientControlSbb().delete(new UserDocumentUriKey("rls-services",subscriber,"index"),null);			
+			getXDMClientControlSbb().delete(new UserDocumentUriKey("rls-services",notifier,"index"),null);			
 		} catch (Exception e) {
 			tracer.severe(e.getMessage(), e);			
 		}
@@ -241,7 +241,7 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 		+ "\n+-- Content Type: " + contentType + '/' + contentSubtype
 		+ "\n+-- Content:\n\n" + content;
 		tracer.info(notification);
-		if (status.equals(Subscription.Status.terminated) && terminationReason != null && terminationReason.equals(Subscription.Event.deactivated)) {
+		if (status == Subscription.Status.terminated && terminationReason != null && terminationReason == Subscription.Event.deactivated) {
 			tracer.info("The subscription was deactivated, re-subscribing");
 			// re-subscribe
 			getPresenceClientControlSbb().newSubscription(subscriber, "...", notifier, eventPackage, getSubscriptionId(), expires);

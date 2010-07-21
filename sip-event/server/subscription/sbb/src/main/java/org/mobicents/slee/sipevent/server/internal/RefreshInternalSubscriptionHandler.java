@@ -6,6 +6,7 @@ import javax.slee.ActivityContextInterface;
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
+import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
@@ -101,7 +102,7 @@ public class RefreshInternalSubscriptionHandler {
 		if (!subscription.getResourceList()) {
 			// notify subscriber
 			internalSubscriptionHandler.getInternalSubscriberNotificationHandler()
-			.notifyInternalSubscriber(dataSource, subscription, aci,
+			.notifyInternalSubscriber(subscription, aci,
 					childSbb);
 		}
 
@@ -116,7 +117,7 @@ public class RefreshInternalSubscriptionHandler {
 		
 		if (subscription.getResourceList()) {
 			// it's a resource list subscription thus pas control to rls
-			internalSubscriptionHandler.sbb.getEventListControlChildSbb().refreshSubscription(subscription);
+			internalSubscriptionHandler.sbb.getEventListSubscriptionHandler().refreshSubscription(subscription);
 		}
 	}
 }

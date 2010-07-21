@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sbb-jar PUBLIC "-//Sun Microsystems, Inc.//DTD JAIN SLEE SBB 1.1//EN"
+                         "http://java.sun.com/dtd/slee-sbb-jar_1_1.dtd">    
+<sbb-jar>
+    <sbb>      
+    
+        <description/>
+       
+        <sbb-name>PresRulesCacheSbb</sbb-name>
+        <sbb-vendor>org.mobicents</sbb-vendor>
+        <sbb-version>1.0</sbb-version>
+       
+        <sbb-classes>
+            <sbb-abstract-class reentrant="True">
+                <sbb-abstract-class-name>org.mobicents.slee.sippresence.server.presrulescache.PresRulesCacheSbb</sbb-abstract-class-name>
+                <cmp-field>
+                	<cmp-field-name>presRulesAppUsageACI</cmp-field-name>                	
+                </cmp-field>                                     
+	        </sbb-abstract-class>	   
+        </sbb-classes>            
+     	
+     	<event event-direction="Receive" initial-event="False">
+            <event-name>AttributeUpdatedEvent</event-name>
+            <event-type-ref>
+                <event-type-name>AttributeUpdatedEvent</event-type-name>
+				<event-type-vendor>org.openxdm</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+            </event-type-ref>            
+        </event>
+        
+        <event event-direction="Receive" initial-event="False">
+            <event-name>DocumentUpdatedEvent</event-name>
+            <event-type-ref>
+                <event-type-name>DocumentUpdatedEvent</event-type-name>
+				<event-type-vendor>org.openxdm</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+            </event-type-ref>            
+        </event>
+        
+        <event event-direction="Receive" initial-event="False">
+            <event-name>ElementUpdatedEvent</event-name>
+            <event-type-ref>
+                <event-type-name>ElementUpdatedEvent</event-type-name>
+				<event-type-vendor>org.openxdm</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+            </event-type-ref>            
+        </event>
+        
+        <event event-direction="Receive" initial-event="True">
+            <event-name>GetAndSubscribePresRulesAppUsageEvent</event-name>
+            <event-type-ref>
+          		<event-type-name>GetAndSubscribePresRulesAppUsageEvent</event-type-name>
+            	<event-type-vendor>org.mobicents</event-type-vendor>
+            	<event-type-version>1.0</event-type-version>
+        	</event-type-ref>
+            <initial-event-select variable="ActivityContext"/>
+        </event>
+        
+        <event event-direction="Receive" initial-event="False">
+            <event-name>UnsubscribePresRulesAppUsageEvent</event-name>
+            <event-type-ref>
+            	<event-type-name>UnsubscribePresRulesAppUsageEvent</event-type-name>
+            	<event-type-vendor>org.mobicents</event-type-vendor>
+            	<event-type-version>1.0</event-type-version>
+       		</event-type-ref>            
+        </event>
+        
+     	<resource-adaptor-type-binding>
+            <resource-adaptor-type-ref>
+                <resource-adaptor-type-name>DataSourceResourceAdaptorType</resource-adaptor-type-name>
+                <resource-adaptor-type-vendor>org.openxdm</resource-adaptor-type-vendor>
+                <resource-adaptor-type-version>1.0</resource-adaptor-type-version>
+            </resource-adaptor-type-ref>  
+            <activity-context-interface-factory-name>
+				slee/resources/xdm/datasource/1.0/acif
+			</activity-context-interface-factory-name>          
+            <resource-adaptor-entity-binding>
+                <resource-adaptor-object-name>slee/resources/xdm/datasource/1.0/sbbinterface</resource-adaptor-object-name>
+                <resource-adaptor-entity-link>DataSourceRA</resource-adaptor-entity-link>
+            </resource-adaptor-entity-binding>
+        </resource-adaptor-type-binding>
+        
+        <resource-adaptor-type-binding>
+            <resource-adaptor-type-ref>
+                <resource-adaptor-type-name>PresRulesCacheResourceAdaptorType</resource-adaptor-type-name>
+                <resource-adaptor-type-vendor>org.mobicents</resource-adaptor-type-vendor>
+                <resource-adaptor-type-version>1.0</resource-adaptor-type-version>
+            </resource-adaptor-type-ref>  
+            <activity-context-interface-factory-name>
+				slee/resources/presence/presrulescache/1.0/acif
+			</activity-context-interface-factory-name>          
+            <resource-adaptor-entity-binding>
+                <resource-adaptor-object-name>
+                	slee/resources/presence/presrulescache/1.0/sbbinterface
+             	</resource-adaptor-object-name>
+                <resource-adaptor-entity-link>PresRulesCacheRA</resource-adaptor-entity-link>
+            </resource-adaptor-entity-binding>
+        </resource-adaptor-type-binding>
+        
+    </sbb>
+    
+</sbb-jar>

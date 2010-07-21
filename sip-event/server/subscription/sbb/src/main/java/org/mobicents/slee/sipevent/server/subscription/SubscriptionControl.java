@@ -9,6 +9,6 @@ package org.mobicents.slee.sipevent.server.subscription;
  */
 public interface SubscriptionControl extends
 		ImplementedSubscriptionControlParent, SubscriptionClientControl,
-		EventListSubscriptionControlParent {
+		EventListSubscriberParent {
 
 }

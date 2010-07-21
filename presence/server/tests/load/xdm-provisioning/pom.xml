@@ -1,0 +1,85 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">	
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<artifactId>sip-presence-parent</artifactId>
+		<groupId>org.mobicents.servers.sippresence</groupId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+	
+	<artifactId>load-test-user-provisioning</artifactId>
+
+	<properties>
+		<server.host>127.0.0.1</server.host>
+		<server.port>8080</server.port>
+		<users_size>100</users_size>
+		<users_name_prefix>user</users_name_prefix>
+		<users_resource_list_size>10</users_resource_list_size>
+	</properties>
+
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+	</build>
+      		
+	<dependencies>
+		<dependency>
+			<version>2.1.0.GA</version>
+			<artifactId>xcap-client-api</artifactId>
+			<groupId>org.mobicents</groupId>
+		</dependency>
+		<dependency>
+			<artifactId>xdms-appusages-resource-lists-sbb</artifactId>	
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<artifactId>client-appusages-resource-lists</artifactId>
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<artifactId>xdms-appusages-oma-pres-rules-sbb</artifactId>	
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<artifactId>client-appusages-oma-pres-rules</artifactId>
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.client</groupId>
+			<artifactId>jbossall-client</artifactId>
+			<version>4.2.2.GA</version>
+			<scope>test</scope>
+		</dependency>			
+		<dependency>
+			<artifactId>xdms-appusages-rls-services-sbb</artifactId>	
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<artifactId>client-appusages-rls-services</artifactId>
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<version>${pom.version}</version>
+		</dependency>
+	</dependencies>
+	
+	<profiles>
+		<profile>
+			<id>maven-release</id>
+			<properties>
+				<maven.test.skip>true</maven.test.skip>
+			</properties>
+		</profile>
+	</profiles>
+</project>

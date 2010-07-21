@@ -33,10 +33,6 @@
 			<version>${pom.version}</version>
 		</dependency>
 		<dependency>
-			<artifactId>sip11-ratype</artifactId>
-			<groupId>org.mobicents.resources</groupId>
-		</dependency>
-		<dependency>
 			<groupId>org.mobicents.servers.xdm</groupId>
 			<artifactId>xdms-core-configuration-jar</artifactId>
 			<version>${pom.version}</version>

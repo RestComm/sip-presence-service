@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sbb-jar PUBLIC "-//Sun Microsystems, Inc.//DTD JAIN SLEE SBB 1.1//EN"
+                         "http://java.sun.com/dtd/slee-sbb-jar_1_1.dtd">    
+<sbb-jar>
+    
+    <sbb>      
+       
+        <sbb-name>RLSServicesWatcherSbb</sbb-name>
+        <sbb-vendor>org.mobicents</sbb-vendor>
+        <sbb-version>1.0</sbb-version>
+       
+        <sbb-classes>
+            <sbb-abstract-class reentrant="False">
+                <sbb-abstract-class-name>
+                	org.mobicents.slee.sipevent.server.rlscache.RLSServicesWatcherSbb
+                </sbb-abstract-class-name>                                                    
+	        </sbb-abstract-class>	   
+        </sbb-classes>            
+     	
+     	<event event-direction="Receive" initial-event="False">
+            <event-name>AttributeUpdatedEvent</event-name>
+            <event-type-ref>
+                <event-type-name>AttributeUpdatedEvent</event-type-name>
+				<event-type-vendor>org.openxdm</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+            </event-type-ref>            
+        </event>
+        
+        <event event-direction="Receive" initial-event="False">
+            <event-name>DocumentUpdatedEvent</event-name>
+            <event-type-ref>
+                <event-type-name>DocumentUpdatedEvent</event-type-name>
+				<event-type-vendor>org.openxdm</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+            </event-type-ref>            
+        </event>
+        
+        <event event-direction="Receive" initial-event="False">
+            <event-name>ElementUpdatedEvent</event-name>
+            <event-type-ref>
+                <event-type-name>ElementUpdatedEvent</event-type-name>
+				<event-type-vendor>org.openxdm</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+            </event-type-ref>            
+        </event>
+        
+        <event event-direction="Receive" initial-event="True">
+            <event-name>WatchRLSServicesEvent</event-name>
+            <event-type-ref>
+          		<event-type-name>WatchRLSServicesEvent</event-type-name>
+            	<event-type-vendor>org.mobicents</event-type-vendor>
+            	<event-type-version>1.0</event-type-version>
+        	</event-type-ref>
+            <initial-event-select variable="ActivityContext"/>
+        </event>
+        
+        <event event-direction="Receive" initial-event="False">
+            <event-name>ActivityEndEvent</event-name>
+            <event-type-ref>
+        		<event-type-name>javax.slee.ActivityEndEvent</event-type-name>
+				<event-type-vendor>javax.slee</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+			</event-type-ref>
+		</event>
+        
+     	<resource-adaptor-type-binding>
+            <resource-adaptor-type-ref>
+                <resource-adaptor-type-name>DataSourceResourceAdaptorType</resource-adaptor-type-name>
+                <resource-adaptor-type-vendor>org.openxdm</resource-adaptor-type-vendor>
+                <resource-adaptor-type-version>1.0</resource-adaptor-type-version>
+            </resource-adaptor-type-ref>  
+            <activity-context-interface-factory-name>
+				slee/resources/xdm/datasource/1.0/acif
+			</activity-context-interface-factory-name>          
+            <resource-adaptor-entity-binding>
+                <resource-adaptor-object-name>slee/resources/xdm/datasource/1.0/sbbinterface</resource-adaptor-object-name>
+                <resource-adaptor-entity-link>DataSourceRA</resource-adaptor-entity-link>
+            </resource-adaptor-entity-binding>
+        </resource-adaptor-type-binding>
+        
+        <resource-adaptor-type-binding>
+            <resource-adaptor-type-ref>
+                <resource-adaptor-type-name>RLSServicesCacheResourceAdaptorType</resource-adaptor-type-name>
+                <resource-adaptor-type-vendor>org.mobicents</resource-adaptor-type-vendor>
+                <resource-adaptor-type-version>1.0</resource-adaptor-type-version>
+            </resource-adaptor-type-ref>  
+            <resource-adaptor-entity-binding>
+                <resource-adaptor-object-name>
+                	slee/resources/sipevent/rlscache/1.0/sbbinterface
+             	</resource-adaptor-object-name>
+                <resource-adaptor-entity-link>RLSServicesCacheRA</resource-adaptor-entity-link>
+            </resource-adaptor-entity-binding>
+        </resource-adaptor-type-binding>
+        
+    </sbb>
+    
+    <sbb>      
+       
+        <sbb-name>ResourceListsWatcherSbb</sbb-name>
+        <sbb-vendor>org.mobicents</sbb-vendor>
+        <sbb-version>1.0</sbb-version>
+       
+        <sbb-classes>
+            <sbb-abstract-class reentrant="False">
+                <sbb-abstract-class-name>
+                	org.mobicents.slee.sipevent.server.rlscache.ResourceListsWatcherSbb
+                </sbb-abstract-class-name>                                                    
+	        </sbb-abstract-class>	   
+        </sbb-classes>            
+     	
+     	<event event-direction="Receive" initial-event="False">
+            <event-name>AttributeUpdatedEvent</event-name>
+            <event-type-ref>
+                <event-type-name>AttributeUpdatedEvent</event-type-name>
+				<event-type-vendor>org.openxdm</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+            </event-type-ref>            
+        </event>
+        
+        <event event-direction="Receive" initial-event="False">
+            <event-name>DocumentUpdatedEvent</event-name>
+            <event-type-ref>
+                <event-type-name>DocumentUpdatedEvent</event-type-name>
+				<event-type-vendor>org.openxdm</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+            </event-type-ref>            
+        </event>
+        
+        <event event-direction="Receive" initial-event="False">
+            <event-name>ElementUpdatedEvent</event-name>
+            <event-type-ref>
+                <event-type-name>ElementUpdatedEvent</event-type-name>
+				<event-type-vendor>org.openxdm</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+            </event-type-ref>            
+        </event>
+        
+        <event event-direction="Receive" initial-event="True">
+            <event-name>WatchResourceListsEvent</event-name>
+            <event-type-ref>
+          		<event-type-name>WatchResourceListsEvent</event-type-name>
+            	<event-type-vendor>org.mobicents</event-type-vendor>
+            	<event-type-version>1.0</event-type-version>
+        	</event-type-ref>
+            <initial-event-select variable="ActivityContext"/>
+        </event>
+        
+        <event event-direction="Receive" initial-event="False">
+            <event-name>ActivityEndEvent</event-name>
+            <event-type-ref>
+        		<event-type-name>javax.slee.ActivityEndEvent</event-type-name>
+				<event-type-vendor>javax.slee</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+			</event-type-ref>
+		</event>
+        
+     	<resource-adaptor-type-binding>
+            <resource-adaptor-type-ref>
+                <resource-adaptor-type-name>DataSourceResourceAdaptorType</resource-adaptor-type-name>
+                <resource-adaptor-type-vendor>org.openxdm</resource-adaptor-type-vendor>
+                <resource-adaptor-type-version>1.0</resource-adaptor-type-version>
+            </resource-adaptor-type-ref>  
+            <activity-context-interface-factory-name>
+				slee/resources/xdm/datasource/1.0/acif
+			</activity-context-interface-factory-name>          
+            <resource-adaptor-entity-binding>
+                <resource-adaptor-object-name>slee/resources/xdm/datasource/1.0/sbbinterface</resource-adaptor-object-name>
+                <resource-adaptor-entity-link>DataSourceRA</resource-adaptor-entity-link>
+            </resource-adaptor-entity-binding>
+        </resource-adaptor-type-binding>
+        
+        <resource-adaptor-type-binding>
+            <resource-adaptor-type-ref>
+                <resource-adaptor-type-name>RLSServicesCacheResourceAdaptorType</resource-adaptor-type-name>
+                <resource-adaptor-type-vendor>org.mobicents</resource-adaptor-type-vendor>
+                <resource-adaptor-type-version>1.0</resource-adaptor-type-version>
+            </resource-adaptor-type-ref>  
+            <resource-adaptor-entity-binding>
+                <resource-adaptor-object-name>
+                	slee/resources/sipevent/rlscache/1.0/sbbinterface
+             	</resource-adaptor-object-name>
+                <resource-adaptor-entity-link>RLSServicesCacheRA</resource-adaptor-entity-link>
+            </resource-adaptor-entity-binding>
+        </resource-adaptor-type-binding>
+        
+    </sbb>
+    
+</sbb-jar>

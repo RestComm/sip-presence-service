@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">                                                               
+<scenario name="Presence Event List Subscriber">
+	
+	<nop>
+   		<action>
+      		<assign assign_to="counter" value="0"/>
+     		<assignstr assign_to="expires" value="3600" />      		
+  		</action>
+ 	</nop>
+    
+	<label id="loop_begin" />
+	
+	 <nop>
+    	<action>
+      		<add assign_to="counter" value="1"/>
+      		<test assign_to="not_last_round" variable="counter" compare="less_than" value="10"/>
+    	</action>
+  	</nop>
+  	
+  	<nop test="not_last_round" next="send_request" />
+   	
+ 	<nop>
+   		<action>
+     		<assignstr assign_to="expires" value="0" />      		
+  		</action>
+ 	</nop>
+ 	
+ 	<label id="send_request" />
+ 			
+	<send retrans="2000">
+    <![CDATA[
+
+      SUBSCRIBE sip:[field0]@[remote_ip];pres-list=Default SIP/2.0
+      Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=z9hG4bK-[pid]-[call_number]-[$counter]
+      From: [field0] <sip:[field0]@[local_ip]>;tag=[call_number]
+      To: [field0] <sip:[field0]@[remote_ip]>[peer_tag_param]
+      Call-ID: [call_id]
+      CSeq: [cseq] SUBSCRIBE
+      Contact: sip:[field0]@[local_ip]:[local_port]
+      Max-Forwards: 70
+      Expires: [$expires]
+      Event: presence
+      Supported: eventlist
+      Accept: application/pidf+xml,application/rlmi+xml,multipart/related
+      Content-Length: 0
+
+    ]]>
+	</send>
+
+	<label id="wait_for_ok_or_notify" />
+
+ 	<recv response="200" optional="true" next="wait_for_notify"/>	
+	
+	<recv request="NOTIFY">
+		<action>
+    		<ereg regexp=".*" search_in="hdr" header="Via:" check_it="true" assign_to="nVia" />
+    		<ereg regexp=".*" search_in="hdr" header="From:" check_it="true" assign_to="nFrom" />
+    		<ereg regexp=".*" search_in="hdr" header="To:" check_it="true" assign_to="nTo" />
+    		<ereg regexp=".*" search_in="hdr" header="CSeq:" check_it="true" assign_to="nCSeq" />
+    		<ereg regexp=".*" search_in="hdr" header="Contact:" check_it="true" assign_to="nContact" />    		 
+	  </action>
+	</recv>
+	
+	<recv response="200"/>	
+		
+	<send>
+	<![CDATA[
+
+      SIP/2.0 200 OK
+      Via: [$nVia]
+      From: [$nFrom]
+      To: [$nTo]
+      [last_Call-ID:]
+      CSeq: [$nCSeq]
+      Contact: [$nContact]
+      [last_Record-Route:]
+      [routes]
+      Max-Forwards: 70
+      Content-Length: 0
+      
+	]]>
+	</send>
+	
+	<label id="wait_for_notify" />
+ 	
+  	<recv request="NOTIFY" timeout="10000" ontimeout="loop-end-check"/>
+		
+	<send next="wait_for_notify">
+	<![CDATA[
+      
+      SIP/2.0 200 OK
+      [last_Via:]
+      [last_From:]
+      [last_To:]
+      [last_Call-ID:]
+      [last_CSeq:]
+      [last_Contact:]
+      [last_Record-Route:]
+      [routes]
+      Max-Forwards: 70
+      Content-Length: 0
+      
+	]]>
+	</send>
+	
+	<label id="loop-end-check" />
+	
+	<nop next="loop_begin" test="not_last_round"/>
+	
+	<pause milliseconds="15000" />
+		
+</scenario>

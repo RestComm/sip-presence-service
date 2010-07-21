@@ -20,6 +20,9 @@ public class SubscriptionKey implements Serializable {
     private final String eventPackage;
     private final String eventId;
 
+    private transient Boolean internalSubscription;
+    private transient Boolean wInfoSubscription;
+    
     public SubscriptionKey(String dialogId, String eventPackage, String eventId) {
         if (dialogId == null) {
         	throw new NullPointerException("null dialog id");
@@ -82,13 +85,26 @@ public class SubscriptionKey implements Serializable {
 	private transient String toString = null;
     public String toString() {
     	if (toString == null) {
-    		toString = "SubscriptionKey:dialogId="+dialogId+",eventPackage="+eventPackage+",eventId="+eventId;
+    		toString = new StringBuilder("SubscriptionKeydialogId=").append(dialogId).append(",eventPackage=").append(eventPackage).append(",eventId=").append(String.valueOf(eventId)).toString();
     	}
         return toString; 
     }
 
     public boolean isInternalSubscription() {
-    	// no need to test both call id and remote tag
-		return dialogId.equals(SubscriptionKey.NO_DIALOG_ID);
+    	if (internalSubscription == null) {
+    		// no need to test both call id and remote tag
+    		internalSubscription = Boolean.valueOf(dialogId.equals(SubscriptionKey.NO_DIALOG_ID));
+    	}
+    	return internalSubscription.booleanValue();
+	}
+    
+    private static final String WINFO = ".winfo";
+    
+    public boolean isWInfoSubscription() {
+    	if (wInfoSubscription == null) {
+    		// no need to test both call id and remote tag
+    		wInfoSubscription = Boolean.valueOf(eventPackage.endsWith(WINFO));
+    	}
+    	return wInfoSubscription.booleanValue();
 	}
 }

@@ -67,7 +67,7 @@ public class SubscriptionControlDataSource {
 		}
 		eventIdNode.put(Boolean.TRUE, s);
 		// add notfier -> subscription reference 
-		notifiersRoot.addChild(Fqn.fromElements(s.getNotifier(),sk));
+		notifiersRoot.addChild(Fqn.fromElements(s.getNotifier().getUri(),sk));
 		s.setDataSource(this);
 	}
 
@@ -198,13 +198,13 @@ public class SubscriptionControlDataSource {
 		// delete timer id reference
 		removeTimerReference(s.getTimerID());
 		// delete dialog reference
-		Node notifierNode = notifiersRoot.getChild(s.getNotifier());
+		Node notifierNode = notifiersRoot.getChild(s.getNotifier().getUri());
 		if (notifierNode == null) {
-			throw new IllegalStateException("the notifier node was not found, bug");
+			return;
 		}
 		notifierNode.removeChild(sk);
 		if (notifierNode.isLeaf()) {
-			notifiersRoot.removeChild(s.getNotifier());
+			notifiersRoot.removeChild(s.getNotifier().getUri());
 		}
 	}
 	

@@ -14,6 +14,7 @@ import javax.slee.CreateException;
 import javax.slee.RolledBackContext;
 import javax.slee.Sbb;
 import javax.slee.SbbContext;
+import javax.slee.SbbLocalObject;
 import javax.slee.facilities.Tracer;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -25,9 +26,13 @@ import net.java.slee.resource.sip.SleeSipProvider;
 import org.mobicents.slee.sipevent.server.publication.PublicationControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
+import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.mobicents.slee.sippresence.server.jmx.SipPresenceServerManagement;
+import org.mobicents.slee.sippresence.server.presrulescache.PresRulesActivityContextInterfaceFactory;
+import org.mobicents.slee.sippresence.server.presrulescache.PresRulesSbbInterface;
+import org.mobicents.slee.sippresence.server.presrulescache.RulesetUpdatedEvent;
 import org.mobicents.slee.sippresence.server.subscription.PresenceSubscriptionControl;
 import org.mobicents.slee.xdm.server.XDMClientControlParentSbbLocalObject;
 import org.mobicents.slee.xdm.server.XDMClientControlSbbLocalObject;
@@ -72,6 +77,9 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 
 	private DataSourceSbbInterface dataSourceSbbInterface;
 	
+	protected PresRulesSbbInterface presRulesSbbInterface;
+	protected PresRulesActivityContextInterfaceFactory presRulesACIF;
+	
 	private static final SipPresenceServerManagement configuration = SipPresenceServerManagement.getInstance();
 
 	private static final PresenceSubscriptionControl PRESENCE_SUBSCRIPTION_CONTROL = new PresenceSubscriptionControl();
@@ -112,6 +120,10 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 			// messageFactory = sipProvider.getMessageFactory();
 			dataSourceSbbInterface = (DataSourceSbbInterface) context
 					.lookup("slee/resources/xdm/datasource/sbbrainterface");
+			presRulesSbbInterface = (PresRulesSbbInterface) context
+				.lookup("slee/resources/presence/presrulescache/1.0/sbbinterface");
+			presRulesACIF = (PresRulesActivityContextInterfaceFactory) context
+				.lookup("slee/resources/presence/presrulescache/1.0/acif");
 		} catch (NamingException e) {
 			tracer.severe("Can't set sbb context.", e);
 		}
@@ -147,7 +159,7 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 	}
 
 	public void isSubscriberAuthorized(String subscriber,
-			String subscriberDisplayName, String notifier, SubscriptionKey key,
+			String subscriberDisplayName, Notifier notifier, SubscriptionKey key,
 			int expires, String content, String contentType,
 			String contentSubtype, boolean eventList,ServerTransaction serverTransaction) {
 
@@ -192,7 +204,7 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 	}
 
 	public Object filterContentPerSubscriber(String subscriber,
-			String notifier, String eventPackage, Object unmarshalledContent) {
+			Notifier notifier, String eventPackage, Object unmarshalledContent) {
 		if (contains(PresenceSubscriptionControl.getEventPackages(),
 				eventPackage)) {
 			return PRESENCE_SUBSCRIPTION_CONTROL
@@ -210,6 +222,10 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 		}
 	}
 
+	public void onRulesetUpdatedEvent(RulesetUpdatedEvent event, ActivityContextInterface aci) {
+		PRESENCE_SUBSCRIPTION_CONTROL.rulesetUpdated(event.getDocumentSelector(),event.getRuleset(),this);
+	}
+	
 	public Marshaller getMarshaller() {
 		try {
 			return jaxbContext.createMarshaller();
@@ -298,24 +314,26 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 		}
 	}
 
-	// ------------ XDMClientControlParentSbbLocalObject
-
-	/**
-	 * async get response from xdm client
-	 */
-	public void getResponse(XcapUriKey key, int responseCode, String mimetype,
-			String content, String tag) {
-		PRESENCE_SUBSCRIPTION_CONTROL.getResponse(key, responseCode,
-				mimetype, content,this);
+	public PresRulesActivityContextInterfaceFactory getPresRulesACIF() {
+		return presRulesACIF;
 	}
-
+	
+	public PresRulesSbbInterface getPresRulesSbbInterface() {
+		return presRulesSbbInterface;
+	}
+	
+	@Override
+	public SbbLocalObject getSbbLocalObject() {
+		return sbbContext.getSbbLocalObject();
+	}
+	
+	// ------------ XDMClientControlParentSbbLocalObject
+	
 	/**
 	 * a pres-rules doc subscribed was updated
 	 */
 	public void documentUpdated(DocumentSelector documentSelector,
 			String oldETag, String newETag, String documentAsString) {
-		PRESENCE_SUBSCRIPTION_CONTROL.documentUpdated(documentSelector,
-				oldETag, newETag, documentAsString,this);
 		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(documentSelector,
 				oldETag, newETag, documentAsString,this);
 	}
@@ -337,6 +355,11 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 
 	// unused methods from xdm client sbb
 
+	public void getResponse(XcapUriKey key, int responseCode, String mimetype,
+			String content, String tag) {
+		throw new UnsupportedOperationException();
+	}
+	
 	public void deleteResponse(XcapUriKey key, int responseCode, String responseContent, String tag) {
 		throw new UnsupportedOperationException();
 	}
@@ -363,14 +386,7 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 	private static JAXBContext initJAXBContext() {
 		try {
 			return JAXBContext
-					.newInstance("org.mobicents.slee.sippresence.pojo.pidf"
-							+ ":org.mobicents.slee.sippresence.pojo.pidf.oma"
-							+ ":org.mobicents.slee.sippresence.pojo.rpid"
-							+ ":org.mobicents.slee.sippresence.pojo.datamodel"
-							+ ":org.mobicents.slee.sippresence.pojo.commonschema"
-							+ ":org.openxdm.xcap.client.appusage.presrules.jaxb.commonpolicy"
-							+ ":org.openxdm.xcap.client.appusage.presrules.jaxb"
-							+ ":org.openxdm.xcap.client.appusage.omapresrules.jaxb"
+					.newInstance(configuration.getJaxbPackageNames()
 							+ ":org.openxdm.xcap.common.xcapdiff"
 							+ ":org.openxdm.xcap.client.appusage.resourcelists.jaxb");
 		} catch (JAXBException e) {

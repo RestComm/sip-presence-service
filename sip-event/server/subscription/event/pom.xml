@@ -17,6 +17,15 @@
 			<artifactId>sip-event-subscription-control-data</artifactId>
 			<version>${pom.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>${pom.groupId}</groupId>
+			<artifactId>sip-event-subscription-control-library</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<artifactId>sip11-ratype</artifactId>
+			<groupId>org.mobicents.resources</groupId>
+		</dependency>
 	</dependencies>
 	
 </project>

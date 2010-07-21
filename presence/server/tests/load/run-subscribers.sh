@@ -1,1 +1,1 @@
-sipp 127.0.0.1:5060 -trace_err -sf subscriber.xml -inf publishers.csv -i 127.0.0.1 -p 5050 -r 1 -m 1000000 -l 1000000
+sipp 127.0.0.1:5060 -sf subscriber.xml -inf notifiers.csv -inf users.csv -i 127.0.0.1 -p 5061 -r 1 -l 1000

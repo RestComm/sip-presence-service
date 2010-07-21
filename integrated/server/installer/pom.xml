@@ -270,7 +270,34 @@
 											<overWrite>true</overWrite>
 											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
 										</artifactItem>
-										 
+										<artifactItem>
+											<groupId>org.mobicents.servers.sippresence</groupId>
+											<artifactId>sip-presence-server-pres-rules-cache-ra-DU</artifactId>
+											<version>${pom.version}</version>
+											<overWrite>true</overWrite>
+											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
+										</artifactItem>
+										<artifactItem>
+											<groupId>org.mobicents.servers.sippresence</groupId>
+											<artifactId>sip-presence-server-pres-rules-cache-service-DU</artifactId>
+											<version>${pom.version}</version>
+											<overWrite>true</overWrite>
+											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
+										</artifactItem>
+										<artifactItem>
+											<artifactId>sip-event-subscription-control-rls-cache-ra-DU</artifactId>
+											<groupId>org.mobicents.servers.sipevent</groupId>
+											<version>${pom.version}</version>
+											<overWrite>true</overWrite>
+											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
+										</artifactItem>
+										<artifactItem>
+											<artifactId>sip-event-subscription-control-rls-cache-service-DU</artifactId>
+											<groupId>org.mobicents.servers.sipevent</groupId>
+											<version>${pom.version}</version>
+											<overWrite>true</overWrite>
+											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
+										</artifactItem> 
 									</artifactItems>
 								</configuration>
 							</execution>							

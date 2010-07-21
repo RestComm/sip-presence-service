@@ -34,6 +34,12 @@
 			<groupId>${pom.groupId}</groupId>
 			<version>${pom.version}</version>
 			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<artifactId>sip-presence-server-pres-rules-cache-library</artifactId>
+			<groupId>${pom.groupId}</groupId>
+			<version>${pom.version}</version>
+			<scope>runtime</scope>			
 		</dependency>			
 	</dependencies>
 	

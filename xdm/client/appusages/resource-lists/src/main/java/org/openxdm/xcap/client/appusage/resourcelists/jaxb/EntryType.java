@@ -8,6 +8,7 @@
 
 package org.openxdm.xcap.client.appusage.resourcelists.jaxb;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,8 +59,13 @@ import org.w3c.dom.Element;
     "any"
 })
 @XmlRootElement(name = "entry", namespace = "urn:ietf:params:xml:ns:resource-lists")
-public class EntryType {
+public class EntryType implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	@XmlElement(name = "display-name")
     protected EntryType.DisplayName displayName;
     @XmlAnyElement(lax = true)
@@ -68,7 +74,7 @@ public class EntryType {
     @XmlSchemaType(name = "anyURI")
     protected String uri;
     @XmlAnyAttribute
-    private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+    private HashMap<QName, String> otherAttributes = new HashMap<QName, String>();
 
     /**
      * Gets the value of the displayName property.
@@ -189,6 +195,15 @@ public class EntryType {
         extends DisplayNameType
     {
 
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
     }
 
+    @Override
+    public String toString() {
+    	return uri;
+    }
 }

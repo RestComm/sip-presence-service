@@ -3,6 +3,8 @@ package org.mobicents.slee.sippresence.server.subscription.rules;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.openxdm.xcap.common.uri.DocumentSelector;
+
 public class OMAPresRule extends PresRule {
 
 	/**
@@ -17,6 +19,10 @@ public class OMAPresRule extends PresRule {
 	private Set<String> serviceIDs;
 	private boolean provideSessionParticipation;
 	private boolean provideWillingness;
+	
+	public OMAPresRule(DocumentSelector documentSelector) {
+		super(documentSelector);
+	}
 	
 	/**
 	 * combines this OMA pres rule with another.

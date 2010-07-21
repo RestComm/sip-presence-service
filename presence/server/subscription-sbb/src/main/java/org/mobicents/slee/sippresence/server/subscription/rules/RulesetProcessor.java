@@ -24,6 +24,7 @@ import org.openxdm.xcap.client.appusage.presrules.jaxb.commonpolicy.Ruleset;
 import org.openxdm.xcap.client.appusage.presrules.jaxb.commonpolicy.SphereType;
 import org.openxdm.xcap.client.appusage.presrules.jaxb.commonpolicy.TransformationsType;
 import org.openxdm.xcap.client.appusage.presrules.jaxb.commonpolicy.ValidityType;
+import org.openxdm.xcap.common.uri.DocumentSelector;
 
 public class RulesetProcessor {
 	
@@ -31,11 +32,13 @@ public class RulesetProcessor {
 	private String notifier;
 	private PublishedSphereSource publishedSphereSource;
 	private OMAPresRule combinedRule;
+	private DocumentSelector documentSelector;
 	
-	public RulesetProcessor(String subscriber, String notifier, Ruleset ruleset, PublishedSphereSource publishedSphereSource) {
+	public RulesetProcessor(String subscriber, String notifier, Ruleset ruleset, DocumentSelector documentSelector, PublishedSphereSource publishedSphereSource) {
 		this.subscriber = subscriber;
 		this.notifier = notifier;
 		this.publishedSphereSource = publishedSphereSource;
+		this.documentSelector = documentSelector;
 		processRuleset(ruleset);
 	}
 	
@@ -77,7 +80,7 @@ public class RulesetProcessor {
 			}	
 		}		
 		if(combinedRule == null) {
-			combinedRule = new OMAPresRule();
+			combinedRule = new OMAPresRule(documentSelector);
 		}
 	}
 
@@ -261,7 +264,7 @@ public class RulesetProcessor {
 		TransformationsType transformationsType = ruleType.getTransformations();
 		if (transformationsType != null) {
 			// create rule
-			OMAPresRule rule = new OMAPresRule();
+			OMAPresRule rule = new OMAPresRule(documentSelector);
 			// fill transformations
 			for(Object transformationObject: transformationsType.getAny()) {
 

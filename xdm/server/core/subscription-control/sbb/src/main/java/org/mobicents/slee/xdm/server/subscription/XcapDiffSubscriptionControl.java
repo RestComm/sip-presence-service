@@ -13,6 +13,7 @@ import javax.xml.bind.JAXBException;
 
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
+import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.mobicents.slee.xdm.server.ServerConfiguration;
@@ -60,7 +61,7 @@ public class XcapDiffSubscriptionControl {
 	}
 
 	public void isSubscriberAuthorized(String subscriber,
-			String subscriberDisplayName, String notifier, SubscriptionKey key,
+			String subscriberDisplayName, Notifier notifier, SubscriptionKey key,
 			int expires, String content, String contentType,
 			String contentSubtype, boolean eventList, ServerTransaction serverTransaction, XcapDiffSubscriptionControlSbbInterface sbb) {
 
@@ -346,7 +347,7 @@ public class XcapDiffSubscriptionControl {
 	}
 
 	public Object filterContentPerSubscriber(String subscriber,
-			String notifier, String eventPackage, Object unmarshalledContent) {
+			Notifier notifier, String eventPackage, Object unmarshalledContent) {
 		return unmarshalledContent;
 	}
 

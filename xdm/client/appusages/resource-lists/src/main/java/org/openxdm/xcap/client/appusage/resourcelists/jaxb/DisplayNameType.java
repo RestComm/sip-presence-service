@@ -8,6 +8,8 @@
 
 package org.openxdm.xcap.client.appusage.resourcelists.jaxb;
 
+import java.io.Serializable;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -42,8 +44,12 @@ import javax.xml.bind.annotation.XmlValue;
     org.openxdm.xcap.client.appusage.resourcelists.jaxb.EntryType.DisplayName.class
 })
 @XmlRootElement(name = "display-name", namespace = "urn:ietf:params:xml:ns:resource-lists")
-public class DisplayNameType {
+public class DisplayNameType implements Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	@XmlValue
     protected String value;
     @XmlAttribute(namespace = "http://www.w3.org/XML/1998/namespace")

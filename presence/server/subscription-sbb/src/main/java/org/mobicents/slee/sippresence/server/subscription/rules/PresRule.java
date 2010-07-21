@@ -9,6 +9,7 @@ import javax.xml.bind.JAXBElement;
 import org.openxdm.xcap.client.appusage.presrules.jaxb.ProvideDevicePermission;
 import org.openxdm.xcap.client.appusage.presrules.jaxb.ProvidePersonPermission;
 import org.openxdm.xcap.client.appusage.presrules.jaxb.ProvideServicePermission;
+import org.openxdm.xcap.common.uri.DocumentSelector;
 
 /**
  * Pres-rules object for applying transformations.
@@ -22,7 +23,9 @@ public class PresRule implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -2821668554015646242L;
-
+	
+	private final DocumentSelector documentSelector;
+	
 	private SubHandlingAction subHandling = SubHandlingAction.confirm;
 	
 	// ------------ provide all devices, if true override all values in "provide devices"
@@ -63,7 +66,15 @@ public class PresRule implements Serializable {
 	private UserInputTransformation provideUserInput = UserInputTransformation.false_;
 	private boolean provideNote;
 	private Set<UnknownBooleanAttributeTransformation> unknownBooleanAttributes; 
-
+	
+	public PresRule(DocumentSelector documentSelector) {
+		this.documentSelector = documentSelector;
+	}
+	
+	public DocumentSelector getDocumentSelector() {
+		return documentSelector;
+	}
+	
 	/**
 	 * Combine another rule with this rule.
 	 */

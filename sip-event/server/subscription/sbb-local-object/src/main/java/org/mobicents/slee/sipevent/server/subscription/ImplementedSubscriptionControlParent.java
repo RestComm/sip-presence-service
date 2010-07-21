@@ -6,6 +6,7 @@ package org.mobicents.slee.sipevent.server.subscription;
 import javax.sip.ServerTransaction;
 import javax.sip.header.ContentTypeHeader;
 
+import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 
 /**
@@ -24,7 +25,7 @@ public interface ImplementedSubscriptionControlParent {
 	 * @param eventId
 	 * @param authorizationCode
 	 */
-	public void authorizationChanged(String subscriber, String notifier,
+	public void authorizationChanged(String subscriber, Notifier notifier,
 			String eventPackage, String eventId, int authorizationCode);
 
 	/**
@@ -43,7 +44,7 @@ public interface ImplementedSubscriptionControlParent {
 	 *            authorization request
 	 */
 	public void newSubscriptionAuthorization(String subscriber,
-			String subscriberDisplayName, String notifier, SubscriptionKey key,
+			String subscriberDisplayName, Notifier notifier, SubscriptionKey key,
 			int expires, int responseCode, boolean eventList, ServerTransaction serverTransaction);
 
 	/**

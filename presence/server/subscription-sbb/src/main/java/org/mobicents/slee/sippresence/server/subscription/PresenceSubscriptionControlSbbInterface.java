@@ -6,21 +6,21 @@ package org.mobicents.slee.sippresence.server.subscription;
 import java.util.HashMap;
 
 import javax.sip.header.HeaderFactory;
+import javax.slee.SbbLocalObject;
 import javax.xml.bind.Unmarshaller;
 
 import org.mobicents.slee.sipevent.server.publication.PublicationControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControl;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlParentSbbLocalObject;
+import org.mobicents.slee.sippresence.server.presrulescache.PresRulesActivityContextInterfaceFactory;
+import org.mobicents.slee.sippresence.server.presrulescache.PresRulesSbbInterface;
 import org.mobicents.slee.sippresence.server.subscription.rules.PublishedSphereSource;
-import org.mobicents.slee.xdm.server.XDMClientControlParent;
-import org.mobicents.slee.xdm.server.XDMClientControlSbbLocalObject;
 
 /**
  * @author martins
  *
  */
-public interface PresenceSubscriptionControlSbbInterface extends XDMClientControlParent,
-ImplementedSubscriptionControl, PublishedSphereSource {
+public interface PresenceSubscriptionControlSbbInterface extends ImplementedSubscriptionControl, PublishedSphereSource {
 
 	public HashMap getCombinedRules();
 
@@ -28,10 +28,14 @@ ImplementedSubscriptionControl, PublishedSphereSource {
 
 	public ImplementedSubscriptionControlParentSbbLocalObject getParentSbbCMP();
 
-	public XDMClientControlSbbLocalObject getXDMClientControlSbb();
+	public PresRulesActivityContextInterfaceFactory getPresRulesACIF();
+	
+	public PresRulesSbbInterface getPresRulesSbbInterface();
 
 	public PublicationControlSbbLocalObject getPublicationChildSbb();
 
+	public SbbLocalObject getSbbLocalObject();
+	
 	public HeaderFactory getHeaderFactory();
 
 	public Unmarshaller getUnmarshaller();

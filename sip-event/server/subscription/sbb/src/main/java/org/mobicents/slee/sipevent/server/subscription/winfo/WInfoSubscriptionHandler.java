@@ -5,9 +5,7 @@ import java.math.BigInteger;
 import java.text.ParseException;
 import java.util.List;
 
-import javax.sip.Dialog;
 import javax.sip.header.ContentTypeHeader;
-import javax.sip.message.Request;
 import javax.slee.ActivityContextInterface;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -16,8 +14,10 @@ import javax.xml.bind.Marshaller;
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
+import org.mobicents.slee.sipevent.server.subscription.WInfoNotifyEvent;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.mobicents.slee.sipevent.server.subscription.winfo.pojo.Watcher;
 import org.mobicents.slee.sipevent.server.subscription.winfo.pojo.WatcherList;
 import org.mobicents.slee.sipevent.server.subscription.winfo.pojo.Watcherinfo;
@@ -42,16 +42,15 @@ public class WInfoSubscriptionHandler {
 	public void notifyWinfoSubscriptions(SubscriptionControlDataSource dataSource,Subscription subscription,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 
-		if (!subscription.getKey().getEventPackage().endsWith(".winfo")) {
+		if (!subscription.getKey().isWInfoSubscription()) {
 			
 			for (Subscription winfoSubscription : dataSource
 					.getSubscriptionsByNotifierAndEventPackage(subscription
-							.getNotifier(), subscription.getKey()
+							.getNotifier().getUri(), subscription.getKey()
 							.getEventPackage()
 							+ ".winfo")) {
 
-				if (winfoSubscription.getStatus().equals(
-						Subscription.Status.active)) {
+				if (winfoSubscription.getStatus() == Subscription.Status.active) {
 
 					try {
 						// get subscription aci
@@ -59,45 +58,8 @@ public class WInfoSubscriptionHandler {
 								.getActivityContextNamingfacility().lookup(
 										winfoSubscription.getKey().toString());
 						if (winfoAci != null) {
-							// increment subscription version
-							winfoSubscription.incrementVersion();
-							// get winfo notify content and content type
-							// header
-							String partialWInfoContent = getPartialWatcherInfoContent(
-									winfoSubscription, subscription);
-							ContentTypeHeader winfoContentHeader = getWatcherInfoContentHeader();
-							if (winfoSubscription.getKey()
-									.isInternalSubscription()) {
-								// internal subscription
-								sbb
-										.getInternalSubscriptionHandler()
-										.getInternalSubscriberNotificationHandler()
-										.notifyInternalSubscriber(subscription,
-												partialWInfoContent,
-												winfoContentHeader, winfoAci);
-							} else {
-								// sip subscription
-								Dialog winfoDialog = (Dialog) winfoAci
-										.getActivity();
-								// create notify
-								Request notify = sbb.getSipSubscribeHandler()
-										.getSipSubscriberNotificationHandler()
-										.createNotify(winfoDialog,
-												winfoSubscription);
-								// add content
-								notify.setContent(partialWInfoContent,
-										winfoContentHeader);
-								// send notify in dialog related with
-								// subscription
-								winfoDialog.sendRequest(sbb.getSipProvider()
-										.getNewClientTransaction(notify));
-								if (logger.isDebugEnabled()) {
-									logger.debug("Request sent:\n"
-											+ notify.toString());
-								}
-							}
-							// update subscription storage
-							winfoSubscription.store();
+							// fire winfo notify event
+							sbb.fireWInfoNotifyEvent(new WInfoNotifyEvent(winfoSubscription.getKey(), subscription.getKey(), createWInfoWatcher(subscription)), winfoAci, null);							
 						} else {
 							// aci is gone, cleanup subscription
 							logger
@@ -187,8 +149,8 @@ public class WInfoSubscriptionHandler {
 	/*
 	 * creates partial watcher info doc
 	 */
-	private String getPartialWatcherInfoContent(Subscription winfoSubscription,
-			Subscription subscription) {
+	public String getPartialWatcherInfoContent(Subscription winfoSubscription,
+			SubscriptionKey watcherSubscriptionKey, Watcher watcher) {
 		// create watcher info
 		Watcherinfo watcherinfo = new Watcherinfo();
 		watcherinfo.setVersion(BigInteger.valueOf(winfoSubscription
@@ -196,10 +158,10 @@ public class WInfoSubscriptionHandler {
 		watcherinfo.setState("partial");
 		// create watcher list
 		WatcherList watcherList = new WatcherList();
-		watcherList.setResource(winfoSubscription.getNotifier());
-		watcherList.setPackage(subscription.getKey().getEventPackage());
+		watcherList.setResource(winfoSubscription.getNotifier().getUri());
+		watcherList.setPackage(watcherSubscriptionKey.getEventPackage());
 		// create and add watcher to watcher info list
-		watcherList.getWatcher().add(createWInfoWatcher(subscription));
+		watcherList.getWatcher().add(watcher);
 		// add watcher list to watcher info
 		watcherinfo.getWatcherList().add(watcherList);
 		// marshall and return
@@ -218,7 +180,7 @@ public class WInfoSubscriptionHandler {
 		watcherinfo.setState("full");
 		// create watcher list
 		WatcherList watcherList = new WatcherList();
-		watcherList.setResource(winfoSubscription.getNotifier());
+		watcherList.setResource(winfoSubscription.getNotifier().getUri());
 		String winfoEventPackage = winfoSubscription.getKey().getEventPackage();
 		String eventPackage = winfoEventPackage.substring(0, winfoEventPackage
 				.indexOf(".winfo"));
@@ -226,7 +188,7 @@ public class WInfoSubscriptionHandler {
 		// get watcher subscriptions
 		// add a watcher element for each
 		List<Watcher> watchers = watcherList.getWatcher();
-		for(Subscription subscription : dataSource.getSubscriptionsByNotifierAndEventPackage(winfoSubscription.getNotifier(), eventPackage)) {
+		for(Subscription subscription : dataSource.getSubscriptionsByNotifierAndEventPackage(winfoSubscription.getNotifier().getUri(), eventPackage)) {
 			// create and add watcher to watcher info list
 			watchers.add(createWInfoWatcher(subscription));
 		}
@@ -236,9 +198,13 @@ public class WInfoSubscriptionHandler {
 		return marshallWInfo(watcherinfo);
 	}
 
-	public ContentTypeHeader getWatcherInfoContentHeader()
-			throws ParseException {
-		return sbb.getHeaderFactory().createContentTypeHeader("application",
-				"watcherinfo+xml");
+	public ContentTypeHeader getWatcherInfoContentHeader() {
+		try {
+			return sbb.getHeaderFactory().createContentTypeHeader("application",
+					"watcherinfo+xml");
+		} catch (ParseException e) {
+			logger.error(e.getMessage(), e);
+			return null;
+		}
 	}
 }

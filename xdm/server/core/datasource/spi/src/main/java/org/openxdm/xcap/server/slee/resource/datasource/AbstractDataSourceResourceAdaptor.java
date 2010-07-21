@@ -315,7 +315,7 @@ public abstract class AbstractDataSourceResourceAdaptor implements DataSourceRes
 			else {
 				// created, add to slee
 				try {
-					sleeEndpoint.startActivity(activityHandle, activity,ACTIVITY_FLAGS);
+					sleeEndpoint.startActivityTransacted(activityHandle, activity,ACTIVITY_FLAGS);
 				} catch (Throwable e) {
 					getLogger().severe("failed to start activity for auid "+auid,e);
 				}
@@ -341,7 +341,7 @@ public abstract class AbstractDataSourceResourceAdaptor implements DataSourceRes
 			else {
 				// created, add to slee
 				try {
-					sleeEndpoint.startActivity(activityHandle, activity,ACTIVITY_FLAGS);
+					sleeEndpoint.startActivityTransacted(activityHandle, activity,ACTIVITY_FLAGS);
 				} catch (Throwable e) {
 					getLogger().severe("failed to start activity for document selector "+documentSelector,e);
 				}

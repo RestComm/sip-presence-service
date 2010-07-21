@@ -1,0 +1,26 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<artifactId>sip-presence-parent</artifactId>
+		<groupId>org.mobicents.servers.sippresence</groupId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+		
+	<groupId>org.mobicents.servers.sipevent</groupId>
+	<artifactId>sip-event-subscription-control-rls-cache</artifactId>
+	
+	<packaging>pom</packaging>			
+
+	<modules>
+	  <module>spi</module>
+	  <module>library</module>
+	  <module>events</module>
+	  <module>ratype</module>
+	  <module>ra</module>
+	  <module>ra-du</module>
+	  <module>sbb</module>
+	  <module>service-du</module>
+	</modules>
+	
+</project>

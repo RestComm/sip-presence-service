@@ -10,6 +10,12 @@
         <sbb-vendor>org.mobicents</sbb-vendor>
         <sbb-version>1.0</sbb-version>
 		
+		<library-ref>
+			<library-name>sip-event-server-subscription-library</library-name>
+			<library-vendor>org.mobicents.servers.sipevent</library-vendor>
+			<library-version>1.0</library-version>
+		</library-ref>
+		
         <sbb-ref>
        		<sbb-name>ImplementedSubscriptionControlSbb</sbb-name>
         	<sbb-vendor>org.mobicents</sbb-vendor>
@@ -18,10 +24,10 @@
        </sbb-ref>
        
        <sbb-ref>
-       		<sbb-name>EventListSubscriptionControlSbb</sbb-name>
+       		<sbb-name>EventListSubscriberSbb</sbb-name>
         	<sbb-vendor>org.mobicents</sbb-vendor>
         	<sbb-version>1.0</sbb-version>
-        	<sbb-alias>eventListControlChildSbb</sbb-alias>
+        	<sbb-alias>eventListSubscriberChildSbb</sbb-alias>
        </sbb-ref>
        
         <sbb-classes>
@@ -31,9 +37,6 @@
                 	<cmp-field-name>implementedControlChildSbbCMP</cmp-field-name>
                 </cmp-field>
                 <cmp-field>
-                	<cmp-field-name>eventListControlChildSbbCMP</cmp-field-name>
-                </cmp-field>   
-                <cmp-field>
                 	<cmp-field-name>parentSbbCMP</cmp-field-name>
                 </cmp-field>
                 <get-child-relation-method>                	
@@ -42,10 +45,10 @@
                 	<default-priority>0</default-priority>
                 </get-child-relation-method> 
                  <get-child-relation-method>                	
-                	<sbb-alias-ref>eventListControlChildSbb</sbb-alias-ref>
-                	<get-child-relation-method-name>getEventListControlChildRelation</get-child-relation-method-name>
+                	<sbb-alias-ref>eventListSubscriberChildSbb</sbb-alias-ref>
+                	<get-child-relation-method-name>getEventListSubscriberChildRelation</get-child-relation-method-name>
                 	<default-priority>0</default-priority>
-                </get-child-relation-method>                                      
+                </get-child-relation-method>                                    
 	        </sbb-abstract-class>
 	        <sbb-local-interface>
             	<sbb-local-interface-name>org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbbLocalObject</sbb-local-interface-name>
@@ -81,24 +84,6 @@
                 <event-type-version>1.0</event-type-version>
             </event-type-ref>
         </event>
-       
-       <event event-direction="Receive" initial-event="True">
-            <event-name>ServiceStartedEvent</event-name>
-            <event-type-ref>
-                <event-type-name>javax.slee.serviceactivity.ServiceStartedEvent</event-type-name>
-                <event-type-vendor>javax.slee</event-type-vendor>
-                <event-type-version>1.1</event-type-version>
-            </event-type-ref>
-            <initial-event-select variable="ActivityContext"/>
-        </event>
-        <event event-direction="Receive" initial-event="False">
-            <event-name>ActivityEndEvent</event-name>
-            <event-type-ref>
-        		<event-type-name>javax.slee.ActivityEndEvent</event-type-name>
-				<event-type-vendor> javax.slee </event-type-vendor>
-				<event-type-version> 1.0 </event-type-version>
-			</event-type-ref>
-		</event>
 		
 		<event event-direction="Receive" initial-event="False">
             <event-name>ResponseClientErrorEvent</event-name>
@@ -121,14 +106,42 @@
         </event>
         
         <event event-direction="FireAndReceive" initial-event="False">
-            <event-name>InternalNotifyEvent</event-name>
+            <event-name>NotifyEvent</event-name>
             <event-type-ref>
-                <event-type-name>InternalNotifyEvent</event-type-name>
+                <event-type-name>NotifyEvent</event-type-name>
                 <event-type-vendor>org.mobicents.slee.sipevent</event-type-vendor>
                 <event-type-version>1.0</event-type-version>
             </event-type-ref>
         </event>
         
+        <event event-direction="FireAndReceive" initial-event="False">
+            <event-name>WInfoNotifyEvent</event-name>
+            <event-type-ref>
+                <event-type-name>WInfoNotifyEvent</event-type-name>
+                <event-type-vendor>org.mobicents.slee.sipevent</event-type-vendor>
+                <event-type-version>1.0</event-type-version>
+            </event-type-ref>
+        </event>
+        
+        <event event-direction="FireAndReceive" initial-event="False">
+            <event-name>TerminateSubscriptionEvent</event-name>
+            <event-type-ref>
+                <event-type-name>TerminateSubscriptionEvent</event-type-name>
+				<event-type-vendor>org.mobicents.slee.sipevent</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+            </event-type-ref>
+        </event>
+        
+        <event event-direction="Receive" initial-event="True">
+            <event-name>RLSServicesAddedEvent</event-name>
+            <event-type-ref>
+        		<event-type-name>RLSServicesAddedEvent</event-type-name>
+				<event-type-vendor>org.mobicents</event-type-vendor>
+				<event-type-version> 1.0 </event-type-version>
+			</event-type-ref>
+			<initial-event-select variable="ActivityContext"/>			
+		</event>
+		
         <resource-adaptor-type-binding>
 			<resource-adaptor-type-ref>
 				<resource-adaptor-type-name>
@@ -153,148 +166,24 @@
 				</resource-adaptor-entity-link>
 			</resource-adaptor-entity-binding>
 		</resource-adaptor-type-binding>
+		
+		<resource-adaptor-type-binding>
+            <resource-adaptor-type-ref>
+                <resource-adaptor-type-name>RLSServicesCacheResourceAdaptorType</resource-adaptor-type-name>
+                <resource-adaptor-type-vendor>org.mobicents</resource-adaptor-type-vendor>
+                <resource-adaptor-type-version>1.0</resource-adaptor-type-version>
+            </resource-adaptor-type-ref>  
+            <activity-context-interface-factory-name>
+				slee/resources/sipevent/rlscache/1.0/acif
+			</activity-context-interface-factory-name>
+            <resource-adaptor-entity-binding>
+                <resource-adaptor-object-name>
+                	slee/resources/sipevent/rlscache/1.0/sbbinterface
+             	</resource-adaptor-object-name>
+                <resource-adaptor-entity-link>RLSServicesCacheRA</resource-adaptor-entity-link>
+            </resource-adaptor-entity-binding>
+        </resource-adaptor-type-binding>
 
-    </sbb>
-    
-    <!-- event list control sbb -->
-    
-    <sbb>      
-    
-        <description />
-
-        <sbb-name>EventListSubscriptionControlSbb</sbb-name>
-        <sbb-vendor>org.mobicents</sbb-vendor>
-        <sbb-version>1.0</sbb-version>
-		
-		<library-ref>
-			<library-name>sip-event-server-subscription-library</library-name>
-			<library-vendor>org.mobicents.servers.sipevent</library-vendor>
-			<library-version>1.0</library-version>
-		</library-ref>
-		
-        <sbb-ref>
-       		<sbb-name>FlatListMakerSbb</sbb-name>
-        	<sbb-vendor>org.mobicents</sbb-vendor>
-        	<sbb-version>1.0</sbb-version>
-        	<sbb-alias>flatListMakerChildSbb</sbb-alias>
-       </sbb-ref>
-       
-       <sbb-ref>
-       		<sbb-name>EventListSubscriberSbb</sbb-name>
-        	<sbb-vendor>org.mobicents</sbb-vendor>
-        	<sbb-version>1.0</sbb-version>
-        	<sbb-alias>eventListSubscriberChildSbb</sbb-alias>
-       </sbb-ref>
-       
-       <sbb-ref>
-       		<sbb-name>InternalXDMClientControlSbb</sbb-name>
-       		<sbb-vendor>org.mobicents</sbb-vendor>
-        	<sbb-version>1.0</sbb-version>
-        	<sbb-alias>xdmClientControlChildSbb</sbb-alias>
-       </sbb-ref>
-       
-        <sbb-classes>
-            <sbb-abstract-class reentrant="True">
-                <sbb-abstract-class-name>org.mobicents.slee.sipevent.server.subscription.eventlist.EventListSubscriptionControlSbb</sbb-abstract-class-name>
-                <cmp-field>
-                	<cmp-field-name>xDMClientControlChildSbbCMP</cmp-field-name>
-                </cmp-field> 
-                <cmp-field>
-                	<cmp-field-name>parentSbbCMP</cmp-field-name>
-                </cmp-field>
-                <get-child-relation-method>                	
-                	<sbb-alias-ref>flatListMakerChildSbb</sbb-alias-ref>
-                	<get-child-relation-method-name>getFlatListMakerChildRelation</get-child-relation-method-name>
-                	<default-priority>0</default-priority>
-                </get-child-relation-method>
-                <get-child-relation-method>                	
-                	<sbb-alias-ref>xdmClientControlChildSbb</sbb-alias-ref>
-                	<get-child-relation-method-name>getXDMClientControlChildRelation</get-child-relation-method-name>
-                	<default-priority>0</default-priority>
-                </get-child-relation-method> 
-                 <get-child-relation-method>                	
-                	<sbb-alias-ref>eventListSubscriberChildSbb</sbb-alias-ref>
-                	<get-child-relation-method-name>getEventListSubscriberChildRelation</get-child-relation-method-name>
-                	<default-priority>0</default-priority>
-                </get-child-relation-method>                                      
-	        </sbb-abstract-class>
-	        <sbb-local-interface>
-            	<sbb-local-interface-name>org.mobicents.slee.sipevent.server.subscription.EventListSubscriptionControlSbbLocalObject</sbb-local-interface-name>
-            </sbb-local-interface>	   
-        </sbb-classes>            
-     
-     	<event event-direction="Fire">
-            <event-name>FlatListUpdatedEvent</event-name>
-            <event-type-ref>
-        		<event-type-name>FlatListUpdatedEvent</event-type-name>
-				<event-type-vendor>org.mobicents.slee.sipevent</event-type-vendor>
-				<event-type-version> 1.0 </event-type-version>
-			</event-type-ref>
-		</event>
-		
-		<event event-direction="Fire">
-            <event-name>FlatListRemovedEvent</event-name>
-            <event-type-ref>
-        		<event-type-name>FlatListRemovedEvent</event-type-name>
-				<event-type-vendor>org.mobicents.slee.sipevent</event-type-vendor>
-				<event-type-version> 1.0 </event-type-version>
-			</event-type-ref>
-		</event>
-		
-    </sbb>
-    
-    <!-- flat list maker sbb -->
-    
-    <sbb>      
-    
-        <description />
-
-        <sbb-name>FlatListMakerSbb</sbb-name>
-        <sbb-vendor>org.mobicents</sbb-vendor>
-        <sbb-version>1.0</sbb-version>
-
-		<library-ref>
-			<library-name>sip-event-server-subscription-library</library-name>
-			<library-vendor>org.mobicents.servers.sipevent</library-vendor>
-			<library-version>1.0</library-version>
-		</library-ref>
-		
-		<sbb-ref>
-       		<sbb-name>InternalXDMClientControlSbb</sbb-name>
-       		<sbb-vendor>org.mobicents</sbb-vendor>
-        	<sbb-version>1.0</sbb-version>
-        	<sbb-alias>xdmClientControlChildSbb</sbb-alias>
-       </sbb-ref>
-       
-        <sbb-classes>
-            <sbb-abstract-class reentrant="True">
-                <sbb-abstract-class-name>org.mobicents.slee.sipevent.server.subscription.eventlist.FlatListMakerSbb</sbb-abstract-class-name>
-                <cmp-field>
-                	<cmp-field-name>xDMClientControlChildSbbCMP</cmp-field-name>
-                </cmp-field>
-                <cmp-field>
-                	<cmp-field-name>flatList</cmp-field-name>
-                </cmp-field>
-                <cmp-field>
-                	<cmp-field-name>lists</cmp-field-name>
-                </cmp-field> 
-                <cmp-field>
-                	<cmp-field-name>currentListType</cmp-field-name>
-                </cmp-field> 
-                <cmp-field>
-                	<cmp-field-name>parentSbbCMP</cmp-field-name>
-                </cmp-field>
-                <get-child-relation-method>                	
-                	<sbb-alias-ref>xdmClientControlChildSbb</sbb-alias-ref>
-                	<get-child-relation-method-name>getXDMClientControlChildRelation</get-child-relation-method-name>
-                	<default-priority>0</default-priority>
-                </get-child-relation-method>                                      
-	        </sbb-abstract-class>
-	        <sbb-local-interface>
-            	<sbb-local-interface-name>org.mobicents.slee.sipevent.server.subscription.FlatListMakerSbbLocalObject</sbb-local-interface-name>
-            </sbb-local-interface>	   
-        </sbb-classes>            
-     
     </sbb>
     
     <!-- event list subscriber sbb -->
@@ -327,7 +216,7 @@
                 	<cmp-field-name>subscriptionClientControlChildSbbCMP</cmp-field-name>
                 </cmp-field>
                 <cmp-field>
-                	<cmp-field-name>flatList</cmp-field-name>
+                	<cmp-field-name>rLSServiceACI</cmp-field-name>
                 </cmp-field>
                 <cmp-field>
                 	<cmp-field-name>notificationData</cmp-field-name>
@@ -351,26 +240,25 @@
             	<sbb-local-interface-name>org.mobicents.slee.sipevent.server.subscription.EventListSubscriberSbbLocalObject</sbb-local-interface-name>
             </sbb-local-interface>	   
         </sbb-classes>            
-     
-     	
+          	
 		<event event-direction="Receive" initial-event="False">
-            <event-name>FlatListRemovedEvent</event-name>
+            <event-name>RLSServicesRemovedEvent</event-name>
             <event-type-ref>
-        		<event-type-name>FlatListRemovedEvent</event-type-name>
-				<event-type-vendor>org.mobicents.slee.sipevent</event-type-vendor>
+        		<event-type-name>RLSServicesRemovedEvent</event-type-name>
+				<event-type-vendor>org.mobicents</event-type-vendor>
 				<event-type-version> 1.0 </event-type-version>
 			</event-type-ref>
 		</event>
 		
 		<event event-direction="Receive" initial-event="False">
-            <event-name>FlatListUpdatedEvent</event-name>
+            <event-name>RLSServicesUpdatedEvent</event-name>
             <event-type-ref>
-        		<event-type-name>FlatListUpdatedEvent</event-type-name>
-				<event-type-vendor>org.mobicents.slee.sipevent</event-type-vendor>
+        		<event-type-name>RLSServicesUpdatedEvent</event-type-name>
+				<event-type-vendor>org.mobicents</event-type-vendor>
 				<event-type-version> 1.0 </event-type-version>
 			</event-type-ref>
 		</event>
-		
+        
     </sbb>
     
 </sbb-jar>

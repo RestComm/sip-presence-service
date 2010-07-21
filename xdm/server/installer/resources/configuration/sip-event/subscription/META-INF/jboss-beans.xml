@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="urn:jboss:bean-deployer:2.0">
+	
+	<!-- MOBICENTS SIP PRESENCE SERVICE: SIP EVENT SUBSCRIPTION CONTROL XML CONFIGURATION -->
+	
+	<bean name="Mobicents.SipPresence.SipEvent.SubscriptionControlDataSource" class="org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource">      
+		<constructor>
+     		<parameter><inject bean="Mobicents.JAINSLEE.Cache"/></parameter>			
+     	</constructor>	      
+   	</bean>
+   	
+	<!-- Gets the singleton and registers it as JMX MBean -->
+	
+	<bean name="Mobicents.SipPresence.SipEvent.SubscriptionControlManagement" class="org.mobicents.slee.sipevent.server.subscription.jmx.SubscriptionControlManagement">
+      
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="org.mobicents.slee:sippresence=SipEventSubscriptionControl",exposedInterface=org.mobicents.slee.sipevent.server.subscription.jmx.SubscriptionControlManagementMBean.class,registerDirectly=true)</annotation>
+      
+      <constructor factoryMethod="getInstance"/>
+      
+      <property name="defaultExpires">3600</property>
+      <property name="maxExpires">3600</property>
+      <property name="minExpires">60</property>
+      <property name="defaultWaitingExpires">86400</property> 
+      <property name="maxForwards">70</property>
+      <property name="contactAddressDisplayName">Mobicents SIP Event Server</property>
+      <property name="eventListSupportOn">false</property>
+      <property name="PChargingVectorHeaderTerminatingIOI">mobicents.org</property>
+      <property name="dataSource"><inject bean="Mobicents.SipPresence.SipEvent.SubscriptionControlDataSource"/></property>
+      			      
+   </bean>
+   
+</deployment>
