@@ -345,8 +345,8 @@ public class SipSubscriptionHandler {
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 		if (eventPackage != null) {
 			for (String acceptedEventPackage : childSbb.getEventPackages()) {
-				if (eventPackage.equals(acceptedEventPackage)
-						|| eventPackage.equals(acceptedEventPackage + ".winfo")) {
+				if (eventPackage.equalsIgnoreCase(acceptedEventPackage)
+						|| eventPackage.equalsIgnoreCase(acceptedEventPackage + ".winfo")) {
 					return true;
 				}
 			}
