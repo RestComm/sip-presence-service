@@ -6,18 +6,18 @@
 	<property name="release.dir" location="${ant.file.mobicents.release}/../target" />
 	<property name="release.type" value="mobicents" /> <!-- mobicents or jbcp -->
     <property name="docs.dir" location="${ant.file.mobicents.release}/../../docs"/>
-	<property name="mobicents.jainslee.version" value="2.1.1.GA" />
+	<property name="mobicents.jainslee.version" value="2.1.2-SNAPSHOT" />
 	<property name="jboss.version" value="5.1.0.GA" />
 	<property name="release.version" value="1.0.0.CR1-SNAPSHOT" />
 	<property name="mobicents.distro.zip.path" value="mobicents-jainslee-${mobicents.jainslee.version}.zip" />
 	<property name="jboss.home" location="${release.dir}/jboss-${jboss.version}/" />
 	<property name="jboss.config" value="default" />
 	
-	
-	<property name="mobicents.jainslee.download.url" value="http://downloads.sourceforge.net/project/mobicents/Mobicents%20JAIN%20SLEE%20Server/${mobicents.jainslee.version}/mobicents-jainslee-${mobicents.jainslee.version}-jboss-${jboss.version}.zip" />
 	<!--
+	<property name="mobicents.jainslee.download.url" value="http://downloads.sourceforge.net/project/mobicents/Mobicents%20JAIN%20SLEE%20Server/${mobicents.jainslee.version}/mobicents-jainslee-${mobicents.jainslee.version}-jboss-${jboss.version}.zip" />
+	 -->
 	<property name="mobicents.jainslee.download.url" value="http://hudson.jboss.org/hudson/view/Mobicents/job/MobicentsSleeRelease/lastSuccessfulBuild/artifact/mobicents-jainslee-${mobicents.jainslee.version}-jboss-${jboss.version}.zip" />
-	-->
+	
 	
 	<tstamp>
 		<format property="time.stamp" pattern="yyyyMMdd-HHmm" />
