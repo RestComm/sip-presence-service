@@ -29,7 +29,7 @@
 			<version>${pom.version}</version>
 		</dependency>
 		<dependency>
-			<artifactId>xdms-appusages-resource-lists-sbb</artifactId>	
+			<artifactId>xdms-appusages-resource-lists-bean</artifactId>	
 			<groupId>${pom.groupId}</groupId>
 			<version>${pom.version}</version>
 		</dependency>
@@ -57,7 +57,7 @@
 		<dependency>
 			<groupId>org.jboss.client</groupId>
 			<artifactId>jbossall-client</artifactId>
-			<version>4.2.2.GA</version>
+			<version>5.0.0.GA</version>
 			<scope>test</scope>
 		</dependency>	
 	</dependencies>

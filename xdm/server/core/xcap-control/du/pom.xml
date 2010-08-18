@@ -29,9 +29,14 @@
 		</dependency>		
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
-			<artifactId>xdms-appusages-xcap-caps-sbb</artifactId>	
+			<artifactId>xdms-appusages-xcap-caps-events</artifactId>	
 			<version>${pom.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>${pom.groupId}</groupId>
+			<artifactId>xdms-appusages-xcap-caps-sbb</artifactId>	
+			<version>${pom.version}</version>
+		</dependency>		
 	</dependencies>
 	
 	<build>

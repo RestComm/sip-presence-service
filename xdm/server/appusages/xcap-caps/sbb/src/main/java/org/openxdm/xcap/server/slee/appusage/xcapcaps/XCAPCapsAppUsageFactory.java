@@ -2,8 +2,8 @@ package org.openxdm.xcap.server.slee.appusage.xcapcaps;
 
 import javax.xml.validation.Schema;
 
-import org.openxdm.xcap.common.appusage.AppUsage;
-import org.openxdm.xcap.common.appusage.AppUsageFactory;
+import org.mobicents.xdm.server.appusage.AppUsage;
+import org.mobicents.xdm.server.appusage.AppUsageFactory;
 
 public class XCAPCapsAppUsageFactory implements AppUsageFactory {
 

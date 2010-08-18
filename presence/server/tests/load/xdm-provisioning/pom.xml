@@ -33,7 +33,7 @@
 			<groupId>org.mobicents</groupId>
 		</dependency>
 		<dependency>
-			<artifactId>xdms-appusages-resource-lists-sbb</artifactId>	
+			<artifactId>xdms-appusages-resource-lists-bean</artifactId>	
 			<groupId>org.mobicents.servers.xdm</groupId>
 			<version>${pom.version}</version>
 		</dependency>
@@ -43,7 +43,7 @@
 			<version>${pom.version}</version>
 		</dependency>
 		<dependency>
-			<artifactId>xdms-appusages-oma-pres-rules-sbb</artifactId>	
+			<artifactId>xdms-appusages-oma-pres-rules-bean</artifactId>	
 			<groupId>org.mobicents.servers.xdm</groupId>
 			<version>${pom.version}</version>
 		</dependency>
@@ -59,11 +59,11 @@
 		<dependency>
 			<groupId>org.jboss.client</groupId>
 			<artifactId>jbossall-client</artifactId>
-			<version>4.2.2.GA</version>
+			<version>5.0.0.GA</version>
 			<scope>test</scope>
 		</dependency>			
 		<dependency>
-			<artifactId>xdms-appusages-rls-services-sbb</artifactId>	
+			<artifactId>xdms-appusages-rls-services-bean</artifactId>	
 			<groupId>org.mobicents.servers.xdm</groupId>
 			<version>${pom.version}</version>
 		</dependency>

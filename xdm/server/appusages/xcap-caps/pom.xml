@@ -11,6 +11,7 @@
 	<artifactId>xdms-appusages-xcap-caps</artifactId>
 	
 	<modules>
+		<module>events</module>
 		<module>sbb</module>
 	</modules>
 	

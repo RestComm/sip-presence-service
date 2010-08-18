@@ -70,7 +70,10 @@ public class SchemaContext {
 				// parse each one to dom document and add to schema docs list
 				schemaDocuments.add(documentBuilder.parse(schemaFile));				
 			}
-		}			
+		}
+		else {
+			return null;
+		}
 		// create and return new schema context
 		return new SchemaContext(schemaDocuments);
 	}

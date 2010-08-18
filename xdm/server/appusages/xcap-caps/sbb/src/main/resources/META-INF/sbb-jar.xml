@@ -31,6 +31,26 @@
             <event-type-ref>
                 <event-type-name>javax.slee.serviceactivity.ServiceStartedEvent</event-type-name>
                 <event-type-vendor>javax.slee</event-type-vendor>
+                <event-type-version>1.1</event-type-version>
+            </event-type-ref>
+            <initial-event-select variable="ActivityContext"/>
+        </event>
+        
+        <event event-direction="Receive" initial-event="True">
+            <event-name>AppUsageAddedEvent</event-name>
+            <event-type-ref>
+                <event-type-name>AppUsageAddedEvent</event-type-name>
+                <event-type-vendor>org.mobicents.xdm</event-type-vendor>
+                <event-type-version>1.0</event-type-version>
+            </event-type-ref>
+            <initial-event-select variable="ActivityContext"/>
+        </event>
+        
+        <event event-direction="Receive" initial-event="True">
+            <event-name>AppUsageRemovedEvent</event-name>
+            <event-type-ref>
+                <event-type-name>AppUsageRemovedEvent</event-type-name>
+                <event-type-vendor>org.mobicents.xdm</event-type-vendor>
                 <event-type-version>1.0</event-type-version>
             </event-type-ref>
             <initial-event-select variable="ActivityContext"/>
@@ -45,18 +65,6 @@
 			</event-type-ref>
 		</event>
 		
-	   	<resource-adaptor-type-binding>
-            <resource-adaptor-type-ref>
-                <resource-adaptor-type-name>AppUsageCacheResourceAdaptorType</resource-adaptor-type-name>
-                <resource-adaptor-type-vendor>org.openxdm</resource-adaptor-type-vendor>
-                <resource-adaptor-type-version>1.0</resource-adaptor-type-version>
-            </resource-adaptor-type-ref>
-            <resource-adaptor-entity-binding>
-                <resource-adaptor-object-name>slee/resources/openxdm/appusagecache/sbbrainterface</resource-adaptor-object-name>
-                <resource-adaptor-entity-link>AppUsageCacheRA</resource-adaptor-entity-link>
-            </resource-adaptor-entity-binding>
-        </resource-adaptor-type-binding>
-        
         <resource-adaptor-type-binding>
             <resource-adaptor-type-ref>
                 <resource-adaptor-type-name>DataSourceResourceAdaptorType</resource-adaptor-type-name>

@@ -31,7 +31,7 @@ import org.mobicents.xcap.client.impl.XcapClientImpl;
 import org.mobicents.xcap.client.uri.DocumentSelectorBuilder;
 import org.mobicents.xcap.client.uri.ElementSelectorBuilder;
 import org.mobicents.xcap.client.uri.UriBuilder;
-import org.openxdm.xcap.common.appusage.AppUsage;
+import org.mobicents.xdm.server.appusage.AppUsage;
 import org.openxdm.xcap.server.slee.appusage.omapresrules.OMAPresRulesAppUsage;
 import org.openxdm.xcap.server.slee.appusage.resourcelists.ResourceListsAppUsage;
 import org.openxdm.xcap.server.slee.appusage.rlsservices.RLSServicesAppUsage;
@@ -46,7 +46,7 @@ public class LoadTestUserProvisioningTest {
 		
 	private XcapClient client = null;
 	private AppUsage resourceListAppUsage = new ResourceListsAppUsage(null);
-	private AppUsage rlsServicesAppUsage = new RLSServicesAppUsage(null,null);
+	private AppUsage rlsServicesAppUsage = new RLSServicesAppUsage(null);
 	private AppUsage presRulesAppUsage = new OMAPresRulesAppUsage(null);
 	
 	private ObjectName userProfileMBeanObjectName;

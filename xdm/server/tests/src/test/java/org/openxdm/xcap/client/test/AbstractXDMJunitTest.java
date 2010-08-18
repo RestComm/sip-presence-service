@@ -16,8 +16,8 @@ import org.jboss.jmx.adaptor.rmi.RMIAdaptor;
 import org.junit.After;
 import org.junit.Before;
 import org.mobicents.slee.enabler.userprofile.jpa.jmx.UserProfileControlManagementMBean;
+import org.mobicents.xdm.server.appusage.AppUsage;
 import org.openxdm.xcap.client.XCAPClient;
-import org.openxdm.xcap.common.appusage.AppUsage;
 import org.openxdm.xcap.server.slee.appusage.resourcelists.ResourceListsAppUsage;
 
 public abstract class AbstractXDMJunitTest {

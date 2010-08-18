@@ -11,10 +11,7 @@
 	<artifactId>xdms-appusages-resource-lists</artifactId>
 	
 	<modules>
-		<module>jar</module>
-		<module>library</module>
-		<module>sbb</module>
-		<module>du</module>		
+		<module>bean</module>
 	</modules>
 	
 </project>

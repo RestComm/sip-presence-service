@@ -11,7 +11,12 @@
 	<groupId>org.mobicents.servers.xdm</groupId>
 	<artifactId>xdms-core-xcap-control-sbb</artifactId>
 			
-	<dependencies>	
+	<dependencies>					
+		<dependency>
+			<groupId>${pom.groupId}</groupId>
+			<artifactId>xdms-core-appusage-management</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
 			<artifactId>xdms-core-configuration-jar</artifactId>
@@ -20,11 +25,6 @@
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
 			<artifactId>xdms-core-datasource-ratype</artifactId>
-			<version>${pom.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${pom.groupId}</groupId>
-			<artifactId>xdms-core-appusagecache-ratype</artifactId>
 			<version>${pom.version}</version>
 		</dependency>
 		<dependency>

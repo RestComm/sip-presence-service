@@ -187,7 +187,42 @@
 											<overWrite>true</overWrite>
 											<outputDirectory>${deploy.dir}/${beans.dir.name}/configuration/sip-event/subscription</outputDirectory>
 										</artifactItem>
-
+										<artifactItem>
+											<groupId>org.mobicents.servers.xdm</groupId>
+											<artifactId>xdms-core-appusage-management</artifactId>
+											<version>${pom.version}</version>
+											<overWrite>true</overWrite>
+											<outputDirectory>${deploy.dir}/${beans.dir.name}/appusages</outputDirectory>
+										</artifactItem>
+										<artifactItem>
+											<groupId>org.mobicents.servers.xdm</groupId>
+											<artifactId>xdms-appusages-pres-rules-bean</artifactId>
+											<version>${pom.version}</version>
+											<overWrite>true</overWrite>
+											<outputDirectory>${deploy.dir}/${beans.dir.name}/appusages</outputDirectory>
+										</artifactItem>
+										<artifactItem>
+											<groupId>org.mobicents.servers.xdm</groupId>
+											<artifactId>xdms-appusages-oma-pres-rules-bean</artifactId>
+											<version>${pom.version}</version>
+											<overWrite>true</overWrite>
+											<outputDirectory>${deploy.dir}/${beans.dir.name}/appusages</outputDirectory>
+										</artifactItem>
+										<artifactItem>
+											<groupId>org.mobicents.servers.xdm</groupId>
+											<artifactId>xdms-appusages-resource-lists-bean</artifactId>
+											<version>${pom.version}</version>
+											<overWrite>true</overWrite>
+											<outputDirectory>${deploy.dir}/${beans.dir.name}/appusages</outputDirectory>
+										</artifactItem>
+										<artifactItem>
+											<groupId>org.mobicents.servers.xdm</groupId>
+											<artifactId>xdms-appusages-rls-services-bean</artifactId>
+											<version>${pom.version}</version>
+											<overWrite>true</overWrite>
+											<outputDirectory>${deploy.dir}/${beans.dir.name}/appusages</outputDirectory>
+										</artifactItem>		
+										
 										<artifactItem>
 											<groupId>org.mobicents.servers.xdm</groupId>
 											<artifactId>xdms-core-datasource-DU</artifactId>
@@ -198,13 +233,6 @@
 										<artifactItem>
 											<groupId>org.mobicents.servers.xdm</groupId>
 											<artifactId>xdms-core-internal-client-DU</artifactId>
-											<version>${pom.version}</version>
-											<overWrite>true</overWrite>
-											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
-										</artifactItem>
-										<artifactItem>
-											<groupId>org.mobicents.servers.xdm</groupId>
-											<artifactId>xdms-core-appusagecache-DU</artifactId>
 											<version>${pom.version}</version>
 											<overWrite>true</overWrite>
 											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
@@ -226,34 +254,6 @@
 										<artifactItem>
 											<groupId>org.mobicents.servers.xdm</groupId>
 											<artifactId>xdms-core-subscription-control-DU</artifactId>
-											<version>${pom.version}</version>
-											<overWrite>true</overWrite>
-											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
-										</artifactItem>
-										<artifactItem>
-											<groupId>org.mobicents.servers.xdm</groupId>
-											<artifactId>xdms-appusages-pres-rules-DU</artifactId>
-											<version>${pom.version}</version>
-											<overWrite>true</overWrite>
-											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
-										</artifactItem>
-										<artifactItem>
-											<groupId>org.mobicents.servers.xdm</groupId>
-											<artifactId>xdms-appusages-oma-pres-rules-DU</artifactId>
-											<version>${pom.version}</version>
-											<overWrite>true</overWrite>
-											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
-										</artifactItem>
-										<artifactItem>
-											<groupId>org.mobicents.servers.xdm</groupId>
-											<artifactId>xdms-appusages-resource-lists-DU</artifactId>
-											<version>${pom.version}</version>
-											<overWrite>true</overWrite>
-											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
-										</artifactItem>
-										<artifactItem>
-											<groupId>org.mobicents.servers.xdm</groupId>
-											<artifactId>xdms-appusages-rls-services-DU</artifactId>
 											<version>${pom.version}</version>
 											<overWrite>true</overWrite>
 											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
@@ -289,6 +289,9 @@
 								<configuration>
 									<tasks>
 										<copy overwrite="true" file="resources/configuration/sip-event/subscription/META-INF/jboss-beans.xml" todir="${deploy.dir}/${beans.dir.name}/configuration/sip-event/subscription/META-INF" />
+										<copy overwrite="true" todir="${deploy.dir}/${beans.dir.name}/appusages/xsd">
+											<fileset dir="../appusages/xsd"/>
+										</copy>
 									</tasks>
 								</configuration>
 							</execution>

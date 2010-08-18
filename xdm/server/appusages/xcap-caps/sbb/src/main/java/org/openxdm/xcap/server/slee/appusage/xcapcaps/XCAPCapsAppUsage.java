@@ -2,7 +2,7 @@ package org.openxdm.xcap.server.slee.appusage.xcapcaps;
 
 import javax.xml.validation.Validator;
 
-import org.openxdm.xcap.common.appusage.AppUsage;
+import org.mobicents.xdm.server.appusage.AppUsage;
 
 
 /**

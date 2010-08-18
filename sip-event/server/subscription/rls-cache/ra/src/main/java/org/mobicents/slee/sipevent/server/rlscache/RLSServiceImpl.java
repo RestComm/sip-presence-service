@@ -172,7 +172,9 @@ public class RLSServiceImpl implements RLSService, ListReferenceFrom {
 			list = null;
 			String resourceListURI = serviceType.getResourceList().trim();
 			ListReferenceEndpointAddress listAddress = ra.getAddressParser().getAddress(resourceListURI, true);
-			reference = ra.addReference(this,listAddress);
+			if (listAddress != null) {
+				reference = ra.addReference(this,listAddress);
+			}
 			if (reference == null) {
 				status = Status.BAD_GATEWAY;
 			}

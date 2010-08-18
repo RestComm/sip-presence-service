@@ -78,29 +78,20 @@
 	<classpathentry kind="src" path="xdm/client/appusages/xcap-caps/src/main/java"/>
 	<classpathentry kind="src" path="xdm/client/sbb-local-object/src/main/java"/>
 	<classpathentry kind="src" path="xdm/commons/src/main/java"/>
-	<classpathentry kind="src" path="xdm/server/appusages/oma-pres-rules/du/src/main/resources"/>
-	<classpathentry kind="src" path="xdm/server/appusages/oma-pres-rules/sbb/src/main/resources"/>
-	<classpathentry kind="src" path="xdm/server/appusages/oma-pres-rules/sbb/src/main/java"/>
-	<classpathentry kind="src" path="xdm/server/appusages/pres-rules/du/src/main/resources"/>
-	<classpathentry kind="src" path="xdm/server/appusages/pres-rules/sbb/src/main/resources"/>
-	<classpathentry kind="src" path="xdm/server/appusages/pres-rules/sbb/src/main/java"/>
-	<classpathentry kind="src" path="xdm/server/appusages/resource-lists/du/src/main/resources"/>
-	<classpathentry kind="src" path="xdm/server/appusages/resource-lists/jar/src/main/java"/>
-	<classpathentry kind="src" path="xdm/server/appusages/resource-lists/sbb/src/main/java"/>
-	<classpathentry kind="src" path="xdm/server/appusages/resource-lists/sbb/src/main/resources"/>
-	<classpathentry kind="src" path="xdm/server/appusages/rls-services/du/src/main/resources"/>
-	<classpathentry kind="src" path="xdm/server/appusages/rls-services/sbb/src/main/resources"/>
-	<classpathentry kind="src" path="xdm/server/appusages/rls-services/sbb/src/main/java"/>
+	<classpathentry kind="src" path="xdm/server/appusages/oma-pres-rules/bean/src/main/resources"/>
+	<classpathentry kind="src" path="xdm/server/appusages/oma-pres-rules/bean/src/main/java"/>
+	<classpathentry kind="src" path="xdm/server/appusages/pres-rules/bean/src/main/java"/>
+	<classpathentry kind="src" path="xdm/server/appusages/pres-rules/bean/src/main/resources"/>
+	<classpathentry kind="src" path="xdm/server/appusages/resource-lists/bean/src/main/java"/>
+	<classpathentry kind="src" path="xdm/server/appusages/resource-lists/bean/src/main/resources"/>
+	<classpathentry kind="src" path="xdm/server/appusages/rls-services/bean/src/main/java"/>
+	<classpathentry kind="src" path="xdm/server/appusages/rls-services/bean/src/main/resources"/>
 	<classpathentry kind="src" path="xdm/server/appusages/rls-services/tests/src/test/java"/>
+	<classpathentry kind="src" path="xdm/server/appusages/xcap-caps/events/src/main/resources"/>
 	<classpathentry kind="src" path="xdm/server/appusages/xcap-caps/sbb/src/main/resources"/>
 	<classpathentry kind="src" path="xdm/server/appusages/xcap-caps/sbb/src/main/java"/>
-	<classpathentry kind="src" path="xdm/server/core/appusage-cache/du/src/main/resources"/>
-	<classpathentry kind="src" path="xdm/server/core/appusage-cache/events/src/main/resources"/>
-	<classpathentry kind="src" path="xdm/server/core/appusage-cache/events/src/main/java"/>
-	<classpathentry kind="src" path="xdm/server/core/appusage-cache/ra/src/main/resources"/>
-	<classpathentry kind="src" path="xdm/server/core/appusage-cache/ra/src/main/java"/>
-	<classpathentry kind="src" path="xdm/server/core/appusage-cache/ratype/src/main/java"/>
-	<classpathentry kind="src" path="xdm/server/core/appusage-cache/ratype/src/main/resources"/>
+	<classpathentry kind="src" path="xdm/server/core/appusage-management/src/main/java"/>
+	<classpathentry kind="src" path="xdm/server/core/appusage-management/src/main/resources"/>
 	<classpathentry kind="src" path="xdm/server/core/configuration/jar/src/main/java"/>
 	<classpathentry kind="src" path="xdm/server/core/configuration/metadata/src/main/resources"/>
 	<classpathentry kind="src" path="xdm/server/core/datasource/du/src/main/resources"/>
@@ -130,6 +121,7 @@
 	<classpathentry kind="var" path="M2_REPO/commons-collections/commons-collections/3.1/commons-collections-3.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-httpclient/commons-httpclient/3.1/commons-httpclient-3.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.0.4/commons-logging-1.0.4.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-pool/commons-pool/1.4/commons-pool-1.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/dom4j/dom4j/1.6.1/dom4j-1.6.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/gnu-getopt/getopt/1.0.12-brew/getopt-1.0.12-brew.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javassist/javassist/3.9.0.GA/javassist-3.9.0.GA.jar"/>
@@ -137,7 +129,7 @@
 	<classpathentry kind="var" path="M2_REPO/javax/security/jaas/1.0.01/jaas-1.0.01.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javax/servlet/servlet-api/2.4/servlet-api-2.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javax/sip/jain-sip-api/1.2/jain-sip-api-1.2.jar"/>
-	<classpathentry kind="var" path="M2_REPO/javax/sip/jain-sip-ri/1.2.151/jain-sip-ri-1.2.151.jar"/>
+	<classpathentry kind="var" path="M2_REPO/javax/sip/jain-sip-ri/1.2.153/jain-sip-ri-1.2.153.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javax/slee/jain-slee/1.1/jain-slee-1.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javax/transaction/jta/1.1/jta-1.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javax/xml/bind/jaxb-api/2.1/jaxb-api-2.1.jar"/>
@@ -170,7 +162,7 @@
 	<classpathentry kind="var" path="M2_REPO/org/jboss/cl/jboss-classloader/2.0.3.GA/jboss-classloader-2.0.3.GA.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/jboss/cl/jboss-classloading-vfs/2.0.3.GA/jboss-classloading-vfs-2.0.3.GA.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/jboss/cl/jboss-classloading/2.0.3.GA/jboss-classloading-2.0.3.GA.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/jboss/client/jbossall-client/4.2.2.GA/jbossall-client-4.2.2.GA.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/jboss/client/jbossall-client/5.0.0.GA/jbossall-client-5.0.0.GA.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/jboss/cluster/jboss-ha-server-api/1.1.0.GA/jboss-ha-server-api-1.1.0.GA.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/jboss/cluster/jboss-ha-server-cache-jbc/2.0.0.GA/jboss-ha-server-cache-jbc-2.0.0.GA.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/jboss/cluster/jboss-ha-server-cache-spi/2.0.0.GA/jboss-ha-server-cache-spi-2.0.0.GA.jar"/>
@@ -230,22 +222,22 @@
 	<classpathentry kind="var" path="M2_REPO/org/jboss/ws/native/jbossws-native-jaxrpc/3.0.4.GA/jbossws-native-jaxrpc-3.0.4.GA.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/jboss/ws/native/jbossws-native-jaxws/3.1.2.GA/jbossws-native-jaxws-3.1.2.GA.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/jboss/ws/native/jbossws-native-saaj/3.1.2.GA/jbossws-native-saaj-3.1.2.GA.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/mobicents/cluster/cache/1.5/cache-1.5.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/mobicents/cluster/core/1.5/core-1.5.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/mobicents/ha/javax/sip/mobicents-jain-sip-ha-core/0.10/mobicents-jain-sip-ha-core-0.10.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/mobicents/ha/javax/sip/mobicents-jain-sip-jboss5/0.10/mobicents-jain-sip-jboss5-0.10.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/mobicents/resources/http-servlet-events/2.0.0.GA/http-servlet-events-2.0.0.GA.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/mobicents/resources/http-servlet-ratype/2.0.0.GA/http-servlet-ratype-2.0.0.GA.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/mobicents/resources/sip11-events/2.1.1.GA/sip11-events-2.1.1.GA.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/mobicents/resources/sip11-jain-sip-ha/2.1.1.GA/sip11-jain-sip-ha-2.1.1.GA.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/mobicents/resources/sip11-library/2.1.1.GA/sip11-library-2.1.1.GA.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/mobicents/resources/sip11-ratype/2.1.1.GA/sip11-ratype-2.1.1.GA.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/mobicents/servers/jainslee/core/fault-tolerant-ra-api/2.1.1.GA/fault-tolerant-ra-api-2.1.1.GA.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/mobicents/servers/jainslee/core/jmx-property-editors/2.1.1.GA/jmx-property-editors-2.1.1.GA.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/mobicents/servers/jainslee/core/spi/2.1.1.GA/spi-2.1.1.GA.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mobicents/cluster/cache/1.6/cache-1.6.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mobicents/cluster/core/1.6/core-1.6.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mobicents/ha/javax/sip/mobicents-jain-sip-ha-core/0.11/mobicents-jain-sip-ha-core-0.11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mobicents/ha/javax/sip/mobicents-jain-sip-jboss5/0.11/mobicents-jain-sip-jboss5-0.11.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mobicents/resources/http-servlet-events/2.1.2.FINAL/http-servlet-events-2.1.2.FINAL.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mobicents/resources/http-servlet-ratype/2.1.2.FINAL/http-servlet-ratype-2.1.2.FINAL.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mobicents/resources/sip11-events/2.1.2.FINAL/sip11-events-2.1.2.FINAL.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mobicents/resources/sip11-jain-sip-ha/2.1.2.FINAL/sip11-jain-sip-ha-2.1.2.FINAL.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mobicents/resources/sip11-library/2.1.2.FINAL/sip11-library-2.1.2.FINAL.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mobicents/resources/sip11-ratype/2.1.2.FINAL/sip11-ratype-2.1.2.FINAL.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mobicents/servers/jainslee/core/fault-tolerant-ra-api/2.1.2.FINAL/fault-tolerant-ra-api-2.1.2.FINAL.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mobicents/servers/jainslee/core/jmx-property-editors/2.1.2.FINAL/jmx-property-editors-2.1.2.FINAL.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mobicents/servers/jainslee/core/spi/2.1.2.FINAL/spi-2.1.2.FINAL.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/mobicents/servers/sippresence/xcap-client-api/1.0.0.BETA5/xcap-client-api-1.0.0.BETA5.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/mobicents/servers/xdm/core/commons/1.0.0.BETA5/commons-1.0.0.BETA5.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/mobicents/tools/sip-balancer-jar/1.0.0.FINAL/sip-balancer-jar-1.0.0.FINAL.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/mobicents/tools/sip-balancer-jar/1.0.1/sip-balancer-jar-1.0.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/mobicents/xcap-client-api/2.1.0.GA/xcap-client-api-2.1.0.GA.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-api/1.4.2/slf4j-api-1.4.2.jar"/>
 	<classpathentry kind="var" path="M2_REPO/oswego-concurrent/concurrent/1.3.4-jboss-update1/concurrent-1.3.4-jboss-update1.jar"/>

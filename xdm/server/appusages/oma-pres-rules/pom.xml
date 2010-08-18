@@ -11,8 +11,7 @@
 	<artifactId>xdms-appusages-oma-pres-rules</artifactId>
 	
 	<modules>
-		<module>sbb</module>
-		<module>du</module>		
+		<module>bean</module>
 	</modules>
 	
 </project>

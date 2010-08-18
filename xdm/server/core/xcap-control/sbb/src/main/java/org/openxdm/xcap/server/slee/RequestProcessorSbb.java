@@ -22,8 +22,10 @@ import javax.xml.xpath.XPathFactory;
 
 import org.apache.log4j.Logger;
 import org.mobicents.slee.xdm.server.ServerConfiguration;
-import org.openxdm.xcap.common.appusage.AppUsage;
-import org.openxdm.xcap.common.appusage.AuthorizationPolicy;
+import org.mobicents.xdm.server.appusage.AppUsage;
+import org.mobicents.xdm.server.appusage.AppUsageManagement;
+import org.mobicents.xdm.server.appusage.AppUsagePool;
+import org.mobicents.xdm.server.appusage.AuthorizationPolicy;
 import org.openxdm.xcap.common.datasource.DataSource;
 import org.openxdm.xcap.common.error.BadRequestException;
 import org.openxdm.xcap.common.error.CannotDeleteConflictException;
@@ -41,6 +43,7 @@ import org.openxdm.xcap.common.error.PreconditionFailedException;
 import org.openxdm.xcap.common.error.SchemaValidationErrorConflictException;
 import org.openxdm.xcap.common.error.UniquenessFailureConflictException;
 import org.openxdm.xcap.common.error.UnsupportedMediaTypeException;
+import org.openxdm.xcap.common.etag.ETagGenerator;
 import org.openxdm.xcap.common.resource.AttributeResource;
 import org.openxdm.xcap.common.resource.DocumentResource;
 import org.openxdm.xcap.common.resource.ElementResource;
@@ -61,13 +64,11 @@ import org.openxdm.xcap.common.uri.TerminalSelector;
 import org.openxdm.xcap.common.xml.NamespaceContext;
 import org.openxdm.xcap.common.xml.TextWriter;
 import org.openxdm.xcap.common.xml.XMLValidator;
-import org.openxdm.xcap.server.etag.ETagGenerator;
 import org.openxdm.xcap.server.etag.ETagValidator;
 import org.openxdm.xcap.server.result.CreatedWriteResult;
 import org.openxdm.xcap.server.result.OKWriteResult;
 import org.openxdm.xcap.server.result.ReadResult;
 import org.openxdm.xcap.server.result.WriteResult;
-import org.openxdm.xcap.server.slee.resource.appusagecache.AppUsageCacheResourceAdaptorSbbInterface;
 import org.openxdm.xcap.server.slee.resource.datasource.DataSourceSbbInterface;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -85,7 +86,6 @@ public abstract class RequestProcessorSbb implements
 
 	private static Logger logger = Logger.getLogger(RequestProcessorSbb.class);
 
-	private AppUsageCacheResourceAdaptorSbbInterface appUsageCache;
 	private DataSourceSbbInterface dataSourceSbbInterface = null;
 
 	private static final ServerConfiguration CONFIGURATION = ServerConfiguration.getInstance();
@@ -97,8 +97,6 @@ public abstract class RequestProcessorSbb implements
 		this.sbbContext = context;
 		try {
 			myEnv = (Context) new InitialContext().lookup("java:comp/env");
-			appUsageCache = (AppUsageCacheResourceAdaptorSbbInterface) myEnv
-					.lookup("slee/resources/openxdm/appusagecache/sbbrainterface");
 			dataSourceSbbInterface = (DataSourceSbbInterface) myEnv
 					.lookup("slee/resources/openxdm/datasource/sbbrainterface");			
 		} catch (NamingException e) {
@@ -169,19 +167,22 @@ public abstract class RequestProcessorSbb implements
 		AttributeSelector attributeSelector = null;
 		Map<String, String> namespaces = null;
 		AppUsage appUsage = null;
-
+		AppUsagePool appUsagePool = null;
+		
 		try {
 			// parse document parent String
 			documentSelector = DocumentSelector.valueOf(resourceSelector
 					.getDocumentSelector());
 			// get app usage from cache
-			appUsage = appUsageCache.borrow(documentSelector.getAUID());
-			if (appUsage == null) {
+			appUsagePool = AppUsageManagement.getInstance().getAppUsagePool(documentSelector.getAUID());
+			if (appUsagePool == null) {
 				// throw exception
 				if (logger.isDebugEnabled())
 					logger.debug("appusage not found");
 				throw new NotFoundException();
 			}
+			appUsage = appUsagePool.borrowInstance();
+			
 			// authorize user
 			if (authenticatedUser != null && !appUsage.getAuthorizationPolicy().isAuthorized(authenticatedUser, AuthorizationPolicy.Operation.DELETE, documentSelector)) {
 				throw new NotAuthorizedRequestException();
@@ -543,13 +544,9 @@ public abstract class RequestProcessorSbb implements
 			if (logger.isDebugEnabled())
 				logger.debug("error parsing uri, returning not found");
 			throw new NotFoundException();
-		} catch (InterruptedException e) {
-			String msg = "failed to borrow app usage object from cache";
-			logger.error(msg, e);
-			throw new InternalServerErrorException(msg);
 		} finally {
-			if (appUsage != null) {
-				appUsageCache.release(appUsage);
+			if (appUsagePool != null) {
+				appUsagePool.returnInstance(appUsage);
 			}
 		}
 
@@ -560,18 +557,21 @@ public abstract class RequestProcessorSbb implements
 			BadRequestException, NotAuthorizedRequestException {
 
 		AppUsage appUsage = null;
+		AppUsagePool appUsagePool = null;
+		
 		try {
 			// parse document parent String
 			DocumentSelector documentSelector = DocumentSelector.valueOf(resourceSelector
-							.getDocumentSelector());
+					.getDocumentSelector());
 			// get app usage from cache
-			appUsage = appUsageCache.borrow(documentSelector.getAUID());
-			if (appUsage == null) {
+			appUsagePool = AppUsageManagement.getInstance().getAppUsagePool(documentSelector.getAUID());
+			if (appUsagePool == null) {
 				// throw exception
 				if (logger.isDebugEnabled())
 					logger.debug("appusage not found");
 				throw new NotFoundException();
 			}
+			appUsage = appUsagePool.borrowInstance();
 			// authorize user
 			if (authenticatedUser != null && !appUsage.getAuthorizationPolicy().isAuthorized(authenticatedUser, AuthorizationPolicy.Operation.GET, documentSelector)) {
 				throw new NotAuthorizedRequestException();
@@ -726,13 +726,9 @@ public abstract class RequestProcessorSbb implements
 		} catch (TransformerException e) {
 			logger.error("unable to transform dom element to text.", e);
 			throw new InternalServerErrorException(e.getMessage());
-		} catch (InterruptedException e) {
-			String msg = "failed to borrow app usage object from cache";
-			logger.error(msg, e);
-			throw new InternalServerErrorException(msg);
 		} finally {
-			if (appUsage != null) {
-				appUsageCache.release(appUsage);
+			if (appUsagePool != null) {
+				appUsagePool.returnInstance(appUsage);
 			}
 		}
 	}
@@ -804,21 +800,21 @@ public abstract class RequestProcessorSbb implements
 		String newElementAsString = null;
 		Element newElement = null;
 		AppUsage appUsage = null;
-
+		AppUsagePool appUsagePool = null;
+		
 		try {
-
-			// parse document selector
+			// parse document parent String
 			documentSelector = DocumentSelector.valueOf(resourceSelector
 					.getDocumentSelector());
-
 			// get app usage from cache
-			appUsage = appUsageCache.borrow(documentSelector.getAUID());
-			if (appUsage == null) {
+			appUsagePool = AppUsageManagement.getInstance().getAppUsagePool(documentSelector.getAUID());
+			if (appUsagePool == null) {
 				// throw exception
 				if (logger.isDebugEnabled())
 					logger.debug("appusage not found");
 				throw new NoParentConflictException(xcapRoot);
 			}
+			appUsage = appUsagePool.borrowInstance();
 			// authorize user
 			if (authenticatedUser != null && !appUsage.getAuthorizationPolicy().isAuthorized(authenticatedUser, AuthorizationPolicy.Operation.PUT, documentSelector)) {
 				throw new NotAuthorizedRequestException();
@@ -1445,14 +1441,10 @@ public abstract class RequestProcessorSbb implements
 					xcapRoot, documentSelector != null ? documentSelector.getAUID() : null,
 					documentSelector != null ? documentSelector
 							.getDocumentParent() : e.getValidParent(),
-					dataSourceSbbInterface));
-		} catch (InterruptedException e) {
-			String msg = "failed to borrow app usage object from cache";
-			logger.error(msg, e);
-			throw new InternalServerErrorException(msg);
+					dataSourceSbbInterface));		
 		} finally {
-			if (appUsage != null) {
-				appUsageCache.release(appUsage);
+			if (appUsagePool != null) {
+				appUsagePool.returnInstance(appUsage);
 			}
 		}
 	}

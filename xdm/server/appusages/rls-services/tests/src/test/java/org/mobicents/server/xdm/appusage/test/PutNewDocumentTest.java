@@ -5,27 +5,37 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanException;
+import javax.management.MalformedObjectNameException;
+import javax.management.ReflectionException;
+import javax.management.RuntimeMBeanException;
+import javax.naming.NamingException;
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
 
 import junit.framework.JUnit4TestAdapter;
 
 import org.apache.commons.httpclient.HttpException;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.junit.Test;
-import org.openxdm.xcap.client.Response;
-import org.openxdm.xcap.client.XCAPClient;
-import org.openxdm.xcap.client.XCAPClientImpl;
+import org.mobicents.xcap.client.XcapClient;
+import org.mobicents.xcap.client.XcapResponse;
+import org.mobicents.xcap.client.impl.XcapClientImpl;
+import org.mobicents.xcap.client.uri.DocumentSelectorBuilder;
+import org.mobicents.xcap.client.uri.UriBuilder;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
 import org.openxdm.xcap.common.error.NotUTF8ConflictException;
 import org.openxdm.xcap.common.error.NotWellFormedConflictException;
-import org.openxdm.xcap.common.key.GlobalDocumentUriKey;
-import org.openxdm.xcap.common.key.UserDocumentUriKey;
 import org.openxdm.xcap.common.xml.TextWriter;
 import org.openxdm.xcap.common.xml.XMLValidator;
 import org.openxdm.xcap.server.slee.appusage.rlsservices.RLSServicesAppUsage;
 
-public class PutNewDocumentTest {
+public class PutNewDocumentTest extends AbstractT {
 	
 	public static junit.framework.Test suite() {
 		return new JUnit4TestAdapter(PutNewDocumentTest.class);
@@ -35,12 +45,30 @@ public class PutNewDocumentTest {
 	private String documentName = "index";
 	
 	@Test
-	public void test() throws HttpException, IOException, JAXBException, InterruptedException, TransformerException, NotWellFormedConflictException, NotUTF8ConflictException, InternalServerErrorException {
+	public void test() throws HttpException, IOException, JAXBException, InterruptedException, TransformerException, NotWellFormedConflictException, NotUTF8ConflictException, InternalServerErrorException, InstanceNotFoundException, MBeanException, ReflectionException, URISyntaxException, MalformedObjectNameException, NullPointerException, NamingException {
 		
-		XCAPClient client = new XCAPClientImpl("localhost",8080,"/mobicents");
+		initRmiAdaptor();
+
+		try {
+			createUser(user,"password");
+		}
+		catch (RuntimeMBeanException e) {
+			if (!(e.getCause() instanceof IllegalStateException)) {
+				e.printStackTrace();
+			}
+		}
+		
+		XcapClient client = new XcapClientImpl();
+		
+		Credentials credentials = new UsernamePasswordCredentials(user, "password");
 		
 		// create uri		
-		UserDocumentUriKey key = new UserDocumentUriKey(RLSServicesAppUsage.ID,user,documentName);
+		String documentSelector = DocumentSelectorBuilder.getUserDocumentSelectorBuilder(RLSServicesAppUsage.ID,user,documentName).toPercentEncodedString();
+		UriBuilder uriBuilder = new UriBuilder()
+			.setSchemeAndAuthority("http://localhost:8080")
+			.setXcapRoot("/mobicents")
+			.setDocumentSelector(documentSelector);
+		URI documentURI = uriBuilder.toURI();
 		
 		// read document xml
 		InputStream is = this.getClass().getResourceAsStream("example.xml");
@@ -48,7 +76,7 @@ public class PutNewDocumentTest {
 		is.close();
 		
 		// send put request and get response
-		Response putResponse = client.put(key,RLSServicesAppUsage.MIMETYPE,content,null);
+		XcapResponse putResponse = client.put(documentURI,RLSServicesAppUsage.MIMETYPE,content,null,credentials);
 		
 		// check put response
 		System.out.println("Response got:\n"+putResponse);
@@ -56,21 +84,22 @@ public class PutNewDocumentTest {
 		assertTrue("Put response code should be 201",putResponse.getCode() == 201);
 				
 		// send get request and get response
-		Response getResponse = client.get(key,null);
+		XcapResponse getResponse = client.get(documentURI,null,credentials);
 		
 		// check get response
 		assertTrue("Get response must exists",getResponse != null);
 		assertTrue("Get response code should be 200",getResponse.getCode() == 200); 
-		ByteArrayInputStream bais = new ByteArrayInputStream(getResponse.getContent().getBytes("UTF-8"));
+		ByteArrayInputStream bais = new ByteArrayInputStream(getResponse.getEntity().getRawContent());
 		String getResponseContent = TextWriter.toString(XMLValidator.getWellFormedDocument(XMLValidator.getUTF8Reader(bais)));
 		bais.close();
 		assertTrue("Get response content must equals the one sent in put",content.equals(getResponseContent));
 		
-		System.out.println("Global document after put:\n"+client.get(new GlobalDocumentUriKey(RLSServicesAppUsage.ID,documentName),null).getContent());
 		// clean
-		client.delete(key,null);
-		System.out.println("Global document after delete:\n"+client.get(new GlobalDocumentUriKey(RLSServicesAppUsage.ID,documentName),null).getContent());
+		client.delete(documentURI,null,credentials);
 		client.shutdown();
+		
+		removeUser(user);
+		
 	}
 		
 }

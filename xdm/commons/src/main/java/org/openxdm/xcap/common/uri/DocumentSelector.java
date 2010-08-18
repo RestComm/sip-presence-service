@@ -116,7 +116,7 @@ public class DocumentSelector implements Serializable {
 	public boolean isUserDocument() {
 		// no need to check for whole 'users word, document parent's first char
 		// can only be a 'g' or 'u'
-		return documentParent.charAt(0) == 'u';
+		return documentParent.charAt(0) == 'u' || documentParent.charAt(0) == 'U';
 	}
 	
 	@Override

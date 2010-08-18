@@ -11,12 +11,12 @@
 				
 	<dependencies>
 		<dependency>
+			<groupId>org.mobicents</groupId>
 			<artifactId>xcap-client-api</artifactId>
-			<groupId>org.mobicents.servers.sippresence</groupId>
-			<version>1.0.0.BETA5</version>
+			<version>2.1.0.GA</version>
 		</dependency>
 		<dependency>
-			<artifactId>xdms-appusages-rls-services-sbb</artifactId>
+			<artifactId>xdms-appusages-rls-services-bean</artifactId>
 			<groupId>${pom.groupId}</groupId>
 			<version>${pom.version}</version>
 		</dependency>
@@ -24,6 +24,12 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.client</groupId>
+			<artifactId>jbossall-client</artifactId>
+			<version>5.0.0.GA</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	

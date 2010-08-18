@@ -10,6 +10,7 @@ import javax.slee.ServiceID;
 import javax.slee.facilities.Tracer;
 import javax.slee.resource.ActivityFlags;
 import javax.slee.resource.ActivityHandle;
+import javax.slee.resource.ActivityIsEndingException;
 import javax.slee.resource.ConfigProperties;
 import javax.slee.resource.FailureReason;
 import javax.slee.resource.FireableEventType;
@@ -508,6 +509,11 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 			try {
 				sleeEndpoint.fireEventTransacted(handle, rLSServicesRemovedEvent, event, null, null);
 			}
+			catch (ActivityIsEndingException e) {
+				if(tracer.isFineEnabled()) {
+					tracer.fine("unable to fire rls services removed event, activity is ending", e);
+				}
+			}	
 			catch (Throwable e) {
 				tracer.severe("failed to fire rls services removed event", e);
 			}		
