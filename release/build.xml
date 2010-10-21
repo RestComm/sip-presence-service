@@ -13,11 +13,16 @@
 	<property name="jboss.home" location="${release.dir}/jboss-${jboss.version}/" />
 	<property name="jboss.config" value="default" />
 	
-	<!--
+	<!-- official slee release 
 	<property name="mobicents.jainslee.download.url" value="http://downloads.sourceforge.net/project/mobicents/Mobicents%20JAIN%20SLEE%20Server/${mobicents.jainslee.version}/mobicents-jainslee-${mobicents.jainslee.version}-jboss-${jboss.version}.zip" />
 	-->
-	<property name="mobicents.jainslee.download.url" value="http://hudson.jboss.org/hudson/view/Mobicents/job/MobicentsSleeRelease/lastSuccessfulBuild/artifact/mobicents-jainslee-${mobicents.jainslee.version}-jboss-${jboss.version}.zip" />
 	
+	<!-- commmunity hudson snapshot
+	<property name="mobicents.jainslee.download.url" value="http://hudson.jboss.org/hudson/view/Mobicents/job/MobicentsSleeRelease/lastSuccessfulBuild/artifact/mobicents-jainslee-${mobicents.jainslee.version}-jboss-${jboss.version}.zip" />
+	-->
+	
+	<!-- internal redhat hudson snapshot -->
+	<property name="mobicents.jainslee.download.url" value="http://hudson.qa.jboss.com/hudson/job/MobicentsSleeRelease/lastSuccessfulBuild/artifact/mobicents-jainslee-${mobicents.jainslee.version}-jboss-${jboss.version}.zip" />
 	
 	<tstamp>
 		<format property="time.stamp" pattern="yyyyMMdd-HHmm" />
