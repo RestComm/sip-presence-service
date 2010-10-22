@@ -15,7 +15,8 @@ import org.openxdm.xcap.common.uri.DocumentSelector;
  */
 public class JPADataSource implements DataSource {
 
-	private static final String[] EMPTY_STRING_ARRAY = new String[0];
+	private static final String[] EMPTY_STRING_ARRAY = {};
+	private static final org.openxdm.xcap.common.datasource.Document[] EMPTY_DOC_ARRAY = {};
 	
 	private EntityManagerFactory entityManagerFactory = null;
 	
@@ -190,10 +191,32 @@ public class JPADataSource implements DataSource {
 		addCollection(appUsage, "users/" + user);
 	}*/
 	
-	public String[] getDocuments(String auid, String collection)
+	public org.openxdm.xcap.common.datasource.Document[] getDocuments(String auid) throws InternalServerErrorException {
+		
+		org.openxdm.xcap.common.datasource.Document[] result = null;
+		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		List<?> resultList = entityManager.createNamedQuery("selectDocumentsFromAppUsage")
+		.setParameter("auid", auid)
+		.getResultList();
+		int resultListSize = resultList.size();
+		if (resultListSize > 0) {
+			result = new org.openxdm.xcap.common.datasource.Document[resultListSize];
+			for(int i=0;i<resultListSize;i++) {
+				result[i] = (Document)resultList.get(i);
+			}
+		}
+		else {
+			result = EMPTY_DOC_ARRAY;
+		}
+		entityManager.close();
+		return result;
+		
+	};
+	
+	public org.openxdm.xcap.common.datasource.Document[] getDocuments(String auid, String collection)
 			throws InternalServerErrorException {
 	
-		String[] result = null;
+		org.openxdm.xcap.common.datasource.Document[] result = null;
 		EntityManager entityManager = entityManagerFactory.createEntityManager();
 		List<?> resultList = entityManager.createNamedQuery("selectDocumentsFromCollection")
 		.setParameter("auid", auid)
@@ -201,13 +224,13 @@ public class JPADataSource implements DataSource {
 		.getResultList();
 		int resultListSize = resultList.size();
 		if (resultListSize > 0) {
-			result = new String[resultListSize];
+			result = new org.openxdm.xcap.common.datasource.Document[resultListSize];
 			for(int i=0;i<resultListSize;i++) {
-				result[i] = ((Document)resultList.get(i)).getKey().getDocumentName();
+				result[i] = (Document)resultList.get(i);
 			}
 		}
 		else {
-			result = EMPTY_STRING_ARRAY;
+			result = EMPTY_DOC_ARRAY;
 		}
 		entityManager.close();
 		return result;

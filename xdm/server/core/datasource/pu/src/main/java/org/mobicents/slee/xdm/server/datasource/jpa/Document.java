@@ -25,6 +25,7 @@ import org.openxdm.xcap.common.xml.XMLValidator;
 @NamedQueries({
 	@NamedQuery(name="selectDocumentFromKey",query="SELECT x FROM Document x WHERE x.key.collection.key.appUsage.id = :auid AND x.key.collection.key.collectionName = :collectionName AND x.key.documentName = :documentName"),
 	@NamedQuery(name="selectDocumentsFromCollection",query="SELECT x FROM Document x WHERE x.key.collection.key.appUsage.id = :auid AND x.key.collection.key.collectionName = :collectionName"),
+	@NamedQuery(name="selectDocumentsFromAppUsage",query="SELECT x FROM Document x WHERE x.key.collection.key.appUsage.id = :auid"),
 	@NamedQuery(name="updateDocumentFromKey",query="UPDATE Document x SET x.xml=:xml,x.eTag=:eTag WHERE x.key.collection.key.appUsage.id = :auid AND x.key.collection.key.collectionName = :collectionName AND x.key.documentName = :documentName"),
 	@NamedQuery(name="deleteDocumentFromKey",query="DELETE FROM Document x WHERE x.key.collection.key.appUsage.id = :auid AND x.key.collection.key.collectionName = :collectionName AND x.key.documentName = :documentName"),
 	@NamedQuery(name="deleteDocumentsFromAppUsage",query="DELETE FROM Document x WHERE x.key.collection.key.appUsage.id = :auid")
@@ -99,6 +100,20 @@ public class Document implements org.openxdm.xcap.common.datasource.Document, Se
 
 	public void setETag(String tag) {
 		eTag = tag;
+	}
+	
+	//
+	
+	public String getAUID() {
+		return key.getCollection().getKey().getAppUsage().getId();
+	}
+	
+	public String getCollectionName() {
+		return key.getCollection().getKey().getCollectionName();
+	}
+	
+	public String getDocumentName() {
+		return key.getDocumentName();
 	}
 	
     public String getAsString() throws InternalServerErrorException {

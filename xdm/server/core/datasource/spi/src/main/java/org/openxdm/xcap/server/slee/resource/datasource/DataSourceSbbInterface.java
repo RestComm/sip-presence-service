@@ -80,7 +80,13 @@ public class DataSourceSbbInterface implements DataSource {
 		return ra.getDataSource().getCollections(appUsage);
 	}
 
-	public String[] getDocuments(String auid, String collection)
+	@Override
+	public Document[] getDocuments(String auid)
+			throws InternalServerErrorException {
+		return ra.getDataSource().getDocuments(auid);
+	}
+	
+	public Document[] getDocuments(String auid, String collection)
 			throws InternalServerErrorException {
 		return ra.getDataSource().getDocuments(auid,collection);
 	}
