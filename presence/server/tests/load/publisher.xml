@@ -6,7 +6,7 @@
 	
 	<nop>
 		<action>
-			<assign assign_to="wait_period" value="10000" />
+			<assign assign_to="wait_period" value="3600000" />
 		</action>	
 	</nop>
 	

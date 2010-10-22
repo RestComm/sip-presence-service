@@ -12,7 +12,7 @@
 	<properties>
 		<server.host>127.0.0.1</server.host>
 		<server.port>8080</server.port>
-		<users_size>100</users_size>
+		<users_size>1000</users_size>
 		<users_name_prefix>user</users_name_prefix>
 		<users_resource_list_size>10</users_resource_list_size>
 	</properties>
@@ -28,29 +28,8 @@
       		
 	<dependencies>
 		<dependency>
-			<version>2.1.0.GA</version>
 			<artifactId>xcap-client-api</artifactId>
 			<groupId>org.mobicents</groupId>
-		</dependency>
-		<dependency>
-			<artifactId>xdms-appusages-resource-lists-bean</artifactId>	
-			<groupId>org.mobicents.servers.xdm</groupId>
-			<version>${pom.version}</version>
-		</dependency>
-		<dependency>
-			<artifactId>client-appusages-resource-lists</artifactId>
-			<groupId>org.mobicents.servers.xdm</groupId>
-			<version>${pom.version}</version>
-		</dependency>
-		<dependency>
-			<artifactId>xdms-appusages-oma-pres-rules-bean</artifactId>	
-			<groupId>org.mobicents.servers.xdm</groupId>
-			<version>${pom.version}</version>
-		</dependency>
-		<dependency>
-			<artifactId>client-appusages-oma-pres-rules</artifactId>
-			<groupId>org.mobicents.servers.xdm</groupId>
-			<version>${pom.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -61,17 +40,7 @@
 			<artifactId>jbossall-client</artifactId>
 			<version>5.0.0.GA</version>
 			<scope>test</scope>
-		</dependency>			
-		<dependency>
-			<artifactId>xdms-appusages-rls-services-bean</artifactId>	
-			<groupId>org.mobicents.servers.xdm</groupId>
-			<version>${pom.version}</version>
-		</dependency>
-		<dependency>
-			<artifactId>client-appusages-rls-services</artifactId>
-			<groupId>org.mobicents.servers.xdm</groupId>
-			<version>${pom.version}</version>
-		</dependency>
+		</dependency>				
 	</dependencies>
 	
 	<profiles>

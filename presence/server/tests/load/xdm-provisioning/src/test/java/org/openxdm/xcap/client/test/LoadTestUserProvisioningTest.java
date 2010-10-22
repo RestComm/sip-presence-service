@@ -21,20 +21,15 @@ import javax.naming.NamingException;
 import junit.framework.Assert;
 import junit.framework.JUnit4TestAdapter;
 
-import org.apache.http.auth.Credentials;
-import org.apache.http.auth.UsernamePasswordCredentials;
 import org.jboss.jmx.adaptor.rmi.RMIAdaptor;
 import org.junit.Test;
 import org.mobicents.slee.enabler.userprofile.jpa.jmx.UserProfileControlManagementMBean;
 import org.mobicents.xcap.client.XcapClient;
+import org.mobicents.xcap.client.auth.Credentials;
 import org.mobicents.xcap.client.impl.XcapClientImpl;
 import org.mobicents.xcap.client.uri.DocumentSelectorBuilder;
 import org.mobicents.xcap.client.uri.ElementSelectorBuilder;
 import org.mobicents.xcap.client.uri.UriBuilder;
-import org.mobicents.xdm.server.appusage.AppUsage;
-import org.openxdm.xcap.server.slee.appusage.omapresrules.OMAPresRulesAppUsage;
-import org.openxdm.xcap.server.slee.appusage.resourcelists.ResourceListsAppUsage;
-import org.openxdm.xcap.server.slee.appusage.rlsservices.RLSServicesAppUsage;
 
 public class LoadTestUserProvisioningTest {
 	
@@ -45,14 +40,12 @@ public class LoadTestUserProvisioningTest {
 	private Properties properties = new Properties();
 		
 	private XcapClient client = null;
-	private AppUsage resourceListAppUsage = new ResourceListsAppUsage(null);
-	private AppUsage rlsServicesAppUsage = new RLSServicesAppUsage(null);
-	private AppUsage presRulesAppUsage = new OMAPresRulesAppUsage(null);
 	
 	private ObjectName userProfileMBeanObjectName;
 	private RMIAdaptor rmiAdaptor;
 	
 	
+	@SuppressWarnings("unchecked")
 	private void initRmiAdaptor() throws NamingException, MalformedObjectNameException, NullPointerException {
 		// Set Some JNDI Properties
 		Hashtable env = new Hashtable();
@@ -74,6 +67,8 @@ public class LoadTestUserProvisioningTest {
 	
 	private void provisionUser(String user) throws InstanceNotFoundException, MBeanException, ReflectionException, IOException, URISyntaxException {
 		
+		System.out.println("Provisioning user "+user+" in the XDMS:");
+		
 		try {
 			createUser(user,"password");
 		}
@@ -83,13 +78,13 @@ public class LoadTestUserProvisioningTest {
 			}
 		}
 		
-		Credentials credentials = new UsernamePasswordCredentials(user, "password");
+		Credentials credentials = client.getCredentialsFactory().getHttpDigestCredentials(user, "password");
 		
 		String schemeAndAuth = "http://"+properties.getProperty("SERVER_HOST")+":"+properties.getProperty("SERVER_PORT");
 		String xcapRoot = properties.getProperty("SERVER_XCAP_ROOT");
 		
 		// create resource lists doc uri		
-		String resourcesListDocumentSelector = DocumentSelectorBuilder.getUserDocumentSelectorBuilder(resourceListAppUsage.getAUID(),user,"index").toPercentEncodedString();
+		String resourcesListDocumentSelector = DocumentSelectorBuilder.getUserDocumentSelectorBuilder("resource-lists",user,"index").toPercentEncodedString();
 		UriBuilder uriBuilder = new UriBuilder()
 			.setSchemeAndAuthority(schemeAndAuth)
 			.setXcapRoot(xcapRoot)
@@ -125,42 +120,40 @@ public class LoadTestUserProvisioningTest {
 			"\n</resource-lists>";	
 		
 		// put the doc in the xdms
-		System.out.println("Resource Lists doc generated for "+user+":\n"+resourceList);
-		int putResult = client.put(resourceListDocumentURI,resourceListAppUsage.getMimetype(),resourceList,null,credentials).getCode();
+		int putResult = client.put(resourceListDocumentURI,"application/resource-lists+xml",resourceList,null,credentials).getCode();
 		System.out.println("Put result for resource lists doc:"+putResult);
 		Assert.assertTrue(putResult < 300);
 		
 		// create pres-rules doc uri
-		String presRulesDocumentSelector = DocumentSelectorBuilder.getUserDocumentSelectorBuilder(presRulesAppUsage.getAUID(),user,"pres-rules").toPercentEncodedString();
+		String presRulesDocumentSelector = DocumentSelectorBuilder.getUserDocumentSelectorBuilder("org.openmobilealliance.pres-rules",user,"pres-rules").toPercentEncodedString();
 		uriBuilder.setDocumentSelector(presRulesDocumentSelector);
 		URI presRulesDocumentURI = uriBuilder.toURI();
 		
 		// create pres-rules content
 		String presRules = 
 			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"+
-			"\n<cr:ruleset xmlns=\"urn:ietf:params:xml:ns:pres-rules\" xmlns:cr=\"urn:ietf:params:xml:ns:common-policy\">"+
-			"\n\t<cr:rule id=\"a\">"+
-			"\n\t\t<cr:conditions>"+
-			"\n\t\t\t<cr:identity><cr:many domain=\""+properties.getProperty("SERVER_HOST")+"\"/></cr:identity>"+
-			"\n\t\t</cr:conditions>"+
-			"\n\t\t<cr:actions><sub-handling>allow</sub-handling></cr:actions>"+
-			"\n\t\t<cr:transformations>"+
-			"\n\t\t\t<provide-devices><all-devices/></provide-devices>"+
-			"\n\t\t\t<provide-services><all-services/></provide-services>"+
-			"\n\t\t\t<provide-persons><all-persons/></provide-persons>"+
-			"\n\t\t\t<provide-all-attributes/>"+
-			"\n\t\t</cr:transformations>"+
-			"\n\t</cr:rule>"+
-			"\n</cr:ruleset>";
+			"<cr:ruleset xmlns=\"urn:ietf:params:xml:ns:pres-rules\" xmlns:cr=\"urn:ietf:params:xml:ns:common-policy\">"+
+			"<cr:rule id=\"a\">"+
+			"<cr:conditions>"+
+			"<cr:identity><cr:many domain=\""+properties.getProperty("SERVER_HOST")+"\"/></cr:identity>"+
+			"</cr:conditions>"+
+			"<cr:actions><sub-handling>allow</sub-handling></cr:actions>"+
+			"<cr:transformations>"+
+			"<provide-devices><all-devices/></provide-devices>"+
+			"<provide-services><all-services/></provide-services>"+
+			"<provide-persons><all-persons/></provide-persons>"+
+			"<provide-all-attributes/>"+
+			"</cr:transformations>"+
+			"</cr:rule>"+
+			"</cr:ruleset>";
 
 		// put pres-rules in the xdms
-		System.out.println("Pres Rules doc generated for "+user+":\n"+presRules);
-		putResult = client.put(presRulesDocumentURI,presRulesAppUsage.getMimetype(),presRules,null,credentials).getCode();
+		putResult = client.put(presRulesDocumentURI,"application/auth-policy+xml",presRules,null,credentials).getCode();
 		System.out.println("Put result for pres rules doc:"+putResult);
 		Assert.assertTrue(putResult < 300);
 				
 		// create rls services doc uri
-		String rlsServicesDocumentSelector = DocumentSelectorBuilder.getUserDocumentSelectorBuilder(rlsServicesAppUsage.getAUID(),user,"index").toPercentEncodedString();
+		String rlsServicesDocumentSelector = DocumentSelectorBuilder.getUserDocumentSelectorBuilder("rls-services",user,"index").toPercentEncodedString();
 		uriBuilder.setDocumentSelector(rlsServicesDocumentSelector);
 		URI rlsServicesDocumentURI = uriBuilder.toURI();
 		
@@ -177,8 +170,7 @@ public class LoadTestUserProvisioningTest {
 			"\n</rls-services>";
 		
 		// put rls services in the xdms
-		System.out.println("RLS Services doc generated for "+user+":\n"+rlsServices);
-		putResult = client.put(rlsServicesDocumentURI,rlsServicesAppUsage.getMimetype(),rlsServices,null,credentials).getCode();
+		putResult = client.put(rlsServicesDocumentURI,"application/rls-services+xml",rlsServices,null,credentials).getCode();
 		System.out.println("Put result for rls services doc:"+putResult);
 		Assert.assertTrue(putResult < 300);
 		

@@ -1,1 +1,1 @@
-sipp 127.0.0.1:5060 -nd -sf winfo-subscriber.xml -inf users.csv -i 127.0.0.1 -p 5050 -r 1 -l 10000
+sipp 127.0.0.1:5060 -nd -sf winfo-subscriber.xml -inf users.csv -i 127.0.0.1 -p 5050 -r 1 -l 1000

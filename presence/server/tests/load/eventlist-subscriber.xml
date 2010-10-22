@@ -84,7 +84,7 @@
 	
 	<label id="wait_for_notify" />
  	
-  	<recv request="NOTIFY" timeout="10000" ontimeout="loop-end-check"/>
+  	<recv request="NOTIFY" timeout="3600000" ontimeout="loop-end-check"/>
 		
 	<send next="wait_for_notify">
 	<![CDATA[
