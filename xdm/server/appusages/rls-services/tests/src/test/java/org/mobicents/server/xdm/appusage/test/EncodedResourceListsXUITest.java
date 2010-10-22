@@ -18,12 +18,10 @@ import javax.xml.transform.TransformerException;
 
 import junit.framework.JUnit4TestAdapter;
 
-import org.apache.commons.httpclient.HttpException;
-import org.apache.http.auth.Credentials;
-import org.apache.http.auth.UsernamePasswordCredentials;
 import org.junit.Test;
 import org.mobicents.xcap.client.XcapClient;
 import org.mobicents.xcap.client.XcapResponse;
+import org.mobicents.xcap.client.auth.Credentials;
 import org.mobicents.xcap.client.impl.XcapClientImpl;
 import org.mobicents.xcap.client.uri.DocumentSelectorBuilder;
 import org.mobicents.xcap.client.uri.UriBuilder;
@@ -44,7 +42,7 @@ public class EncodedResourceListsXUITest extends AbstractT {
 	private String documentName = "index";
 
 	@Test
-	public void test() throws HttpException, IOException, JAXBException,
+	public void test() throws IOException, JAXBException,
 			InterruptedException, TransformerException,
 			NotWellFormedConflictException, NotUTF8ConflictException,
 			InternalServerErrorException, URISyntaxException,
@@ -63,7 +61,7 @@ public class EncodedResourceListsXUITest extends AbstractT {
 
 		XcapClient client = new XcapClientImpl();
 
-		Credentials credentials = new UsernamePasswordCredentials(user,
+		Credentials credentials = client.getCredentialsFactory().getHttpDigestCredentials(user,
 				"password");
 
 		// create uri
