@@ -177,7 +177,7 @@ public abstract class EventListSubscriberSbb implements Sbb,
 		return subscription;
 	}
 	
-	// --- SIP EVETN CHILD SBB CALL BACKS
+	// --- SIP EVENT CHILD SBB CALL BACKS
 	
 	private NotificationData createPartialStateNotificationData(EventListSubscriberParentSbbLocalObject parentSbb, SubscriptionKey subscriptionKey, String subscriber, String notifier) {
 		// get subscription
