@@ -123,8 +123,7 @@ public class NotificationData implements Serializable {
 	 * @return if all required data is added a {@link MultiPart} will be returned, otherwise null
 	 */
 	public MultiPart notificationDataNotNeeded(String uri) throws IllegalStateException {
-		urisLeft.remove(uri);		
-		if (urisLeft.isEmpty()) {
+		if(urisLeft.remove(uri) && urisLeft.isEmpty()) {
 			return buildMultipart();
 		}
 		else {
