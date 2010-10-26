@@ -99,10 +99,10 @@ public abstract class RLSExampleRootSbb implements javax.slee.Sbb,
 		tracer.info("Service deactivated...");
 		try {
 			try {
-				for (Iterator it = getPublisherChildRelation().iterator(); it.hasNext(); ) {
+				for (Iterator<?> it = getPublisherChildRelation().iterator(); it.hasNext(); ) {
 					((RLSExamplePublisherSbbLocalObject)it.next()).stop();
 				}
-				for (Iterator it = getSubscriberChildRelation().iterator(); it.hasNext(); ) {
+				for (Iterator<?> it = getSubscriberChildRelation().iterator(); it.hasNext(); ) {
 					((RLSExampleSubscriberSbbLocalObject)it.next()).stop();
 				}				
 			} catch (Exception e) {

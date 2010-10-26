@@ -3,14 +3,14 @@
  */
 package org.mobicents.slee.sipevent.examples;
 
+import org.mobicents.slee.enabler.xdmc.XDMClientParent;
 import org.mobicents.slee.sippresence.client.PresenceClientControlParent;
-import org.mobicents.slee.xdm.server.XDMClientControlParent;
 
 /**
  * @author martins
  *
  */
-public interface RLSExampleSubscriber extends PresenceClientControlParent,XDMClientControlParent{
+public interface RLSExampleSubscriber extends PresenceClientControlParent,XDMClientParent{
 
 	/**
 	 * Stores the parent sbb local object, to be used on callbacks

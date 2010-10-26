@@ -140,8 +140,8 @@
 
     	<sbb-ref>
     		<sbb-name>InternalXDMClientControlSbb</sbb-name>
-    		<sbb-vendor>org.mobicents</sbb-vendor>
-    		<sbb-version>1.0</sbb-version>
+        	<sbb-vendor>org.mobicents</sbb-vendor>
+        	<sbb-version>1.0</sbb-version>
     		<sbb-alias>xdmChildSbb</sbb-alias>
     	</sbb-ref>
 
@@ -153,14 +153,6 @@
     			<cmp-field>
     				<cmp-field-name>parentSbbCMP</cmp-field-name>
     			</cmp-field>
-    			<cmp-field>
-    				<cmp-field-name>xDMClientControlChildSbbCMP</cmp-field-name>
-    			</cmp-field>    			
-    			<cmp-field>
-    				<cmp-field-name>
-    					presenceClientControlSbbCMP
-    				</cmp-field-name>
-    			</cmp-field>
     			<get-child-relation-method>
     				<sbb-alias-ref>presenceChildSbb</sbb-alias-ref>
     				<get-child-relation-method-name>
@@ -171,7 +163,7 @@
     			<get-child-relation-method>
     				<sbb-alias-ref>xdmChildSbb</sbb-alias-ref>
     				<get-child-relation-method-name>
-    					getXDMClientControlChildRelation
+    					getXDMClientChildRelation
     				</get-child-relation-method-name>
     				<default-priority>0</default-priority>
     			</get-child-relation-method>
