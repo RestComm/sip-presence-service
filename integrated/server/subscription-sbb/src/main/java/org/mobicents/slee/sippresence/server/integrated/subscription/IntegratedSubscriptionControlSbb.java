@@ -1,7 +1,6 @@
 package org.mobicents.slee.sippresence.server.integrated.subscription;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -34,15 +33,13 @@ import org.mobicents.slee.sippresence.server.presrulescache.PresRulesActivityCon
 import org.mobicents.slee.sippresence.server.presrulescache.PresRulesSbbInterface;
 import org.mobicents.slee.sippresence.server.presrulescache.RulesetUpdatedEvent;
 import org.mobicents.slee.sippresence.server.subscription.PresenceSubscriptionControl;
-import org.mobicents.slee.xdm.server.XDMClientControlParentSbbLocalObject;
-import org.mobicents.slee.xdm.server.XDMClientControlSbbLocalObject;
 import org.mobicents.slee.xdm.server.subscription.SubscriptionsMap;
 import org.mobicents.slee.xdm.server.subscription.XcapDiffSubscriptionControl;
-import org.openxdm.xcap.common.key.XcapUriKey;
-import org.openxdm.xcap.common.uri.AttributeSelector;
-import org.openxdm.xcap.common.uri.DocumentSelector;
-import org.openxdm.xcap.common.uri.NodeSelector;
+import org.openxdm.xcap.server.slee.resource.datasource.AttributeUpdatedEvent;
+import org.openxdm.xcap.server.slee.resource.datasource.DataSourceActivityContextInterfaceFactory;
 import org.openxdm.xcap.server.slee.resource.datasource.DataSourceSbbInterface;
+import org.openxdm.xcap.server.slee.resource.datasource.DocumentUpdatedEvent;
+import org.openxdm.xcap.server.slee.resource.datasource.ElementUpdatedEvent;
 
 /**
  * Implemented Subscription control child sbb for an integrated XCAP Diff and
@@ -76,6 +73,7 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 	}
 
 	private DataSourceSbbInterface dataSourceSbbInterface;
+	private DataSourceActivityContextInterfaceFactory dataSourceActivityContextInterfaceFactory;
 	
 	protected PresRulesSbbInterface presRulesSbbInterface;
 	protected PresRulesActivityContextInterfaceFactory presRulesACIF;
@@ -120,6 +118,8 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 			// messageFactory = sipProvider.getMessageFactory();
 			dataSourceSbbInterface = (DataSourceSbbInterface) context
 					.lookup("slee/resources/xdm/datasource/sbbrainterface");
+			dataSourceActivityContextInterfaceFactory = (DataSourceActivityContextInterfaceFactory)
+			context.lookup("slee/resources/xdm/datasource/1.0/acif");
 			presRulesSbbInterface = (PresRulesSbbInterface) context
 				.lookup("slee/resources/presence/presrulescache/1.0/sbbinterface");
 			presRulesACIF = (PresRulesActivityContextInterfaceFactory) context
@@ -260,32 +260,6 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 		return childSbb;
 	}
 
-	// --- XDM CLIENT CHILD SBB
-	public abstract ChildRelation getXDMClientControlChildRelation();
-
-	public abstract XDMClientControlSbbLocalObject getXDMClientControlChildSbbCMP();
-
-	public abstract void setXDMClientControlChildSbbCMP(
-			XDMClientControlSbbLocalObject value);
-
-	public XDMClientControlSbbLocalObject getXDMClientControlSbb() {
-		XDMClientControlSbbLocalObject childSbb = getXDMClientControlChildSbbCMP();
-		if (childSbb == null) {
-			try {
-				childSbb = (XDMClientControlSbbLocalObject) getXDMClientControlChildRelation()
-						.create();
-			} catch (Exception e) {
-				tracer.severe("Failed to create child sbb", e);
-				return null;
-			}
-			setXDMClientControlChildSbbCMP(childSbb);
-			childSbb
-					.setParentSbb((XDMClientControlParentSbbLocalObject) this.sbbContext
-							.getSbbLocalObject());
-		}
-		return childSbb;
-	}
-
 	// --- CMPs
 	public abstract void setSubscriptionsMap(SubscriptionsMap rules);
 
@@ -297,10 +271,32 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 	@SuppressWarnings("unchecked")
 	public abstract HashMap getCombinedRules();
 
+	// -- 
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.subscription.XcapDiffSubscriptionControlSbbInterface#getDataSourceActivityContextInterfaceFactory()
+	 */
+	public DataSourceActivityContextInterfaceFactory getDataSourceActivityContextInterfaceFactory() {
+		return dataSourceActivityContextInterfaceFactory;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.subscription.XcapDiffSubscriptionControlSbbInterface#getDataSourceSbbInterface()
+	 */
 	public DataSourceSbbInterface getDataSourceSbbInterface() {
 		return dataSourceSbbInterface;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.subscription.XcapDiffSubscriptionControlSbbInterface#getSbbContext()
+	 */
+	public SbbContext getSbbContext() {
+		return sbbContext;
+	}
+	
 	public HeaderFactory getHeaderFactory() {
 		return headerFactory;
 	}
@@ -327,45 +323,21 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 		return sbbContext.getSbbLocalObject();
 	}
 	
-	// ------------ XDMClientControlParentSbbLocalObject
+	// ------------ updates on xdm docs
 	
-	/**
-	 * a pres-rules doc subscribed was updated
-	 */
-	public void documentUpdated(DocumentSelector documentSelector,
-			String oldETag, String newETag, String documentAsString) {
-		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(documentSelector,
-				oldETag, newETag, documentAsString,this);
+	public void onAttributeUpdatedEvent(AttributeUpdatedEvent event,
+			ActivityContextInterface aci) {
+		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event.getDocumentSelector(), event.getOldETag(), event.getNewETag(), event.getDocumentAsString(), this);		
 	}
 
-	// atm only processing update per doc "granularity"
-	public void attributeUpdated(DocumentSelector documentSelector,
-			NodeSelector nodeSelector, AttributeSelector attributeSelector,
-			Map<String, String> namespaces, String oldETag, String newETag,
-			String documentAsString, String attributeValue) {
-		documentUpdated(documentSelector, oldETag, newETag, documentAsString);
+	public void onDocumentUpdatedEvent(DocumentUpdatedEvent event,
+			ActivityContextInterface aci) {
+		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event.getDocumentSelector(), event.getOldETag(), event.getNewETag(), event.getDocumentAsString(), this);
 	}
 
-	public void elementUpdated(DocumentSelector documentSelector,
-			NodeSelector nodeSelector, Map<String, String> namespaces,
-			String oldETag, String newETag, String documentAsString,
-			String elementAsString) {
-		documentUpdated(documentSelector, oldETag, newETag, documentAsString);
-	}
-
-	// unused methods from xdm client sbb
-
-	public void getResponse(XcapUriKey key, int responseCode, String mimetype,
-			String content, String tag) {
-		throw new UnsupportedOperationException();
-	}
-	
-	public void deleteResponse(XcapUriKey key, int responseCode, String responseContent, String tag) {
-		throw new UnsupportedOperationException();
-	}
-
-	public void putResponse(XcapUriKey key, int responseCode, String responseContent, String tag) {
-		throw new UnsupportedOperationException();
+	public void onElementUpdatedEvent(ElementUpdatedEvent event,
+			ActivityContextInterface aci) {
+		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event.getDocumentSelector(), event.getOldETag(), event.getNewETag(), event.getDocumentAsString(), this);
 	}
 
 	// ---------- PublishedSphereSource

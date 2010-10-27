@@ -15,8 +15,6 @@
 	<artifactId>xdm-client</artifactId>
 	
 	<modules>
-		<module>sbb-local-object</module>
-		<module>library</module>
 		<module>appusages</module>
 	</modules>
 	

@@ -8,6 +8,8 @@ import java.util.HashSet;
 import javax.sip.ServerTransaction;
 import javax.sip.header.ContentTypeHeader;
 import javax.sip.message.Response;
+import javax.slee.ActivityContextInterface;
+import javax.slee.SbbLocalObject;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 
@@ -17,7 +19,6 @@ import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.mobicents.slee.xdm.server.ServerConfiguration;
-import org.mobicents.slee.xdm.server.XDMClientControlSbbLocalObject;
 import org.openxdm.xcap.client.appusage.resourcelists.jaxb.EntryType;
 import org.openxdm.xcap.client.appusage.resourcelists.jaxb.ListType;
 import org.openxdm.xcap.client.appusage.resourcelists.jaxb.ResourceLists;
@@ -29,6 +30,10 @@ import org.openxdm.xcap.common.uri.ResourceSelector;
 import org.openxdm.xcap.common.xcapdiff.DocumentType;
 import org.openxdm.xcap.common.xcapdiff.ObjectFactory;
 import org.openxdm.xcap.common.xcapdiff.XcapDiff;
+import org.openxdm.xcap.server.slee.resource.datasource.AppUsageActivity;
+import org.openxdm.xcap.server.slee.resource.datasource.DataSourceActivityContextInterfaceFactory;
+import org.openxdm.xcap.server.slee.resource.datasource.DataSourceSbbInterface;
+import org.openxdm.xcap.server.slee.resource.datasource.DocumentActivity;
 
 /**
  * Logic for {@link XcapDiffSubscriptionControlSbb}
@@ -190,8 +195,9 @@ public class XcapDiffSubscriptionControl {
 			subscriptionsMap.put(subscriptions);
 			sbb.setSubscriptionsMap(subscriptionsMap);
 			// let's subscribe all documents and/or app usages
-			XDMClientControlSbbLocalObject xdm = sbb.getXDMClientControlSbb();
-
+			DataSourceActivityContextInterfaceFactory dataSourceActivityContextInterfaceFactory = sbb.getDataSourceActivityContextInterfaceFactory();
+			DataSourceSbbInterface dataSourceSbbInterface = sbb.getDataSourceSbbInterface();
+			SbbLocalObject sbbLocalObject = sbb.getSbbContext().getSbbLocalObject();
 			for (DocumentSelector documentSelector : documentsToSubscribe) {
 				if (!documentSelectorsAlreadySubscribed
 						.contains(documentSelector)
@@ -202,7 +208,9 @@ public class XcapDiffSubscriptionControl {
 					// and this document selector is not subscribed already due
 					// to another
 					// subscription in the same entity, so subscribe the doc
-					xdm.subscribeDocument(documentSelector);
+					DocumentActivity activity = dataSourceSbbInterface.createDocumentActivity(documentSelector);
+					ActivityContextInterface aci = dataSourceActivityContextInterfaceFactory.getActivityContextInterface(activity);
+					aci.attach(sbbLocalObject);					
 				}
 			}
 			for (String auid : appUsagesToSubscribe) {
@@ -210,7 +218,9 @@ public class XcapDiffSubscriptionControl {
 					// app usages already subscribed does not match this app
 					// usage,
 					// so subscribe it
-					xdm.subscribeAppUsage(auid);
+					AppUsageActivity activity = dataSourceSbbInterface.createAppUsageActivity(auid);
+					ActivityContextInterface aci = dataSourceActivityContextInterfaceFactory.getActivityContextInterface(activity);
+					aci.attach(sbbLocalObject);
 				}
 			}
 
@@ -253,17 +263,26 @@ public class XcapDiffSubscriptionControl {
 
 			// now unsubscribe each that was subscribed only by the subscription
 			// terminating
-			XDMClientControlSbbLocalObject xdm = sbb.getXDMClientControlSbb();
-			for (DocumentSelector ds : subscriptions.getDocumentSelectors()) {
-				if (!documentSelectorsSubscribedByOthers.contains(ds)) {
-					// safe to unsubscribe this document
-					xdm.unsubscribeDocument(ds);
+			SbbLocalObject sbbLocalObject = sbb.getSbbContext().getSbbLocalObject();
+			for(ActivityContextInterface aci : sbb.getSbbContext().getActivities()) {
+				Object activity = aci.getActivity();
+				if (activity instanceof DocumentActivity) {
+					String aciDS = ((DocumentActivity)activity).getDocumentSelector();
+					for (DocumentSelector ds : subscriptions.getDocumentSelectors()) {
+						if (ds.toString().equals(aciDS) && !documentSelectorsSubscribedByOthers.contains(ds)) {
+							// safe to unsubscribe this document
+							aci.detach(sbbLocalObject);
+						}
+					}
 				}
-			}
-			for (String auid : subscriptions.getAppUsages()) {
-				if (!appUsagesSubscribedByOthers.contains(auid)) {
-					// safe to unsubscribe this app usage
-					xdm.unsubscribeAppUsage(auid);
+				else if (activity instanceof AppUsageActivity) {
+					String aciAUID = ((AppUsageActivity)activity).getAUID();
+					for (String auid : subscriptions.getAppUsages()) {
+						if (auid.toString().equals(aciAUID) && !appUsagesSubscribedByOthers.contains(auid)) {
+							// safe to unsubscribe this app usage
+							aci.detach(sbbLocalObject);
+						}
+					}
 				}
 			}
 		} else {
@@ -281,27 +300,16 @@ public class XcapDiffSubscriptionControl {
 			HashMap<DocumentSelector, String> documentEtags = new HashMap<DocumentSelector, String>();
 			// let's process first app usages
 			for (String auid : subscriptions.getAppUsages()) {
-				// get collections that exist in this app usage
+				// get documents that exist in this app usage
 				try {
-					String[] appUsageCollections = sbb
-							.getDataSourceSbbInterface().getCollections(auid);
-					// for each one gather all documents names
-					for (String collection : appUsageCollections) {
-						String[] documentNames = sbb
-								.getDataSourceSbbInterface().getDocuments(auid,
-										collection);
-						// grab each document
-						for (String documentName : documentNames) {
-							DocumentSelector documentSelector = new DocumentSelector(
-									auid, collection, documentName);
-							Document document = sbb.getDataSourceSbbInterface()
-									.getDocument(documentSelector);
-							if (document != null) {
-								// TODO authorize inclusion of the document
-								documentEtags.put(documentSelector, document
-										.getETag());
-							}
-						}
+					for (Document document : sbb.getDataSourceSbbInterface().getDocuments(auid)) {
+						DocumentSelector documentSelector = new DocumentSelector(
+								auid, document.getCollectionName(), document.getDocumentName());
+						if (document != null) {
+							// TODO authorize inclusion of the document
+							documentEtags.put(documentSelector, document
+									.getETag());
+						}						
 					}
 				} catch (Exception e) {
 					logger.error(e);
@@ -350,7 +358,7 @@ public class XcapDiffSubscriptionControl {
 			Notifier notifier, String eventPackage, Object unmarshalledContent) {
 		return unmarshalledContent;
 	}
-
+	
 	public void documentUpdated(DocumentSelector documentSelector,
 			String oldETag, String newETag, String documentAsString,XcapDiffSubscriptionControlSbbInterface sbb) {
 		XcapDiff xcapDiff = null;

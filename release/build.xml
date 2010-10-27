@@ -17,13 +17,13 @@
 	<property name="mobicents.jainslee.download.url" value="http://downloads.sourceforge.net/project/mobicents/Mobicents%20JAIN%20SLEE%20Server/${mobicents.jainslee.version}/mobicents-jainslee-${mobicents.jainslee.version}-jboss-${jboss.version}.zip" />
 	-->
 	
-	<!-- commmunity hudson snapshot
+	<!-- commmunity hudson snapshot -->
 	<property name="mobicents.jainslee.download.url" value="http://hudson.jboss.org/hudson/view/Mobicents/job/MobicentsSleeRelease/lastSuccessfulBuild/artifact/mobicents-jainslee-${mobicents.jainslee.version}-jboss-${jboss.version}.zip" />
-	-->
 	
-	<!-- internal redhat hudson snapshot -->
+	
+	<!-- internal redhat hudson snapshot 
 	<property name="mobicents.jainslee.download.url" value="http://hudson.qa.jboss.com/hudson/job/MobicentsSleeRelease/lastSuccessfulBuild/artifact/mobicents-jainslee-${mobicents.jainslee.version}-jboss-${jboss.version}.zip" />
-	
+	-->
 	<tstamp>
 		<format property="time.stamp" pattern="yyyyMMdd-HHmm" />
 	</tstamp>
@@ -287,12 +287,12 @@
 		<delete dir="${jboss.home}/.." failonerror="true" />
 		<unzip src="${mobicents.distro.zip.path}" dest="${release.dir}" />
 		<delete dir="${release.dir}/server/all" failonerror="true" />
-		<!-- FIXME right now slee v2 has no docs 
+		 
 		<move todir="${jboss.home}/docs/mobicents-jain-slee/">
-			<fileset dir="${release.dir}/documentation">
+			<fileset dir="${release.dir}/../docs">
 				<include name="**"/>
 			</fileset>
-		</move> -->
+		</move>
 		
 	</target>
 
@@ -317,6 +317,7 @@
 		<copy toFile="${jboss.home}/mobicents-jainslee-src.zip" file="${jboss.home}/../sources.zip" />
 		<ant antfile="${jboss.home}/../resources/sip11/build.xml" target="deploy" inheritall="true" />
 		<ant antfile="${jboss.home}/../resources/http-servlet/build.xml" target="deploy" inheritall="true" />
+		<ant antfile="${jboss.home}/../enablers/xdm-client/build.xml" target="deploy-all" inheritall="true" />
 	</target>
 
 	<available file="${ant.file.mobicents.release}/../${mobicents.distro.zip.path}" property="got.mobicents-jain-slee" />

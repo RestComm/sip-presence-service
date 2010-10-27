@@ -4,32 +4,33 @@
 package org.mobicents.slee.xdm.server.subscription;
 
 import javax.sip.header.HeaderFactory;
+import javax.slee.SbbContext;
 import javax.xml.bind.Unmarshaller;
 
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControl;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlParentSbbLocalObject;
-import org.mobicents.slee.xdm.server.XDMClientControlParent;
-import org.mobicents.slee.xdm.server.XDMClientControlSbbLocalObject;
+import org.openxdm.xcap.server.slee.resource.datasource.DataSourceActivityContextInterfaceFactory;
 import org.openxdm.xcap.server.slee.resource.datasource.DataSourceSbbInterface;
 
 /**
  * @author martins
  *
  */
-public interface XcapDiffSubscriptionControlSbbInterface extends XDMClientControlParent,
-ImplementedSubscriptionControl {
+public interface XcapDiffSubscriptionControlSbbInterface extends ImplementedSubscriptionControl {
 
-	public void setSubscriptionsMap(SubscriptionsMap rules);
+	public DataSourceActivityContextInterfaceFactory getDataSourceActivityContextInterfaceFactory();
 
-	public SubscriptionsMap getSubscriptionsMap();
-
-	public ImplementedSubscriptionControlParentSbbLocalObject getParentSbbCMP();
-
-	public XDMClientControlSbbLocalObject getXDMClientControlSbb();
+	public DataSourceSbbInterface getDataSourceSbbInterface();
 
 	public HeaderFactory getHeaderFactory();
 
+	public ImplementedSubscriptionControlParentSbbLocalObject getParentSbbCMP();
+
+	public SbbContext getSbbContext();
+	
+	public SubscriptionsMap getSubscriptionsMap();
+
 	public Unmarshaller getUnmarshaller();
 
-	public DataSourceSbbInterface getDataSourceSbbInterface();
+	public void setSubscriptionsMap(SubscriptionsMap rules);
 }

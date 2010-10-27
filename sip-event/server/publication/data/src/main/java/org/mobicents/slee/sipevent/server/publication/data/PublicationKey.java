@@ -48,8 +48,7 @@ public class PublicationKey implements Serializable {
     }
 
     public int hashCode() {
-        int result;
-        result = eTag.hashCode();
+        int result = eTag.hashCode();
         result = 31 * result + eventPackage.hashCode();
         result = 31 * result + entity.hashCode();
         return result;

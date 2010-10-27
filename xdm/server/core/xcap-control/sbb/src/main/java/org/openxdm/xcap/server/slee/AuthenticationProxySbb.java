@@ -9,8 +9,8 @@ import javax.slee.ActivityContextInterface;
 import javax.slee.ChildRelation;
 import javax.slee.RolledBackContext;
 import javax.slee.SbbContext;
+import javax.slee.facilities.Tracer;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.enabler.userprofile.UserProfile;
 import org.mobicents.slee.enabler.userprofile.UserProfileControlSbbLocalObject;
 import org.mobicents.slee.xdm.server.ServerConfiguration;
@@ -23,6 +23,10 @@ import org.openxdm.xcap.server.slee.auth.RFC2617ChallengeParamGenerator;
  * 
  * @author aayush.bhatnagar
  * @author martins
+ * 
+ *         The authentication proxy only authenticates remote requests, if local
+ *         uses asserted id if present, if not defines no user but does not
+ *         fails.
  * 
  *         From the OMA-TS-XDM-core specification:
  * 
@@ -65,13 +69,15 @@ import org.openxdm.xcap.server.slee.auth.RFC2617ChallengeParamGenerator;
 public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 		AuthenticationProxy {
 
-	private static final Logger logger = Logger
-			.getLogger(AuthenticationProxySbb.class);
+	private static Tracer logger;
 
 	private static final RFC2617ChallengeParamGenerator challengeParamGenerator = new RFC2617ChallengeParamGenerator();
 	
 	private static final ServerConfiguration CONFIGURATION = ServerConfiguration.getInstance();
 	
+	public static final String HEADER_X_3GPP_Asserted_Identity = "X-3GPP-Asserted-Identity";
+	public static final String HEADER_X_XCAP_Asserted_Identity = "X-XCAP-Asserted-Identity";
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -83,8 +89,8 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 	public String authenticate(HttpServletRequest request,
 			HttpServletResponse response) throws InternalServerErrorException {
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("Authenticating request");
+		if (logger.isFineEnabled()) {
+			logger.fine("Authenticating request");
 		}
 
 		/**
@@ -95,25 +101,43 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 		 * response to the sender of the HTTP request.
 		 */
 		try {
-			if (request.getHeader(HttpConstant.HEADER_AUTHORIZATION) == null) {
-				challengeRequest(request, response);
-				return null;
-			} else {
-				String user = checkAuthenticatedCredentials(request, response); 
-				if (user != null) {
-					if (logger.isDebugEnabled()) {
-						logger.debug("Authentication suceed");
-					}
-				} else {
-					if (logger.isDebugEnabled()) {
-						logger.debug("Authentication failed");
-					}
-					response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-					response.getWriter().close();
+			String user = null;
+			if(!request.getRemoteAddr().equals(request.getLocalAddr())) {
+				// remote request, use http digest authentication
+				if (logger.isInfoEnabled()) {
+					logger.info("Remote request, using http digest authentication");
 				}
-				return user;
-
+				if (request.getHeader(HttpConstant.HEADER_AUTHORIZATION) == null) {
+					challengeRequest(request, response);
+				} else {
+					user = checkAuthenticatedCredentials(request, response); 
+					if (user != null) {
+						if (logger.isFineEnabled()) {
+							logger.fine("Authentication suceed");
+						}
+					} else {
+						if (logger.isFineEnabled()) {
+							logger.fine("Authentication failed");
+						}
+						response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+						response.getWriter().close();
+					}
+				}
 			}
+			else {
+				if (logger.isInfoEnabled()) {
+					logger.info("Local request, skipping authentication");
+				}
+				// use asserted id header if present
+				user = request.getHeader(HEADER_X_3GPP_Asserted_Identity);
+				if (user == null) {
+					user = request.getHeader(HEADER_X_XCAP_Asserted_Identity);					
+				}		
+				if (logger.isInfoEnabled()) {
+					logger.info("Asserted user: "+user);
+				}
+			}
+			return user;			
 		} catch (Throwable e) {
 			throw new InternalServerErrorException(e.getMessage(), e);
 		}
@@ -131,9 +155,9 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 			HttpServletResponse response) throws IOException,
 			NoSuchAlgorithmException, InternalServerErrorException {
 
-		if (logger.isDebugEnabled())
+		if (logger.isFineEnabled())
 			logger
-					.debug("Authorization header is missing...challenging the request");
+					.fine("Authorization header is missing...challenging the request");
 
 		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
@@ -151,8 +175,8 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 		response.setHeader(HttpConstant.HEADER_WWW_AUTHENTICATE,
 				challengeParams);
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("Sending response with header "+HttpConstant.HEADER_WWW_AUTHENTICATE+" challenge params: "+challengeParams);
+		if (logger.isFineEnabled()) {
+			logger.fine("Sending response with header "+HttpConstant.HEADER_WWW_AUTHENTICATE+" challenge params: "+challengeParams);
 		}
 		
 		// send to client
@@ -197,8 +221,8 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 		String authHeaderParams = request
 				.getHeader(HttpConstant.HEADER_AUTHORIZATION);
 		
-		if (logger.isDebugEnabled()) {
-			logger.debug("Authorization header included with value: "+authHeaderParams);
+		if (logger.isFineEnabled()) {
+			logger.fine("Authorization header included with value: "+authHeaderParams);
 		}
 		
 		// 6 is "Digest".length(), lets skip the header value till that index
@@ -226,97 +250,97 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 				if (paramName.equals("username")) {
 					if (paramValue.length()>2) {
 						username = paramValue.substring(1, paramValue.length()-1);
-						if (logger.isDebugEnabled()) {
-							logger.debug("Username param with value "+username);
+						if (logger.isFineEnabled()) {
+							logger.fine("Username param with value "+username);
 						}
 					}
 					else {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Ignoring invalid param "+paramName+" value "+paramValue);
+						if (logger.isFineEnabled()) {
+							logger.fine("Ignoring invalid param "+paramName+" value "+paramValue);
 						}
 					}					
 				}
 				else if (paramName.equals("nonce")) {
 					if (paramValue.length()>2) {
 						nonce = paramValue.substring(1, paramValue.length()-1);
-						if (logger.isDebugEnabled()) {
-							logger.debug("Nonce param with value "+nonce);
+						if (logger.isFineEnabled()) {
+							logger.fine("Nonce param with value "+nonce);
 						}
 					}
 					else {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Ignoring invalid param "+paramName+" value "+paramValue);
+						if (logger.isFineEnabled()) {
+							logger.fine("Ignoring invalid param "+paramName+" value "+paramValue);
 						}
 					}
 				}
 				else if (paramName.equals("cnonce")) {
 					if (paramValue.length()>2) {
 						cnonce = paramValue.substring(1, paramValue.length()-1);
-						if (logger.isDebugEnabled()) {
-							logger.debug("CNonce param with value "+cnonce);
+						if (logger.isFineEnabled()) {
+							logger.fine("CNonce param with value "+cnonce);
 						}
 					}
 					else {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Ignoring invalid param "+paramName+" value "+paramValue);
+						if (logger.isFineEnabled()) {
+							logger.fine("Ignoring invalid param "+paramName+" value "+paramValue);
 						}
 					}
 				}
 				else if (paramName.equals("realm")) {
 					if (paramValue.length()>2) {
 						realm = paramValue.substring(1, paramValue.length()-1);
-						if (logger.isDebugEnabled()) {
-							logger.debug("Realm param with value "+realm);
+						if (logger.isFineEnabled()) {
+							logger.fine("Realm param with value "+realm);
 						}
 					}
 					else {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Ignoring invalid param "+paramName+" value "+paramValue);
+						if (logger.isFineEnabled()) {
+							logger.fine("Ignoring invalid param "+paramName+" value "+paramValue);
 						}
 					}
 				}
 				else if (paramName.equals("nc")) {
 					nc = paramValue;
-					if (logger.isDebugEnabled()) {
-						logger.debug("Nonce-count param with value "+nc);
+					if (logger.isFineEnabled()) {
+						logger.fine("Nonce-count param with value "+nc);
 					}
 				}
 				else if (paramName.equals("response")) {
 					if (paramValue.length()>2) {
 						resp = paramValue.substring(1, paramValue.length()-1);
-						if (logger.isDebugEnabled()) {
-							logger.debug("Response param with value "+resp);
+						if (logger.isFineEnabled()) {
+							logger.fine("Response param with value "+resp);
 						}
 					}
 					else {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Ignoring invalid param "+paramName+" value "+paramValue);
+						if (logger.isFineEnabled()) {
+							logger.fine("Ignoring invalid param "+paramName+" value "+paramValue);
 						}
 					}
 				}
 				else if (paramName.equals("uri")) {
 					if (paramValue.length()>2) {
 						uri = paramValue.substring(1, paramValue.length()-1);
-						if (logger.isDebugEnabled()) {
-							logger.debug("Digest uri param with value "+uri);
+						if (logger.isFineEnabled()) {
+							logger.fine("Digest uri param with value "+uri);
 						}
 					}
 					else {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Ignoring invalid param "+paramName+" value "+paramValue);
+						if (logger.isFineEnabled()) {
+							logger.fine("Ignoring invalid param "+paramName+" value "+paramValue);
 						}
 					}
 				}
 				else if (paramName.equals("opaque")) {
 					if (paramValue.length()>2) {
 						opaque = paramValue.substring(1, paramValue.length()-1);
-						if (logger.isDebugEnabled()) {
-							logger.debug("Opaque param with value "+opaque);
+						if (logger.isFineEnabled()) {
+							logger.fine("Opaque param with value "+opaque);
 						}
 					}
 					else {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Ignoring invalid param "+paramName+" value "+paramValue);
+						if (logger.isFineEnabled()) {
+							logger.fine("Ignoring invalid param "+paramName+" value "+paramValue);
 						}
 					}
 				}
@@ -326,22 +350,22 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 							qop = paramValue.substring(1, paramValue.length()-1);
 						}
 						else {
-							if (logger.isDebugEnabled()) {
-								logger.debug("Ignoring invalid param "+paramName+" value "+paramValue);
+							if (logger.isFineEnabled()) {
+								logger.fine("Ignoring invalid param "+paramName+" value "+paramValue);
 							}
 						}
 					}
 					else {
 						qop = paramValue;
 					}
-					if (logger.isDebugEnabled()) {
-						logger.debug("Qop param with value "+qop);
+					if (logger.isFineEnabled()) {
+						logger.fine("Qop param with value "+qop);
 					}
 				}
 			}
 			else {
-				if (logger.isDebugEnabled()) {
-					logger.debug("Ignoring invalid param "+param);
+				if (logger.isFineEnabled()) {
+					logger.fine("Ignoring invalid param "+param);
 				}
 			}
 		}
@@ -358,34 +382,34 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 		if (username == null || realm == null || nonce == null || cnonce == null || nc == null
 				|| uri == null || resp == null || opaque == null) {
 			logger
-					.error("A required parameter is missing in the challenge response");
+					.severe("A required parameter is missing in the challenge response");
 			// FIXME should be replied with BAD REQUEST 400
 			return null;
 		}
 		
 		// verify opaque vs nonce
 		if (challengeParamGenerator.getNonce(opaque).equals(nonce)) {
-			if (logger.isDebugEnabled())
-				logger.debug("Nonce provided matches the one generated using opaque as seed");
+			if (logger.isFineEnabled())
+				logger.fine("Nonce provided matches the one generated using opaque as seed");
 			
 		}
 		else {
-			if (logger.isDebugEnabled())
-				logger.debug("Authentication failed, nonce provided doesn't match the one generated using opaque as seed");
+			if (logger.isFineEnabled())
+				logger.fine("Authentication failed, nonce provided doesn't match the one generated using opaque as seed");
 			return null;
 		}
 		
 		if (!qop.equals("auth")) {
-			if (logger.isDebugEnabled())
-				logger.debug("Authentication failed, qop value "+qop+" unsupported");
+			if (logger.isFineEnabled())
+				logger.fine("Authentication failed, qop value "+qop+" unsupported");
 			return null;
 		}
 		
 		// get user password
 		UserProfile userProfile = getUserProfileControlSbb().find(username);
 		if (userProfile == null) {
-			if (logger.isDebugEnabled())
-				logger.debug("Authentication failed, profile not found for user "+username);
+			if (logger.isFineEnabled())
+				logger.fine("Authentication failed, profile not found for user "+username);
 			return null;
 		}
 		else {
@@ -395,8 +419,8 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 		final String digest = new RFC2617AuthQopDigest(username, realm, password, nonce, nc, cnonce, request.getMethod().toUpperCase(), uri).digest();
 		
 		if (digest != null && digest.equals(resp)) {
-			if (logger.isDebugEnabled())
-				logger.debug("authentication response is matching");
+			if (logger.isFineEnabled())
+				logger.fine("authentication response is matching");
 
 			/**
 			 * Add the cnonce,nc and qop as received in the Authorization header
@@ -413,8 +437,8 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 			response.addHeader("Authentication-Info", params);
 			return username;
 		} else {
-			if (logger.isDebugEnabled())
-				logger.debug("authentication response digest received ("+resp+") didn't match the one calculated ("+digest+")");
+			if (logger.isFineEnabled())
+				logger.fine("authentication response digest received ("+resp+") didn't match the one calculated ("+digest+")");
 
 			return null;
 		}
@@ -447,7 +471,7 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 				return (UserProfileControlSbbLocalObject) getUserProfileControlChildRelation()
 						.create();
 			} catch (Exception e) {
-				logger.error("Failed to create child sbb", e);
+				logger.severe("Failed to create child sbb", e);
 				return null;
 			}
 	}
@@ -455,6 +479,10 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 	// -- sbb object lifecycle
 	
 	public void setSbbContext(SbbContext context) {
+		sbbContext = context;
+		if (logger == null) {
+			logger = sbbContext.getTracer(this.getClass().getSimpleName());
+		}
 	}
 
 	public void unsetSbbContext() {

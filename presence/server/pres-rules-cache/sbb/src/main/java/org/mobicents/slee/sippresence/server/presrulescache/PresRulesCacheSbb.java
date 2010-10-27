@@ -123,6 +123,8 @@ public abstract class PresRulesCacheSbb implements Sbb {
 	// event handlers
 	
 	public void onGetAndSubscribePresRulesAppUsageEvent(GetAndSubscribePresRulesAppUsageEvent event, ActivityContextInterface aci) {
+		long start = System.currentTimeMillis();
+
 		String presRulesAUID = configuration.getPresRulesAUID();
 		// lets attach to the app usage activity, to receive events related with updates on its docs
 		AppUsageActivity appUsageActivity = dataSourceSbbInterface.createAppUsageActivity(presRulesAUID);
@@ -131,26 +133,19 @@ public abstract class PresRulesCacheSbb implements Sbb {
 		setPresRulesAppUsageACI(appUsageActivityContextInterface);
 		// now fetch all existent docs
 		DocumentSelector documentSelector = null;
-		boolean debugTrace = tracer.isFineEnabled();
 		try {
-			for(String collection : dataSourceSbbInterface.getCollections(configuration.getPresRulesAUID())) {
-				for (String documentName : dataSourceSbbInterface.getDocuments(presRulesAUID, collection)) {
-					documentSelector = new DocumentSelector(presRulesAUID, collection, documentName);
-					if (debugTrace) {
-						tracer.fine("Retrieving document "+documentSelector);
-					}
-					try {
-						Document document = dataSourceSbbInterface.getDocument(documentSelector);
-						presRulesSbbInterface.rulesetUpdated(documentSelector, null, document.getETag(), document.getAsString());
-					}
-					catch (Exception e) {
-						tracer.severe("failed to get document "+documentSelector,e);
-					}
+			Document[] documents = dataSourceSbbInterface.getDocuments(presRulesAUID);
+			for (Document document : documents) {
+				documentSelector = new DocumentSelector(presRulesAUID, document.getCollectionName(), document.getDocumentName());
+				if (tracer.isFineEnabled()) {
+					tracer.fine("Retrieving document "+documentSelector);
 				}
+				presRulesSbbInterface.rulesetUpdated(documentSelector, null, document.getETag(), document.getAsString());					
 			}
 		} catch (InternalServerErrorException e) {
 			tracer.severe("unable to fetch current pres rules docs",e);
 		}
+		tracer.info("Total time to update pres rules cache with initial rls-services docs: "+(System.currentTimeMillis()-start)+"ms");
 	}
 	
 	public void onUnsubscribePresRulesAppUsageEvent(UnsubscribePresRulesAppUsageEvent event, ActivityContextInterface aci) {

@@ -11,13 +11,17 @@
 			
 	<dependencies>	
 		<dependency>
-			<groupId>org.mobicents.servers.xdm</groupId>
-			<artifactId>xdm-client-sbb-local-object</artifactId>
+			<groupId>${pom.groupId}</groupId>
+			<artifactId>xdms-core-xcap-control-sbb</artifactId>
 			<version>${pom.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>org.mobicents.servers.jainslee.enablers</groupId>
+			<artifactId>xdm-client-sbb</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>${pom.groupId}</groupId>
-			<artifactId>xdms-core-xcap-control-sbb</artifactId>
+			<artifactId>xdms-core-datasource-ratype</artifactId>
 			<version>${pom.version}</version>
 		</dependency>
 	</dependencies>

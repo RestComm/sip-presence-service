@@ -4,13 +4,14 @@ import java.io.StringReader;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.slee.Address;
 import javax.slee.ServiceID;
 import javax.slee.facilities.Tracer;
 import javax.slee.resource.ActivityFlags;
 import javax.slee.resource.ActivityHandle;
-import javax.slee.resource.ActivityIsEndingException;
 import javax.slee.resource.ConfigProperties;
 import javax.slee.resource.FailureReason;
 import javax.slee.resource.FireableEventType;
@@ -62,6 +63,8 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 	private LinkedList<ElementSelectorStep> rlsServicesBaseElementSelectorSteps = initRlsServicesBaseElementSelectorSteps(); 
 	
 	private ListReferenceEndpointAddressParser addressParser;
+	
+	private ExecutorService executorService;
 	
 	public static JAXBContext jaxbContext = initJAxbContext();
 	
@@ -172,6 +175,7 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 	@Override
 	public void raActive() {
 		dataSource = new RLSServicesCacheDataSource();		
+		executorService = Executors.newSingleThreadExecutor();
 	}
 
 	@Override
@@ -188,6 +192,7 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 	@Override
 	public void raInactive() {
 		dataSource = null;
+		executorService.shutdownNow();
 	}
 
 	@Override
@@ -315,99 +320,117 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 	}
 
 	@Override
-	public void rlsServicesUpdated(DocumentSelector documentSelector, String document) {
+	public void rlsServicesUpdated(final DocumentSelector documentSelector, final String document) {
 		
-		if (tracer.isFineEnabled()) {
-			tracer.fine("rlsServicesDocUpdated( ds = "+documentSelector+")");
-		}
-		
-		if (document == null) {
-			// doc was removed, remove all rls services of the doc
-			RLSServiceImpl rlsService = null;
-			for (String existentRLSServiceURI : dataSource.removeRlsServicesDocs(documentSelector)) {
-				rlsService = dataSource.removeRLSService(existentRLSServiceURI);
-				if (rlsService != null) {
-					rlsService.setServiceType(null);
-				}
-				if (tracer.isInfoEnabled()) {
-					tracer.info("Removed RLS Service "+existentRLSServiceURI+" from cache.");
-				}
-			}
-		}
-		else {
-			// doc was created or updated
-			RlsServices rlsServices = null;
-			try {
-				rlsServices = (RlsServices) jaxbContext.createUnmarshaller().unmarshal(new StringReader(document));
-			} catch (JAXBException e) {
-				tracer.severe("unmarshalling of global rls services failed", e);
-				return;
-			}	
+		// op is done async in the executor service
+		Runnable r = new Runnable() {
 			
-			Set<String> removedRlsServices = dataSource.removeRlsServicesDocs(documentSelector);
-			Set<String> updatedRlsServices = new HashSet<String>();
-			// create or update the ones provided by the update
-			RLSServiceImpl rlsService = null;
-			RLSServiceImpl anotherRlsService = null;
-			for (ServiceType serviceType : rlsServices.getService()) {			
-				if(removedRlsServices != null) {
-					removedRlsServices.remove(serviceType.getUri());
+			@Override
+			public void run() {
+				
+				if (tracer.isFineEnabled()) {
+					tracer.fine("rlsServicesDocUpdated( ds = "+documentSelector+")");
 				}
-				updatedRlsServices.add(serviceType.getUri());
-				rlsService = dataSource.getRLSService(serviceType.getUri());
-				if (rlsService == null) {
-					LinkedList<ElementSelectorStep> steps = new LinkedList<ElementSelectorStep>(rlsServicesBaseElementSelectorSteps);
-					steps.addLast(new ElementSelectorStepByAttr("service", "uri", serviceType.getUri()));
-					ListReferenceEndpointAddress address = new ListReferenceEndpointAddress(globalRLSServicesDocumentSelector, new ElementSelector(steps));
-					anotherRlsService = new RLSServiceImpl(serviceType.getUri(), address, this);
-					rlsService = dataSource.putRLSServiceIfAbsent(serviceType.getUri(), anotherRlsService);
-					if (rlsService == null) {
-						rlsService = anotherRlsService;
-						if (tracer.isInfoEnabled()) {
-							tracer.info("Added RLS Service "+serviceType.getUri()+" to cache.");
+				
+				if (document == null) {
+					// doc was removed, remove all rls services of the doc
+					RLSServiceImpl rlsService = null;
+					for (String existentRLSServiceURI : dataSource.removeRlsServicesDocs(documentSelector)) {
+						rlsService = dataSource.removeRLSService(existentRLSServiceURI);
+						if (rlsService != null) {
+							rlsService.setServiceType(null);
 						}
-					}				
-				}
-				rlsService.setServiceType(serviceType);
-			}
-			dataSource.putRlsServicesDocs(documentSelector, updatedRlsServices);
-			// update the ones removed with null service type
-			if(removedRlsServices != null) {
-				for(String removedRLSServiceURI : removedRlsServices) {
-					rlsService = dataSource.removeRLSService(removedRLSServiceURI);
-					if (rlsService != null) {
-						rlsService.setServiceType(null);
-					}
-					if (tracer.isInfoEnabled()) {
-						tracer.info("Removed RLS Service "+removedRLSServiceURI+" from cache.");
+						if (tracer.isInfoEnabled()) {
+							tracer.info("Removed RLS Service "+existentRLSServiceURI+" from cache.");
+						}
 					}
 				}
+				else {
+					// doc was created or updated
+					RlsServices rlsServices = null;
+					try {
+						rlsServices = (RlsServices) jaxbContext.createUnmarshaller().unmarshal(new StringReader(document));
+					} catch (JAXBException e) {
+						tracer.severe("unmarshalling of global rls services failed", e);
+						return;
+					}	
+					
+					Set<String> removedRlsServices = dataSource.removeRlsServicesDocs(documentSelector);
+					Set<String> updatedRlsServices = new HashSet<String>();
+					// create or update the ones provided by the update
+					RLSServiceImpl rlsService = null;
+					RLSServiceImpl anotherRlsService = null;
+					for (ServiceType serviceType : rlsServices.getService()) {			
+						if(removedRlsServices != null) {
+							removedRlsServices.remove(serviceType.getUri());
+						}
+						updatedRlsServices.add(serviceType.getUri());
+						rlsService = dataSource.getRLSService(serviceType.getUri());
+						if (rlsService == null) {
+							LinkedList<ElementSelectorStep> steps = new LinkedList<ElementSelectorStep>(rlsServicesBaseElementSelectorSteps);
+							steps.addLast(new ElementSelectorStepByAttr("service", "uri", serviceType.getUri()));
+							ListReferenceEndpointAddress address = new ListReferenceEndpointAddress(globalRLSServicesDocumentSelector, new ElementSelector(steps));
+							anotherRlsService = new RLSServiceImpl(serviceType.getUri(), address, RLSServicesCacheResourceAdaptor.this);
+							rlsService = dataSource.putRLSServiceIfAbsent(serviceType.getUri(), anotherRlsService);
+							if (rlsService == null) {
+								rlsService = anotherRlsService;
+								if (tracer.isInfoEnabled()) {
+									tracer.info("Added RLS Service "+serviceType.getUri()+" to cache.");
+								}
+							}				
+						}
+						rlsService.setServiceType(serviceType);
+					}
+					dataSource.putRlsServicesDocs(documentSelector, updatedRlsServices);
+					// update the ones removed with null service type
+					if(removedRlsServices != null) {
+						for(String removedRLSServiceURI : removedRlsServices) {
+							rlsService = dataSource.removeRLSService(removedRLSServiceURI);
+							if (rlsService != null) {
+								rlsService.setServiceType(null);
+							}
+							if (tracer.isInfoEnabled()) {
+								tracer.info("Removed RLS Service "+removedRLSServiceURI+" from cache.");
+							}
+						}
+					}
+				}
+				
 			}
-		}
+		};
+		executorService.submit(r);
 	}
 	
 	@Override
-	public void resourceListsUpdated(DocumentSelector documentSelector,
-			String document) {
-		
-		if (tracer.isFineEnabled()) {
-			tracer.fine("resourceListsUpdated, document selector is "+documentSelector);
-		}
-		
-		ResourceLists resourceLists = null;
-		if (document != null) {
-			try {
-				resourceLists = (ResourceLists) jaxbContext.createUnmarshaller().unmarshal(new StringReader(document));
-			} catch (JAXBException e) {
-				tracer.severe("unmarshalling of resource lists failed", e);
-				return;
-			}	
-		}
-		
-		ReferencedResourceLists referencedResourceLists = dataSource.getResourceList(documentSelector);
-		if (referencedResourceLists != null) {
-			referencedResourceLists.setResourceLists(resourceLists);
-		}
+	public void resourceListsUpdated(final DocumentSelector documentSelector,
+			final String document) {
+				
+		Runnable r = new Runnable() {
+			
+			@Override
+			public void run() {
+				
+				if (tracer.isFineEnabled()) {
+					tracer.fine("resourceListsUpdated, document selector is "+documentSelector);
+				}
+				
+				ResourceLists resourceLists = null;
+				if (document != null) {
+					try {
+						resourceLists = (ResourceLists) jaxbContext.createUnmarshaller().unmarshal(new StringReader(document));
+					} catch (JAXBException e) {
+						tracer.severe("unmarshalling of resource lists failed", e);
+						return;
+					}	
+				}
+				
+				ReferencedResourceLists referencedResourceLists = dataSource.getResourceList(documentSelector);
+				if (referencedResourceLists != null) {
+					referencedResourceLists.setResourceLists(resourceLists);
+				}
+			}
+		};
+		executorService.submit(r);
 		
 	}
 
@@ -462,8 +485,8 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 				}
 				ResourceListActivityHandle handle = new ResourceListActivityHandle(documentSelector);
 				try {
-					sleeEndpoint.startActivitySuspended(handle, new ResourceListActivityImpl(documentSelector),ACTIVITY_FLAGS);
-					sleeEndpoint.fireEventTransacted(handle,watchResourceListsEvent, new WatchResourceListsEvent(documentSelector), null, null);
+					sleeEndpoint.startActivity(handle, new ResourceListActivityImpl(documentSelector),ACTIVITY_FLAGS);
+					sleeEndpoint.fireEvent(handle,watchResourceListsEvent, new WatchResourceListsEvent(documentSelector), null, null);
 				}
 				catch (Throwable e) {
 					tracer.severe("failed to start resource list activity "+documentSelector,e);
@@ -490,10 +513,10 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 				activity = new RLSServiceActivityImpl(uri, this);
 				if (dataSource.putIfAbsentRLSServiceActivity(handle, activity) == null) {
 					// added to datasource, now add to slee
-					sleeEndpoint.startActivitySuspended(handle, activity, ACTIVITY_FLAGS);
+					sleeEndpoint.startActivity(handle, activity, ACTIVITY_FLAGS);
 				}
 			}
-			sleeEndpoint.fireEventTransacted(handle, rLSServicesAddedEvent, event, null, null);
+			sleeEndpoint.fireEvent(handle, rLSServicesAddedEvent, event, null, null);
 		}
 		catch (Throwable e) {
 			tracer.severe("failed to fire rls services added event", e);
@@ -507,34 +530,36 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 		
 		if (dataSource.getRLSServiceActivity(handle) != null) {
 			try {
-				sleeEndpoint.fireEventTransacted(handle, rLSServicesRemovedEvent, event, null, null);
+				sleeEndpoint.fireEvent(handle, rLSServicesRemovedEvent, event, null, null);
 			}
-			catch (ActivityIsEndingException e) {
-				if(tracer.isFineEnabled()) {
-					tracer.fine("unable to fire rls services removed event, activity is ending", e);
-				}
-			}	
 			catch (Throwable e) {
-				tracer.severe("failed to fire rls services removed event", e);
-			}		
+				// ignore if handle was concurrently removed 
+				if (dataSource.getRLSServiceActivity(handle) != null) {
+					tracer.severe("failed to fire rls services removed event", e);
+				}
+			}			
 		}
 	}
 
 	public void fireRLSServicesUpdatedEvent(String uri,
 			RLSServicesUpdatedEvent event) {
 		
+		if (tracer.isInfoEnabled()) {
+			tracer.info("Updated RLS Service "+uri+". New entries: "+event.getNewEntries()+". Removed entries: "+event.getRemovedEntries());
+		}
+		
 		final RLSServiceActivityHandle handle = new RLSServiceActivityHandle(uri);
 		
 		if (dataSource.getRLSServiceActivity(handle) != null) {
 			
-			if (tracer.isInfoEnabled()) {
-				tracer.info("Updated RLS Service "+uri+". New entries: "+event.getNewEntries()+". Removed entries: "+event.getRemovedEntries());
-			}
 			try {
-				sleeEndpoint.fireEventTransacted(new RLSServiceActivityHandle(uri), rLSServicesUpdatedEvent, event, null, null);
+				sleeEndpoint.fireEvent(handle, rLSServicesUpdatedEvent, event, null, null);
 			}
 			catch (Throwable e) {
-				tracer.severe("failed to fire rls services updated event", e);
+				// ignore if handle was concurrently removed 
+				if (dataSource.getRLSServiceActivity(handle) != null) {
+					tracer.severe("failed to fire rls services updated event", e);
+				}
 			}
 		}		
 	}

@@ -116,8 +116,9 @@ public abstract class RLSServicesWatcherSbb implements Sbb {
 	// event handlers
 	
 	public void onWatchRLSServicesEvent(WatchRLSServicesEvent event, ActivityContextInterface aci) {
-		boolean debugTrace = tracer.isFineEnabled();
-		if(debugTrace) {
+		long start = System.currentTimeMillis();
+
+		if(tracer.isFineEnabled()) {
 			tracer.fine("onWatchRLSServicesEvent");
 		}
 		// lets attach to the app usage activity, to receive events related with updates on its docs
@@ -127,32 +128,19 @@ public abstract class RLSServicesWatcherSbb implements Sbb {
 		// now fetch all existent docs
 		DocumentSelector documentSelector = null;
 		try {
-			for(String collection : dataSourceRASbbInterface.getCollections("rls-services")) {
-				if(debugTrace) {
-					tracer.fine("onWatchRLSServicesEvent collection = "+collection);
+			Document[] documents = dataSourceRASbbInterface.getDocuments("rls-services");
+			for (Document document : documents) {
+				documentSelector = new DocumentSelector("rls-services", document.getCollectionName(), document.getDocumentName());
+				if (!documentSelector.isUserDocument()) {
+					// ignore global
+					continue;
 				}
-
-				for (String documentName : dataSourceRASbbInterface.getDocuments("rls-services", collection)) {
-					documentSelector = new DocumentSelector("rls-services", collection, documentName);
-					if(debugTrace) {
-						tracer.fine("onWatchRLSServicesEvent documentSelector = "+documentSelector);
-					}
-					if (!documentSelector.isUserDocument()) {
-						// ignore global
-						continue;
-					}
-					try {
-						Document document = dataSourceRASbbInterface.getDocument(documentSelector);
-						rlsCacheRASbbInterface.rlsServicesUpdated(documentSelector,document.getAsString());
-					}
-					catch (Exception e) {
-						tracer.severe("failed to get document "+documentSelector,e);
-					}
-				}
+				rlsCacheRASbbInterface.rlsServicesUpdated(documentSelector,document.getAsString());						
 			}
 		} catch (InternalServerErrorException e) {
 			tracer.severe("unable to fetch current rls services docs",e);
 		}
+		tracer.info("Total time to update rls cache with initial rls-services docs: "+(System.currentTimeMillis()-start)+"ms");
 	}
 	
 	public void onActivityEndEvent(ActivityEndEvent event, ActivityContextInterface aci) {

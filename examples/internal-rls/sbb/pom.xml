@@ -21,15 +21,24 @@
 			<version>${pom.version}</version>	
 			<artifactId>sip-presence-client-sbb-local-object</artifactId>
 		</dependency>
-		 <!--<dependency>
-			<groupId>org.mobicents.servers.sipevent</groupId>
-			<artifactId>sip-event-subscription-control-sbb-local-object</artifactId>
-			<version>${pom.version}</version>				
-		</dependency>  -->
+		 <dependency>
+			<artifactId>user-profile-jmx</artifactId>				
+			<groupId>org.mobicents.slee.enabler.userprofile</groupId>
+			<version>${pom.version}</version>
+		</dependency> 
 		<dependency>
 			<groupId>org.mobicents.servers.sipevent</groupId>
 			<artifactId>sip-event-client-subscription-sbb-local-object</artifactId>
 			<version>${pom.version}</version>				
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<artifactId>xdms-core-configuration-jar</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents.servers.jainslee.enablers</groupId>
+			<artifactId>xdm-client-sbb</artifactId>
 		</dependency>
 	</dependencies>
 	

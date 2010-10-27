@@ -24,7 +24,7 @@ public abstract class AbstractXDMJunitTest {
 
 	protected XCAPClient client = null;
 	protected AppUsage appUsage = new ResourceListsAppUsage(null);
-	protected String user = "sip:eduardo@openxdm.org";
+	protected String user = "+01234566789@mobicents.org";
 	protected String documentName = "index";
 	protected String password = "password";
 	

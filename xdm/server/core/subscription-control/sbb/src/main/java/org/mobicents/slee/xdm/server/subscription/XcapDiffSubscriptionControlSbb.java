@@ -1,14 +1,11 @@
 package org.mobicents.slee.xdm.server.subscription;
 
-import java.util.Map;
-
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sip.ServerTransaction;
 import javax.sip.header.HeaderFactory;
 import javax.slee.ActivityContextInterface;
-import javax.slee.ChildRelation;
 import javax.slee.CreateException;
 import javax.slee.RolledBackContext;
 import javax.slee.Sbb;
@@ -26,13 +23,11 @@ import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
 import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
-import org.mobicents.slee.xdm.server.XDMClientControlParentSbbLocalObject;
-import org.mobicents.slee.xdm.server.XDMClientControlSbbLocalObject;
-import org.openxdm.xcap.common.key.XcapUriKey;
-import org.openxdm.xcap.common.uri.AttributeSelector;
-import org.openxdm.xcap.common.uri.DocumentSelector;
-import org.openxdm.xcap.common.uri.NodeSelector;
+import org.openxdm.xcap.server.slee.resource.datasource.AttributeUpdatedEvent;
+import org.openxdm.xcap.server.slee.resource.datasource.DataSourceActivityContextInterfaceFactory;
 import org.openxdm.xcap.server.slee.resource.datasource.DataSourceSbbInterface;
+import org.openxdm.xcap.server.slee.resource.datasource.DocumentUpdatedEvent;
+import org.openxdm.xcap.server.slee.resource.datasource.ElementUpdatedEvent;
 
 /**
  * Subscription control sbb for a XDM Server.
@@ -46,9 +41,8 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 	private static Logger logger = Logger
 			.getLogger(XcapDiffSubscriptionControlSbb.class);
 
-	// private AppUsageCacheResourceAdaptorSbbInterface appUsageCache;
 	private DataSourceSbbInterface dataSourceSbbInterface = null;
-	// private DataSourceActivityContextInterfaceFactory dataSourceACIF = null;
+	private DataSourceActivityContextInterfaceFactory dataSourceACIF = null;
 
 	private static final XcapDiffSubscriptionControl XCAP_DIFF_SUBSCRIPTION_CONTROL = new XcapDiffSubscriptionControl();
 	
@@ -64,11 +58,8 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 	// private MessageFactory messageFactory;
 	protected HeaderFactory headerFactory;
 
-	/**
-	 * SbbObject's sbb context
-	 */
 	private SbbContext sbbContext;
-
+	
 	public void setSbbContext(SbbContext sbbContext) {
 		this.sbbContext = sbbContext;
 		// retrieve factories, facilities & providers
@@ -87,8 +78,8 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 			// context.lookup("slee/resources/xdm/appusagecache/sbbrainterface");
 			dataSourceSbbInterface = (DataSourceSbbInterface) context
 					.lookup("slee/resources/xdm/datasource/sbbrainterface");
-			// dataSourceACIF = (DataSourceActivityContextInterfaceFactory)
-			// context.lookup("slee/resources/xdm/datasource/1.0/acif");
+			dataSourceACIF = (DataSourceActivityContextInterfaceFactory)
+				context.lookup("slee/resources/xdm/datasource/1.0/acif");
 		} catch (NamingException e) {
 			logger.error("Can't set sbb context.", e);
 		}
@@ -155,46 +146,55 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 
 	// ------------ XcapDiffSubscriptionControlSbbLocalObject
 
-	// --- XDM CLIENT CHILD SBB
-	public abstract ChildRelation getXDMClientControlChildRelation();
-
-	public abstract XDMClientControlSbbLocalObject getXDMClientControlChildSbbCMP();
-
-	public abstract void setXDMClientControlChildSbbCMP(
-			XDMClientControlSbbLocalObject value);
-
-	public XDMClientControlSbbLocalObject getXDMClientControlSbb() {
-		XDMClientControlSbbLocalObject childSbb = getXDMClientControlChildSbbCMP();
-		if (childSbb == null) {
-			try {
-				childSbb = (XDMClientControlSbbLocalObject) getXDMClientControlChildRelation()
-						.create();
-			} catch (Exception e) {
-				logger.error("Failed to create child sbb",e);
-				return null;
-			}
-			setXDMClientControlChildSbbCMP(childSbb);
-			childSbb
-					.setParentSbb((XDMClientControlParentSbbLocalObject) this.sbbContext
-							.getSbbLocalObject());
-		}
-		return childSbb;
-	}
-
 	// --- CMP
 
+	/*
+	 * 
+	 */
 	public abstract void setSubscriptionsMap(SubscriptionsMap map);
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.subscription.XcapDiffSubscriptionControlSbbInterface#getSubscriptionsMap()
+	 */
 	public abstract SubscriptionsMap getSubscriptionsMap();
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.subscription.XcapDiffSubscriptionControlSbbInterface#getDataSourceSbbInterface()
+	 */
 	public DataSourceSbbInterface getDataSourceSbbInterface() {
 		return dataSourceSbbInterface;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.subscription.XcapDiffSubscriptionControlSbbInterface#getDataSourceActivityContextInterfaceFactory()
+	 */
+	public DataSourceActivityContextInterfaceFactory getDataSourceActivityContextInterfaceFactory() {
+		return dataSourceACIF;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.subscription.XcapDiffSubscriptionControlSbbInterface#getSbbContext()
+	 */
+	public SbbContext getSbbContext() {
+		return sbbContext;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.subscription.XcapDiffSubscriptionControlSbbInterface#getHeaderFactory()
+	 */
 	public HeaderFactory getHeaderFactory() {
 		return headerFactory;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.subscription.XcapDiffSubscriptionControlSbbInterface#getUnmarshaller()
+	 */
 	public Unmarshaller getUnmarshaller() {
 		try {
 			return jaxbContext.createUnmarshaller();
@@ -204,46 +204,21 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 		}
 	}
 
-	// ------------ XDMClientControlParentSbbLocalObject
+	// ------------ updates on xdm docs
 
-	public void attributeUpdated(DocumentSelector documentSelector,
-			NodeSelector nodeSelector, AttributeSelector attributeSelector,
-			Map<String, String> namespaces, String oldETag, String newETag,
-			String documentAsString, String attributeValue) {
-
-		documentUpdated(documentSelector, oldETag, newETag, documentAsString);
+	public void onAttributeUpdatedEvent(AttributeUpdatedEvent event,
+			ActivityContextInterface aci) {
+		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event.getDocumentSelector(), event.getOldETag(), event.getNewETag(), event.getDocumentAsString(), this);		
 	}
 
-	public void documentUpdated(DocumentSelector documentSelector,
-			String oldETag, String newETag, String documentAsString) {
-		// delegate to XcapDiffSubscriptionControl
-		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(documentSelector,
-				oldETag, newETag, documentAsString, this);
+	public void onDocumentUpdatedEvent(DocumentUpdatedEvent event,
+			ActivityContextInterface aci) {
+		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event.getDocumentSelector(), event.getOldETag(), event.getNewETag(), event.getDocumentAsString(), this);
 	}
 
-	public void elementUpdated(DocumentSelector documentSelector,
-			NodeSelector nodeSelector, Map<String, String> namespaces,
-			String oldETag, String newETag, String documentAsString,
-			String elementAsString) {
-		// delegate to documentUpdated
-		documentUpdated(documentSelector, oldETag, newETag, documentAsString);
-	}
-
-	// --- not used
-
-	public void deleteResponse(XcapUriKey key, int responseCode, String responseContent, String tag) {
-		throw new UnsupportedOperationException();
-	}
-
-	public void putResponse(XcapUriKey key, int responseCode,
-			String responseContent, String tag) {
-		throw new UnsupportedOperationException();
-	}
-	
-	public void getResponse(XcapUriKey key, int responseCode, String mimetype,
-			String content, String tag) {
-		throw new UnsupportedOperationException();
-
+	public void onElementUpdatedEvent(ElementUpdatedEvent event,
+			ActivityContextInterface aci) {
+		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event.getDocumentSelector(), event.getOldETag(), event.getNewETag(), event.getDocumentAsString(), this);
 	}
 
 	// --------- JAXB
@@ -294,6 +269,5 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 	}
 
 	public void unsetSbbContext() {
-		this.sbbContext = null;
 	}
 }

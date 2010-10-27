@@ -104,7 +104,7 @@ public abstract class PublicationControlSbb extends AbstractPublicationControl i
 	 */
 	public void onTimerEvent(TimerEvent event, ActivityContextInterface aci) {
 		// cancel current timer
-		timerFacility.cancelTimer(event.getTimerID());
+		//timerFacility.cancelTimer(event.getTimerID());
 		// detach from aci
 		aci.detach(this.sbbContext.getSbbLocalObject());
 		// end it

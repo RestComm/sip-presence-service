@@ -1,6 +1,8 @@
 package org.mobicents.slee.sippresence.server.presrulescache;
 
 import java.io.StringReader;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.slee.Address;
 import javax.slee.ServiceID;
@@ -48,6 +50,8 @@ public class PresRulesCacheResourceAdaptor implements ResourceAdaptor,
 
 	public static JAXBContext jaxbContext = initJAxbContext();
 
+	private ExecutorService executorService;
+	
 	public PresRulesCacheDataSource getDataSource() {
 		return dataSource;
 	}
@@ -143,6 +147,7 @@ public class PresRulesCacheResourceAdaptor implements ResourceAdaptor,
 	@Override
 	public void raActive() {
 		dataSource = new PresRulesCacheDataSource();
+		executorService = Executors.newSingleThreadExecutor();
 	}
 
 	@Override
@@ -159,6 +164,7 @@ public class PresRulesCacheResourceAdaptor implements ResourceAdaptor,
 	@Override
 	public void raInactive() {
 		dataSource = null;
+		executorService.shutdownNow();
 	}
 
 	@Override
@@ -282,37 +288,45 @@ public class PresRulesCacheResourceAdaptor implements ResourceAdaptor,
 	 * #rulesetUpdated(org.openxdm.xcap.common.uri.DocumentSelector,
 	 * java.lang.String, java.lang.String, java.lang.String)
 	 */
-	public void rulesetUpdated(DocumentSelector documentSelector,
-			String oldETag, String newETag, String rulesetString) {
+	public void rulesetUpdated(final DocumentSelector documentSelector,
+			final String oldETag, final String newETag, final String rulesetString) {
 
-		Ruleset ruleset = null;
-		try {
-			ruleset = (Ruleset) jaxbContext.createUnmarshaller().unmarshal(
-					new StringReader(rulesetString));
-		} catch (JAXBException e) {
-			tracer.severe("unmarshalling of ruleset failed", e);
-			return;
-		}
+		Runnable r = new Runnable() {
+			
+			@Override
+			public void run() {
+				Ruleset ruleset = null;
+				try {
+					ruleset = (Ruleset) jaxbContext.createUnmarshaller().unmarshal(
+							new StringReader(rulesetString));
+				} catch (JAXBException e) {
+					tracer.severe("unmarshalling of ruleset failed", e);
+					return;
+				}
 
-		if (ruleset != null) {
-			dataSource.putRuleset(documentSelector, ruleset);
-		} else {
-			dataSource.removeRuleset(documentSelector);
-		}
-		PresRulesActivityHandle handle = new PresRulesActivityHandle(
-				documentSelector);
-		PresRulesActivityImpl activity = dataSource.getActivity(handle);
-		if (activity != null) {
-			// fire event transacted, this method is invoked from sbb
-			try {
-				sleeEndpoint.fireEventTransacted(handle,
-						rulesetUpdatedEventType, new RulesetUpdatedEvent(
-								documentSelector, oldETag, newETag, ruleset),
-						null, null);
-			} catch (Exception e) {
-				tracer.severe("unable to fire event for handle " + handle, e);
+				if (ruleset != null) {
+					dataSource.putRuleset(documentSelector, ruleset);
+				} else {
+					dataSource.removeRuleset(documentSelector);
+				}
+				PresRulesActivityHandle handle = new PresRulesActivityHandle(
+						documentSelector);
+				PresRulesActivityImpl activity = dataSource.getActivity(handle);
+				if (activity != null) {
+					// fire event transacted, this method is invoked from sbb
+					try {
+						sleeEndpoint.fireEvent(handle,
+								rulesetUpdatedEventType, new RulesetUpdatedEvent(
+										documentSelector, oldETag, newETag, ruleset),
+								null, null);
+					} catch (Exception e) {
+						tracer.severe("unable to fire event for handle " + handle, e);
+					}
+				}				
 			}
-		}
+		};
+		
+		executorService.submit(r);
 	}
 
 	/*

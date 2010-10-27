@@ -20,6 +20,11 @@
 			<artifactId>xdms-core-datasource-ratype</artifactId>
 			<version>${pom.version}</version>
 		</dependency>
+		<!-- TEMP -->
+		<dependency>
+				<groupId>org.mobicents.servers.jainslee.core</groupId>
+				<artifactId>spi</artifactId>				
+			</dependency>
 	</dependencies>
 		
 </project>

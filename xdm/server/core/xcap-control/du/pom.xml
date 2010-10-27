@@ -21,12 +21,7 @@
 			<groupId>${pom.groupId}</groupId>
 			<artifactId>xdms-core-xcap-control-sbb</artifactId>
 			<version>${pom.version}</version>
-		</dependency>		
-		<dependency>
-			<groupId>org.mobicents.servers.xdm</groupId>
-			<artifactId>xdm-client-library</artifactId>
-			<version>${pom.version}</version>
-		</dependency>		
+		</dependency>			
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
 			<artifactId>xdms-appusages-xcap-caps-events</artifactId>	
