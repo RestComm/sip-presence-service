@@ -286,10 +286,10 @@
 	<target name="unzip-mobicents-jainslee">
 		<delete dir="${jboss.home}/.." failonerror="true" />
 		<unzip src="${mobicents.distro.zip.path}" dest="${release.dir}" />
-		<delete dir="${release.dir}/server/all" failonerror="true" />
+		<delete dir="${release.dir}/jboss-5.1.0.GA/server/all" failonerror="true" />
 		 
 		<move todir="${jboss.home}/docs/mobicents-jain-slee/">
-			<fileset dir="${release.dir}/../docs">
+			<fileset dir="${release.dir}/docs">
 				<include name="**"/>
 			</fileset>
 		</move>
