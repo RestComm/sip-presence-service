@@ -7,9 +7,16 @@ import org.mobicents.xdm.server.appusage.AppUsageFactory;
 
 public class ResourceListsAppUsageDeployer extends AppUsageDeployer {
 	
+	private final boolean omaCompliant;
+
+	public ResourceListsAppUsageDeployer(boolean omaCompliant) {
+		super();
+		this.omaCompliant = omaCompliant;
+	}
+	
 	@Override
 	public AppUsageFactory createAppUsageFactory(Schema schema) {
-		return new ResourceListsAppUsageFactory(schema);
+		return new ResourceListsAppUsageFactory(schema,omaCompliant);
 	}
 
 	@Override

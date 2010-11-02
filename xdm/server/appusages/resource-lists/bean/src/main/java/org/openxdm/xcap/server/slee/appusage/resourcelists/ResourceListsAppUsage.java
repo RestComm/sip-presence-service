@@ -24,11 +24,37 @@ public class ResourceListsAppUsage extends AppUsage {
 	public static final String DEFAULT_DOC_NAMESPACE = "urn:ietf:params:xml:ns:resource-lists";
 	public static final String MIMETYPE = "application/resource-lists+xml";
 	
-	public ResourceListsAppUsage(Validator schemaValidator) {
+	private static final String LIST_ELEMENT_NAME = "list";
+	private static final String NAME_ATTRIBUTE_NAME = "name";
+	private static final String NAME_ATTRIBUTE_REQUIRED_ERROR_PHRASE = "Name attribute is required.";
+	
+	private final boolean omaCompliant;
+
+	/**
+	 * 
+	 * @param schemaValidator
+	 * @param omaCompliant
+	 */
+	public ResourceListsAppUsage(Validator schemaValidator, boolean omaCompliant) {
 		super(ID,DEFAULT_DOC_NAMESPACE,MIMETYPE,schemaValidator,"index");
+		this.omaCompliant = omaCompliant;
 	}	
 	
-	public static void checkNodeResourceListConstraints(Node node) throws UniquenessFailureConflictException, ConstraintFailureConflictException {
+	/**
+	 * For extensions such as OMA Group List Usage
+	 * @param auid
+	 * @param defaultDocumentNamespace
+	 * @param mimetype
+	 * @param schemaValidator
+	 * @param authorizedUserDocumentName
+	 */
+	public ResourceListsAppUsage(String auid, String defaultDocumentNamespace,
+			String mimetype, Validator schemaValidator, String authorizedUserDocumentName, boolean omaCompliant) {
+		super(auid,defaultDocumentNamespace,mimetype,schemaValidator,authorizedUserDocumentName);
+		this.omaCompliant = omaCompliant;
+	}
+	
+	public static void checkNodeResourceListConstraints(Node node, boolean omaCompliant) throws UniquenessFailureConflictException, ConstraintFailureConflictException {
 		
 		Set<String> nameSet = new HashSet<String>();
 		Set<String> uriSet = new HashSet<String>();
@@ -40,9 +66,9 @@ public class ResourceListsAppUsage extends AppUsage {
 		// process each one
 		for(int i=0;i<childNodes.getLength();i++) {
 			Node childNode = childNodes.item(i);			
-			if (childNode.getNodeType() == Node.ELEMENT_NODE && childNode.getLocalName().equals("list")) {
+			if (childNode.getNodeType() == Node.ELEMENT_NODE && childNode.getLocalName().equals(LIST_ELEMENT_NAME)) {
 				// list element
-				Attr nameAttr = ((Element)childNode).getAttributeNode("name");
+				Attr nameAttr = ((Element)childNode).getAttributeNode(NAME_ATTRIBUTE_NAME);
 				if (nameAttr != null) {
 					/*
 					 o  The "name" attribute in a <list> element MUST be unique amongst
@@ -59,7 +85,13 @@ public class ResourceListsAppUsage extends AppUsage {
 						// unique so far, add it to the name set
 						nameSet.add(nameAttr.getNodeValue());
 						// and process this list
-						checkNodeResourceListConstraints(childNode);
+						checkNodeResourceListConstraints(childNode,omaCompliant);
+					}
+				}
+				else {
+					if (omaCompliant) {
+						// OMA requires that name attr is set
+						throw new ConstraintFailureConflictException(NAME_ATTRIBUTE_REQUIRED_ERROR_PHRASE);
 					}
 				}
 				
@@ -162,7 +194,7 @@ public class ResourceListsAppUsage extends AppUsage {
 	
 		super.checkConstraintsOnPut(document, xcapRoot, documentSelector, dataSource);
 		// check this app usage constraints below the root resource-lists node
-		checkNodeResourceListConstraints(document.getDocumentElement());		
+		checkNodeResourceListConstraints(document.getDocumentElement(),omaCompliant);		
 	}
 	
 }

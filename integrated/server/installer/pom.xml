@@ -241,6 +241,13 @@
 											<overWrite>true</overWrite>
 											<outputDirectory>${deploy.dir}/${beans.dir.name}/appusages</outputDirectory>
 										</artifactItem>
+										<artifactItem>
+											<groupId>org.mobicents.servers.xdm</groupId>
+											<artifactId>xdms-appusages-oma-group-usage-list-bean</artifactId>
+											<version>${pom.version}</version>
+											<overWrite>true</overWrite>
+											<outputDirectory>${deploy.dir}/${beans.dir.name}/appusages</outputDirectory>
+										</artifactItem>
 											
 										<artifactItem>
 											<groupId>org.mobicents.servers.xdm</groupId>

@@ -23,7 +23,7 @@ import org.openxdm.xcap.server.slee.appusage.resourcelists.ResourceListsAppUsage
 public abstract class AbstractXDMJunitTest {
 
 	protected XCAPClient client = null;
-	protected AppUsage appUsage = new ResourceListsAppUsage(null);
+	protected AppUsage appUsage = new ResourceListsAppUsage(null,false);
 	protected String user = "+01234566789@mobicents.org";
 	protected String documentName = "index";
 	protected String password = "password";

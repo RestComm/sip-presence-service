@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource-lists xmlns="urn:ietf:params:xml:ns:resource-lists">
+	<list name="friends">
+		<entry-ref ref="resource-lists/users/sip:bill@example.com/index/~~/resource-lists/list%5b@name=%22list1%22%5d/entry%5b@uri=%22sip:petri@example.com%22%5d"/>
+	</list>
+</resource-lists>

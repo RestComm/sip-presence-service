@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="urn:jboss:bean-deployer:2.0">
+		
+	<!-- Registers the APP USAGE DEPLOYER AS JBOSS MICROCONTAINER BEAN -->
+	
+	<bean name="Mobicents.XDMS.AppUsage.Deployer.OMAGroupUsageList"
+		class="org.mobicents.xdm.server.appusage.oma.groupusagelist.OMAGroupUsageListAppUsageDeployer">      
+      <!-- this app usage depends on default resource-lists -->
+      <depends>Mobicents.XDMS.AppUsage.Deployer.ResourceLists</depends>      
+   </bean>
+   
+</deployment>

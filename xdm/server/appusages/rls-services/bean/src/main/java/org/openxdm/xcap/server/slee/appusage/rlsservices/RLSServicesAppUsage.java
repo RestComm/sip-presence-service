@@ -501,7 +501,7 @@ public class RLSServicesAppUsage extends AppUsage {
 							 <external> elements.  The constraints defined for these elements
 							 in Section 3.4.7 MUST be enforced.				 
 						 */		
-						ResourceListsAppUsage.checkNodeResourceListConstraints(serviceChildNode);
+						ResourceListsAppUsage.checkNodeResourceListConstraints(serviceChildNode,false);
 					}			 
 					else if (serviceChildNode.getNodeType() == Node.ELEMENT_NODE && serviceChildNode.getLocalName().equals("resource-list")) {
 						// resource-list element

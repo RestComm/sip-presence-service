@@ -6,6 +6,10 @@
 	
 	<bean name="Mobicents.XDMS.AppUsage.Deployer.ResourceLists"
 		class="org.openxdm.xcap.server.slee.appusage.resourcelists.ResourceListsAppUsageDeployer">      
+      <constructor>
+      	  <!-- if true turns on OMA 1.1 compliance for constraint validations -->		
+          <parameter>false</parameter> 
+     	</constructor>		
       <!-- this app usage depends on app usage management only -->
       <depends>Mobicents.XDMS.AppUsageManagement</depends>      
    </bean>

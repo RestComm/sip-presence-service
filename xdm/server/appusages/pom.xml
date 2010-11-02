@@ -20,6 +20,7 @@
 		<module>rls-services</module>
 		<module>xcap-caps</module>
 		<module>oma-xcap-directory</module>
+		<module>oma-group-usage-list</module>
 	</modules>
 	
 </project>

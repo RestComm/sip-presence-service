@@ -1,4 +1,4 @@
-package org.openxdm.xcap.server.slee.appusage.resourcelists;
+package org.mobicents.xdm.server.appusage.oma.groupusagelist;
 
 import javax.xml.validation.Schema;
 
@@ -6,22 +6,20 @@ import org.mobicents.xdm.server.appusage.AppUsage;
 import org.mobicents.xdm.server.appusage.AppUsageDataSourceInterceptor;
 import org.mobicents.xdm.server.appusage.AppUsageFactory;
 
-public class ResourceListsAppUsageFactory implements AppUsageFactory {
+public class OMAGroupUsageListAppUsageFactory implements AppUsageFactory {
 
 	private final Schema schema;
-	private final boolean omaCompliant;
 
-	public ResourceListsAppUsageFactory(Schema schema, boolean omaCompliant) {
+	public OMAGroupUsageListAppUsageFactory(Schema schema) {
 		this.schema = schema;
-		this.omaCompliant = omaCompliant;
 	}
 	
 	public AppUsage getAppUsageInstance() {
-		return new ResourceListsAppUsage(schema.newValidator(),omaCompliant);
+		return new OMAGroupUsageListAppUsage(schema.newValidator());
 	}
 	
 	public String getAppUsageId() {
-		return ResourceListsAppUsage.ID;
+		return OMAGroupUsageListAppUsage.ID;
 	}
 	
 	@Override
