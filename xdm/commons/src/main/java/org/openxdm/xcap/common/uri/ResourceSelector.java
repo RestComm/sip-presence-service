@@ -3,6 +3,8 @@ package org.openxdm.xcap.common.uri;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.openxdm.xcap.common.xml.NamespaceContext;
+
 /**
  * 
  * A resource selector is the lowest level selector that points to a resource on
@@ -45,12 +47,12 @@ import java.util.Map;
 
 public class ResourceSelector {
 
-	private String documentSelector;
+	private final String documentSelector;
 
-	private String nodeSelector;
+	private final String nodeSelector;
 
-	private Map<String, String> namespaces;
-
+	private final NamespaceContext namespaceContext;
+		
 	/**
 	 * Creates a new instance of a resource selector, pointing to document
 	 * resource.
@@ -92,7 +94,12 @@ public class ResourceSelector {
 			Map<String, String> namespaces) {
 		this.documentSelector = documentSelector;
 		this.nodeSelector = nodeSelector;
-		this.namespaces = namespaces;
+		if (namespaces != null) {
+			this.namespaceContext = new NamespaceContext(namespaces);
+		}
+		else {
+			this.namespaceContext = null;
+		}
 	}
 
 	/**
@@ -106,12 +113,11 @@ public class ResourceSelector {
 	}
 
 	/**
-	 * Retreives the namespace bindings map.
 	 * 
 	 * @return
 	 */
-	public Map<String, String> getNamespaces() {
-		return namespaces;
+	public NamespaceContext getNamespaceContext() {
+		return namespaceContext;
 	}
 
 	/**
@@ -129,12 +135,12 @@ public class ResourceSelector {
 			StringBuilder sb = new StringBuilder(documentSelector);
 			if (nodeSelector != null) {
 				sb.append("/~~").append(nodeSelector);
-				if (namespaces != null && !namespaces.isEmpty()) {
+				if (namespaceContext != null && !namespaceContext.getNamespaces().isEmpty()) {
 					sb.append('?');
-					for (Iterator<String> i = namespaces.keySet().iterator(); i
+					for (Iterator<String> i = namespaceContext.getNamespaces().keySet().iterator(); i
 							.hasNext();) {
 						String prefix = i.next();
-						String namespace = namespaces.get(prefix);
+						String namespace = namespaceContext.getNamespaces().get(prefix);
 						sb.append("xmlns(").append(prefix).append('=').append(
 								namespace).append(')');
 					}

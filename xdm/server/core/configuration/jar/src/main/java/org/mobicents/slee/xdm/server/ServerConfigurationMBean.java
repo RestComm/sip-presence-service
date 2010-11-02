@@ -25,10 +25,6 @@ public interface ServerConfigurationMBean {
 
 	public void setXcapRoot(String xcapRoot);
 	
-	public boolean getDynamicUserProvision();
-	
-	public void setDynamicUserProvision(boolean value); 
-
 	public String getAuthenticationRealm();
 
 	public void setAuthenticationRealm(String realm);

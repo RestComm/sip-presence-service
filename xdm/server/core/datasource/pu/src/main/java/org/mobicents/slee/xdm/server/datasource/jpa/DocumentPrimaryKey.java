@@ -4,9 +4,6 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
-import javax.persistence.ManyToOne;
 
 /**
  * 
@@ -22,27 +19,35 @@ public class DocumentPrimaryKey implements Serializable {
 	 */
 	private static final long serialVersionUID = -6638892043798746768L;
 
+	@Column(name = "AUID", nullable = false)
+	private String appUsage;
+	
 	@Column(name = "DOCUMENT_NAME", nullable = false)
 	private String documentName;
 
-	@ManyToOne(optional=false)
-    @JoinColumns ({
-    	@JoinColumn(name="APPUSAGE_ID", referencedColumnName = "APPUSAGE_ID"),
-    	@JoinColumn(name="COLLECTION_NAME", referencedColumnName = "COLLECTION_NAME")
-    	})
-	private Collection collection;
+	@Column(name = "DOCUMENT_PARENT", nullable = false)
+	private String documentParent;
 
 	public DocumentPrimaryKey() {
 		// TODO Auto-generated constructor stub
 	}
 	
-	public DocumentPrimaryKey(String documentName, Collection collection) {
+	public DocumentPrimaryKey(String auid, String documentParent, String documentName) {
 		setDocumentName(documentName);
-		setCollection(collection);
+		setAppUsage(auid);
+		setDocumentParent(documentParent);
 	}
 
 	// -- GETTERS AND SETTERS
 
+	public String getAppUsage() {
+		return appUsage;
+	}
+	
+	public void setAppUsage(String appUsage) {
+		this.appUsage = appUsage;
+	}
+	
 	public String getDocumentName() {
 		return documentName;
 	}
@@ -51,34 +56,42 @@ public class DocumentPrimaryKey implements Serializable {
 		this.documentName = documentName;
 	}
 
-	public Collection getCollection() {
-		return collection;
+	public String getDocumentParent() {
+		return documentParent;
+	}
+	
+	public void setDocumentParent(String documentParent) {
+		this.documentParent = documentParent;
 	}
 
-	public void setCollection(Collection collection) {
-		this.collection = collection;
-	}
-
-	public boolean equals(Object obj) {
-		if (obj != null && obj.getClass() == this.getClass()) {
-			DocumentPrimaryKey other = (DocumentPrimaryKey) obj;
-			return this.documentName.equals(other.documentName)
-					&& this.collection.equals(other.collection);
-		} else {
-			return false;
-		}
-	}
-
+	@Override
 	public int hashCode() {
-		int result;
-		result = documentName.hashCode();
-		result = 31 * result + collection.hashCode();
+		int result = appUsage.hashCode();
+		result = 31 * result + documentParent.hashCode();
+		result = 31 * result + documentName.hashCode();
 		return result;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DocumentPrimaryKey other = (DocumentPrimaryKey) obj;
+		if (!appUsage.equals(other.appUsage)) 
+			return false;
+		if (!documentParent.equals(other.documentParent)) 
+			return false;
+		if (!documentName.equals(other.documentName)) 
+			return false;
+		return true;
+	}
+
 	public String toString() {
-		return "DocumentPrimaryKey : documentName = " + documentName
-				+ " , collection = " + collection;
+		return "DocumentPrimaryKey : appUsage = "+appUsage+", documentParent = "+documentParent+" , documentName = " + documentName;
 	}
 
 }

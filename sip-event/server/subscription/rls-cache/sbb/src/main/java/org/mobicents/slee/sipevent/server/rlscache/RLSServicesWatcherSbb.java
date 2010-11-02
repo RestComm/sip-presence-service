@@ -130,7 +130,7 @@ public abstract class RLSServicesWatcherSbb implements Sbb {
 		try {
 			Document[] documents = dataSourceRASbbInterface.getDocuments("rls-services");
 			for (Document document : documents) {
-				documentSelector = new DocumentSelector("rls-services", document.getCollectionName(), document.getDocumentName());
+				documentSelector = new DocumentSelector("rls-services", document.getDocumentParent(), document.getDocumentName());
 				if (!documentSelector.isUserDocument()) {
 					// ignore global
 					continue;

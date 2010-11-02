@@ -136,7 +136,7 @@ public abstract class PresRulesCacheSbb implements Sbb {
 		try {
 			Document[] documents = dataSourceSbbInterface.getDocuments(presRulesAUID);
 			for (Document document : documents) {
-				documentSelector = new DocumentSelector(presRulesAUID, document.getCollectionName(), document.getDocumentName());
+				documentSelector = new DocumentSelector(presRulesAUID, document.getDocumentParent(), document.getDocumentName());
 				if (tracer.isFineEnabled()) {
 					tracer.fine("Retrieving document "+documentSelector);
 				}

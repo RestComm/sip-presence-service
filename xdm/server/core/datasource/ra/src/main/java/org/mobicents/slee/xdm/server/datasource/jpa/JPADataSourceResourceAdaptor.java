@@ -7,6 +7,7 @@ import javax.slee.resource.ResourceAdaptorContext;
 
 import org.openxdm.xcap.common.datasource.DataSource;
 import org.openxdm.xcap.server.slee.resource.datasource.AbstractDataSourceResourceAdaptor;
+import org.openxdm.xcap.server.slee.resource.datasource.InterceptedDataSource;
 
 /**
  * JPA DataSource Resource Adaptor's Implementation.
@@ -20,7 +21,7 @@ public class JPADataSourceResourceAdaptor extends AbstractDataSourceResourceAdap
     
 	private Tracer logger;
 	
-    private JPADataSource dataSource; 
+    private DataSource dataSource; 
 
     /* (non-Javadoc)
      * @see javax.slee.resource.ResourceAdaptor#raConfigure(javax.slee.resource.ConfigProperties)
@@ -75,7 +76,7 @@ public class JPADataSourceResourceAdaptor extends AbstractDataSourceResourceAdap
     public void raActive() {
     	super.raActive();
     	if (dataSource == null) {
-    		dataSource = new JPADataSource();
+    		dataSource = new InterceptedDataSource(new JPADataSource());
     		try {
     			dataSource.open();
     		} catch (Exception e) {

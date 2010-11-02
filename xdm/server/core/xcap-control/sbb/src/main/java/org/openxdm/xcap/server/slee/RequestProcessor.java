@@ -5,6 +5,7 @@ package org.openxdm.xcap.server.slee;
 
 import java.io.InputStream;
 
+import org.mobicents.xdm.server.appusage.AppUsageRequestProcessor;
 import org.openxdm.xcap.common.error.BadRequestException;
 import org.openxdm.xcap.common.error.CannotDeleteConflictException;
 import org.openxdm.xcap.common.error.ConflictException;
@@ -28,7 +29,7 @@ import org.openxdm.xcap.server.result.WriteResult;
  * @author Eduardo Martins
  * 
  */
-public interface RequestProcessor {
+public interface RequestProcessor extends AppUsageRequestProcessor {
 
 	/**
 	 * 
@@ -96,4 +97,5 @@ public interface RequestProcessor {
 			UnsupportedMediaTypeException, InternalServerErrorException,
 			PreconditionFailedException, BadRequestException,
 			NotAuthorizedRequestException;
+	
 }

@@ -1,8 +1,6 @@
 package org.mobicents.xdm.server.appusage;
 
-import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
 
 import javax.xml.validation.Schema;
 

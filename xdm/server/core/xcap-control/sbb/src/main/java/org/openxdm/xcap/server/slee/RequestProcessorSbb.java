@@ -13,20 +13,18 @@ import javax.naming.NamingException;
 import javax.slee.ActivityContextInterface;
 import javax.slee.RolledBackContext;
 import javax.slee.SbbContext;
-import javax.xml.XMLConstants;
+import javax.slee.facilities.Tracer;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.xdm.server.ServerConfiguration;
 import org.mobicents.xdm.server.appusage.AppUsage;
 import org.mobicents.xdm.server.appusage.AppUsageManagement;
 import org.mobicents.xdm.server.appusage.AppUsagePool;
 import org.mobicents.xdm.server.appusage.AuthorizationPolicy;
-import org.openxdm.xcap.common.datasource.DataSource;
 import org.openxdm.xcap.common.error.BadRequestException;
 import org.openxdm.xcap.common.error.CannotDeleteConflictException;
 import org.openxdm.xcap.common.error.CannotInsertConflictException;
@@ -39,6 +37,7 @@ import org.openxdm.xcap.common.error.NotAuthorizedRequestException;
 import org.openxdm.xcap.common.error.NotFoundException;
 import org.openxdm.xcap.common.error.NotUTF8ConflictException;
 import org.openxdm.xcap.common.error.NotValidXMLFragmentConflictException;
+import org.openxdm.xcap.common.error.NotXMLAttributeValueConflictException;
 import org.openxdm.xcap.common.error.PreconditionFailedException;
 import org.openxdm.xcap.common.error.SchemaValidationErrorConflictException;
 import org.openxdm.xcap.common.error.UniquenessFailureConflictException;
@@ -55,7 +54,6 @@ import org.openxdm.xcap.common.uri.ElementSelectorStep;
 import org.openxdm.xcap.common.uri.ElementSelectorStepByAttr;
 import org.openxdm.xcap.common.uri.ElementSelectorStepByPos;
 import org.openxdm.xcap.common.uri.ElementSelectorStepByPosAttr;
-import org.openxdm.xcap.common.uri.NamespaceSelector;
 import org.openxdm.xcap.common.uri.NodeSelector;
 import org.openxdm.xcap.common.uri.ParseException;
 import org.openxdm.xcap.common.uri.Parser;
@@ -77,30 +75,39 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public abstract class RequestProcessorSbb implements
-		RequestProcessor, javax.slee.Sbb {
+public abstract class RequestProcessorSbb implements RequestProcessor,
+javax.slee.Sbb {
 
-	private SbbContext sbbContext = null; // This SBB's context
+	private SbbContext sbbContext = null;
 
-	private Context myEnv = null; // This SBB's environment
+	private static Tracer logger;
 
-	private static Logger logger = Logger.getLogger(RequestProcessorSbb.class);
+	private DataSourceSbbInterface dataSourceSbbInterface;
+	private AppUsageDataSourceImpl appUsageDataSource;
 
-	private DataSourceSbbInterface dataSourceSbbInterface = null;
+	private static final ServerConfiguration CONFIGURATION = ServerConfiguration
+	.getInstance();
 
-	private static final ServerConfiguration CONFIGURATION = ServerConfiguration.getInstance();
-	
+	private static final AppUsageManagement APPUSAGE_MANAGEMENT = AppUsageManagement
+	.getInstance();
+
 	/**
 	 * Called when an sbb object is instantied and enters the pooled state.
 	 */
 	public void setSbbContext(SbbContext context) {
 		this.sbbContext = context;
+		if (logger == null) {
+			logger = sbbContext.getTracer(this.getClass().getSimpleName());
+		}
 		try {
-			myEnv = (Context) new InitialContext().lookup("java:comp/env");
+			Context myEnv = (Context) new InitialContext()
+			.lookup("java:comp/env");
 			dataSourceSbbInterface = (DataSourceSbbInterface) myEnv
-					.lookup("slee/resources/openxdm/datasource/sbbrainterface");			
+			.lookup("slee/resources/openxdm/datasource/sbbrainterface");
+			appUsageDataSource = new AppUsageDataSourceImpl(
+					dataSourceSbbInterface);
 		} catch (NamingException e) {
-			logger.error("Can't set sbb context.", e);
+			logger.severe("Can't set sbb context.", e);
 		}
 	}
 
@@ -131,419 +138,154 @@ public abstract class RequestProcessorSbb implements
 
 	public void sbbExceptionThrown(Exception exception, Object event,
 			ActivityContextInterface activity) {
-		if (logger.isDebugEnabled())
-			logger.debug("sbbExceptionThrown(exception=" + exception.toString()
+		if (logger.isFineEnabled())
+			logger.fine("sbbExceptionThrown(exception=" + exception.toString()
 					+ ",event=" + event.toString() + ",activity="
 					+ activity.toString() + ")");
 	}
 
 	public void sbbRolledBack(RolledBackContext sbbRolledBack) {
-		if (logger.isDebugEnabled())
-			logger.debug("sbbRolledBack(sbbRolledBack="
+		if (logger.isFineEnabled())
+			logger.fine("sbbRolledBack(sbbRolledBack="
 					+ sbbRolledBack.toString() + ")");
 	}
 
-	protected SbbContext getSbbContext() {
-		return sbbContext;
-	}
-
-	// APPUSAGE CACHE ITERACTION
-
-	// SERVICE LOGIC
-	// #############################################################
-
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.openxdm.xcap.server.slee.RequestProcessor#delete(org.openxdm.xcap
+	 * .common.uri.ResourceSelector, org.openxdm.xcap.server.etag.ETagValidator,
+	 * java.lang.String, java.lang.String)
+	 */
+	@Override
 	public WriteResult delete(ResourceSelector resourceSelector,
-			ETagValidator eTagValidator, String xcapRoot, String authenticatedUser)
-			throws NotFoundException, InternalServerErrorException,
-			BadRequestException, CannotDeleteConflictException,
-			PreconditionFailedException, MethodNotAllowedException,
-			SchemaValidationErrorConflictException,
+			ETagValidator eTagValidator, String xcapRoot,
+			String authenticatedUser) throws NotFoundException,
+			InternalServerErrorException, BadRequestException,
+			CannotDeleteConflictException, PreconditionFailedException,
+			MethodNotAllowedException, SchemaValidationErrorConflictException,
 			UniquenessFailureConflictException,
 			ConstraintFailureConflictException, NotAuthorizedRequestException {
 
-		WriteResult result = new OKWriteResult();
-		DocumentSelector documentSelector = null;
-		NodeSelector nodeSelector = null;
-		AttributeSelector attributeSelector = null;
-		Map<String, String> namespaces = null;
+		if (logger.isFineEnabled())
+			logger.fine("deleting " + resourceSelector);
+
 		AppUsage appUsage = null;
 		AppUsagePool appUsagePool = null;
-		
+
 		try {
-			// parse document parent String
-			documentSelector = DocumentSelector.valueOf(resourceSelector
-					.getDocumentSelector());
+
+			// parse document selector
+			final DocumentSelector documentSelector = DocumentSelector
+			.valueOf(resourceSelector.getDocumentSelector());
+
 			// get app usage from cache
-			appUsagePool = AppUsageManagement.getInstance().getAppUsagePool(documentSelector.getAUID());
+			appUsagePool = APPUSAGE_MANAGEMENT.getAppUsagePool(documentSelector
+					.getAUID());
 			if (appUsagePool == null) {
 				// throw exception
-				if (logger.isDebugEnabled())
-					logger.debug("appusage not found");
+				if (logger.isFineEnabled())
+					logger.fine("appusage " + documentSelector.getAUID()
+							+ " not found");
 				throw new NotFoundException();
 			}
 			appUsage = appUsagePool.borrowInstance();
-			
+
 			// authorize user
-			if (authenticatedUser != null && !appUsage.getAuthorizationPolicy().isAuthorized(authenticatedUser, AuthorizationPolicy.Operation.DELETE, documentSelector)) {
+			if (authenticatedUser != null
+					&& !appUsage.getAuthorizationPolicy().isAuthorized(
+							authenticatedUser,
+							AuthorizationPolicy.Operation.DELETE,
+							documentSelector)) {
 				throw new NotAuthorizedRequestException();
 			}
+
 			// get document
 			org.openxdm.xcap.common.datasource.Document document = dataSourceSbbInterface
-					.getDocument(documentSelector);
+			.getDocument(documentSelector);
 			if (document == null) {
 				// throw exception
-				if (logger.isDebugEnabled())
-					logger.debug("document not found");
+				if (logger.isFineEnabled())
+					logger.fine("document " + documentSelector + " not found");
 				throw new NotFoundException();
-			} else {
-				// document exists
-				if (logger.isDebugEnabled())
-					logger.debug("document found");
-
-				// get as dom
-				Document domDocument = document.getAsDOMDocument();
-
-				// check document etag
-				if (eTagValidator != null) {
-					eTagValidator.validate(document.getETag());
-					if (logger.isDebugEnabled())
-						logger.debug("document etag found and validated");
-				} else {
-					if (logger.isDebugEnabled())
-						logger.debug("document etag not found");
-				}
-
-				// check node selector string from resource selector
-				if (resourceSelector.getNodeSelector() != null) {
-					// elem, attrib or namespace bind
-					// parse node selector
-					nodeSelector = Parser.parseNodeSelector(resourceSelector
-							.getNodeSelector());
-					if (logger.isDebugEnabled())
-						logger.debug("node selector found and parsed");
-
-					// create xpath
-					XPath xpath = XPathFactory.newInstance().newXPath();
-					// get namespaces bindings from resource selector
-					namespaces = resourceSelector.getNamespaces();
-					// get default doc namespace binding for app usage and add
-					// it to namespace bindings for empty prefix
-					namespaces.put(XMLConstants.DEFAULT_NS_PREFIX, appUsage
-							.getDefaultDocumentNamespace());
-					// add a namespace context to xpath to resolve bindings
-					NamespaceContext nsContext = new NamespaceContext(
-							namespaces);
-					xpath.setNamespaceContext(nsContext);
-					if (logger.isDebugEnabled())
-						logger.debug("xpath initiated with namespace context");
-
-					try {
-						// exec query to get element
-						NodeList elementNodeList = (NodeList) xpath.evaluate(
-								nodeSelector
-										.getElementSelectorWithEmptyPrefix(),
-								domDocument, XPathConstants.NODESET);
-
-						if (elementNodeList.getLength() > 1) { // MULTIPLE
-							// ELEMENTS
-							if (logger.isDebugEnabled())
-								logger
-										.debug("xpath query returned more than one element, returning not found");
-							throw new NotFoundException();
-						}
-
-						else if (elementNodeList.getLength() == 1) {
-							if (logger.isDebugEnabled())
-								logger
-										.debug("xpath query returned one element as expected");
-
-							Element element = (Element) elementNodeList.item(0);
-							if (nodeSelector.getTerminalSelector() != null) {
-								// parse terminal selector
-								TerminalSelector terminalSelector = Parser
-										.parseTerminalSelector(nodeSelector
-												.getTerminalSelector());
-								if (logger.isDebugEnabled())
-									logger
-											.debug("terminal selector found and parsed");
-
-								if (terminalSelector instanceof AttributeSelector) {
-									if (logger.isDebugEnabled())
-										logger
-												.debug("terminal selector is an attribute selector");
-									attributeSelector = (AttributeSelector) terminalSelector;
-									// attribute selector, get attribute
-									String attrName = attributeSelector
-											.getAttName();
-									if (element.hasAttribute(attrName)) {
-										// exists, delete it
-										element.removeAttribute(attrName);
-										if (logger.isDebugEnabled())
-											logger
-													.debug("attribute found and deleted");
-									} else {
-										// does not exists
-										if (logger.isDebugEnabled())
-											logger
-													.debug("attribute to delete not found");
-										throw new NotFoundException();
-									}
-								} else if (terminalSelector instanceof NamespaceSelector) {
-									// onle GET method is allowed for a
-									// namespace selector
-									if (logger.isDebugEnabled())
-										logger
-												.debug("terminal selector is a namespace selector, not allowed on delete");
-									Map<String, String> map = new HashMap<String, String>();
-									map.put("Allow", "GET");
-									throw new MethodNotAllowedException(map);
-								}
-
-								else {
-									// unknown terminal selector
-									if (logger.isDebugEnabled())
-										logger
-												.debug("unknow terminal selector");
-									throw new InternalServerErrorException(
-											"unknown terminal selector");
-								}
-
-							} else { // DELETE ELEMENT
-								if (logger.isDebugEnabled())
-									logger
-											.debug("terminal selector not found, delete of an element");
-								// check cannot delete
-								ElementSelectorStep lastElementSelectorStep = Parser
-										.parseLastElementSelectorStep(nodeSelector
-												.getElementSelector());
-								if (lastElementSelectorStep instanceof ElementSelectorStepByPosAttr) {
-									// need to check if it's the last sibring
-									// with the same name and attr value
-									ElementSelectorStepByPosAttr elementSelectorStepByPosAttr = (ElementSelectorStepByPosAttr) lastElementSelectorStep;
-									if (elementSelectorStepByPosAttr.getName()
-											.equals("*")) {
-										if (logger.isDebugEnabled())
-											logger
-													.debug("element selector by attr and pos with wildcard name");
-										// all elements wildcard
-										Element siblingElement = element;
-										while ((siblingElement = (Element) siblingElement
-												.getNextSibling()) != null) {
-											// get attribute with same name
-											Attr siblingElementAttr = siblingElement
-													.getAttributeNode(elementSelectorStepByPosAttr
-															.getAttrName());
-											// check if it has the same value
-											if (siblingElementAttr != null
-													&& siblingElementAttr
-															.getValue()
-															.equals(
-																	elementSelectorStepByPosAttr
-																			.getAttrValue())) {
-												// we have a sibling with the
-												// same attribute with the same
-												// value, so when we delete the
-												// element the uri points to
-												// this one
-												if (logger.isDebugEnabled())
-													logger
-															.debug("sibling element with same attr name and value, cannot delete");
-												throw new CannotDeleteConflictException();
-											}
-										}
-									} else {
-										if (logger.isDebugEnabled())
-											logger
-													.debug("element selector by attr and pos without wildcard name");
-										Element siblingElement = element;
-										while ((siblingElement = (Element) siblingElement
-												.getNextSibling()) != null) {
-											if (element
-													.getNodeName()
-													.compareTo(
-															siblingElement
-																	.getNodeName()) == 0
-													&& element
-															.getNamespaceURI()
-															.compareTo(
-																	siblingElement
-																			.getNamespaceURI()) == 0) {
-												// sibling with the same name
-												// get attribute with same name
-												Attr siblingElementAttr = siblingElement
-														.getAttributeNode(elementSelectorStepByPosAttr
-																.getAttrName());
-												// check if it has the same
-												// value
-												if (siblingElementAttr != null
-														&& siblingElementAttr
-																.getValue()
-																.equals(
-																		elementSelectorStepByPosAttr
-																				.getAttrValue())) {
-													// we have a sibling with
-													// the same attribute with
-													// the same value, so when
-													// we delete the element the
-													// uri points to this one
-													if (logger.isDebugEnabled())
-														logger
-																.debug("sibling element with same attr name and value, cannot delete");
-													throw new CannotDeleteConflictException();
-												}
-											}
-										}
-									}
-								} else if (lastElementSelectorStep instanceof ElementSelectorStepByPos) {
-
-									ElementSelectorStepByPos elementSelectorStepByPos = (ElementSelectorStepByPos) lastElementSelectorStep;
-									/*
-									 * In particular, if a DELETE operation
-									 * refers to an element by name and position
-									 * alone (parent/elname[n]), this is
-									 * permitted only when the element to be
-									 * deleted is the last element amongst all
-									 * its siblings with that name. Similarly,
-									 * if a DELETE operation refers to an
-									 * element by position alone (parent/*[n]),
-									 * this is permitted only when the elemented
-									 * to be deleted is the last amongst all
-									 * sibling elements, regardless of name.
-									 */
-									// find out if it's the last sibling
-									if (elementSelectorStepByPos.getName()
-											.equals("*")) {
-										if (logger.isDebugEnabled())
-											logger
-													.debug("element selector by pos with wildcard name");
-										if (element.getNextSibling() != null) {
-											// not the last * sibling
-											if (logger.isDebugEnabled())
-												logger
-														.debug("not the last * sibling, cannot delete");
-											throw new CannotDeleteConflictException();
-										}
-									} else {
-										if (logger.isDebugEnabled())
-											logger
-													.debug("element selector by pos without wildcard name");
-										// search a next sibling with the same
-										// name
-										Element siblingElement = element;
-										while ((siblingElement = (Element) siblingElement
-												.getNextSibling()) != null) {
-											if (element
-													.getNodeName()
-													.compareTo(
-															siblingElement
-																	.getNodeName()) == 0
-													&& element
-															.getNamespaceURI()
-															.compareTo(
-																	siblingElement
-																			.getNamespaceURI()) == 0) {
-												if (logger.isDebugEnabled())
-													logger
-															.debug("sibling element with same name and ns after the selected element,cannot delete");
-												throw new CannotDeleteConflictException();
-											}
-										}
-									}
-								}
-								if (logger.isDebugEnabled())
-									logger.debug("element deleted");
-								// the element can be deleted
-								element.getParentNode().removeChild(element);
-							}
-
-						} else { // ELEMENT DOES NOT EXIST
-							if (logger.isDebugEnabled())
-								logger.debug("element not found");
-							throw new NotFoundException();
-						}
-
-						if (logger.isDebugEnabled())
-							logger.debug("validating document after delete");
-						// validate the updated document against it's schema
-						appUsage.validateSchema(domDocument);
-
-					} catch (XPathExpressionException e) {
-						// error in xpath expression
-						if (logger.isDebugEnabled())
-							logger.debug("error in xpath expression.");
-						if (nodeSelector
-								.elementSelectorHasUnbindedPrefixes(namespaces)) {
-							// element selector has unbinded prefixe(s)
-							if (logger.isDebugEnabled())
-								logger
-										.debug("element selector doesn't have prefixe(s) bound, bad request");
-							throw new BadRequestException();
-						} else {
-							// nothing wrong with prefixes, return not found
-							// exception
-							if (logger.isDebugEnabled())
-								logger.debug("element not found");
-							throw new NotFoundException();
-						}
-					}
-				}
-
-				if (logger.isDebugEnabled())
-					logger
-							.debug("checking app usage constraints and resource interdependencies...");
-				// verify app usage constraints
-				appUsage.checkConstraintsOnDelete(domDocument, xcapRoot,
-						documentSelector, dataSourceSbbInterface);
-				// process resource interdependencies
-				appUsage.processResourceInterdependenciesOnDelete(domDocument,
-						documentSelector, dataSourceSbbInterface);
-				// last delete or update the doc
-				if (resourceSelector.getNodeSelector() == null) {
-					// delete document
-					if (logger.isDebugEnabled())
-						logger
-								.debug("node selector not found, delete of a document");
-					dataSourceSbbInterface.deleteDocument(documentSelector,
-							document.getETag());
-				} else {
-					// update document
-					// create new etag
-					String newETag = ETagGenerator.generate(resourceSelector
-							.getDocumentSelector());
-
-					// update data source with document
-					try {
-						String xml = TextWriter.toString(domDocument);
-						if (attributeSelector == null) {
-							dataSourceSbbInterface.updateElement(
-									documentSelector, nodeSelector, namespaces,
-									document.getETag(), newETag, xml,
-									domDocument, null, null);
-						} else {
-							dataSourceSbbInterface.updateAttribute(
-									documentSelector, nodeSelector,
-									attributeSelector, namespaces, document
-											.getETag(), newETag, xml,
-									domDocument, null);
-						}
-						if (logger.isDebugEnabled())
-							logger.debug("document updated in data source");
-					} catch (Exception e) {
-						throw new InternalServerErrorException(
-								"Failed to serialize resulting dom document to string");
-					}
-					// add it to the result
-					result.setResponseEntityTag(newETag);
-				}
-				if (logger.isDebugEnabled())
-					logger.debug("delete request processed with sucess");
-				// return result
-				return result;
 			}
+			if (logger.isFineEnabled())
+				logger.fine("document " + documentSelector + " found");
+
+			// check document etag
+			if (eTagValidator != null) {
+				eTagValidator.validate(document.getETag());
+				if (logger.isFineEnabled())
+					logger.fine("document " + documentSelector
+							+ " etag validated");
+			} else {
+				if (logger.isFineEnabled())
+					logger.fine("document " + documentSelector
+							+ " etag validation not required");
+			}
+
+			if (resourceSelector.getNodeSelector() != null) {
+				// elem, attr or namespace bind
+				// parse node selector
+				final NodeSelector nodeSelector = Parser
+				.parseNodeSelector(resourceSelector.getNodeSelector());
+				if (logger.isFineEnabled())
+					logger.fine("node selector " + nodeSelector
+							+ " found and parsed");
+				// config namespace context
+				final NamespaceContext namespaceContext = resourceSelector
+				.getNamespaceContext();
+				namespaceContext.setDefaultDocNamespace(appUsage
+						.getDefaultDocumentNamespace());
+				// get element
+				final Element element = getElementForDeleteOrGet(document
+						.getAsDOMDocument(), nodeSelector, namespaceContext);
+				// parse element selector
+				final ElementSelector elementSelector = Parser
+				.parseElementSelector(nodeSelector.getElementSelector());
+				if (nodeSelector.getTerminalSelector() != null) {
+					// delete attr or namespace bind
+					// parse terminal selector
+					TerminalSelector terminalSelector = Parser
+					.parseTerminalSelector(nodeSelector
+							.getTerminalSelector());
+					if (logger.isFineEnabled())
+						logger.fine("terminal selector " + terminalSelector
+								+ " found and parsed");
+
+					if (terminalSelector instanceof AttributeSelector) {
+						return deleteAttribute(document, element,
+								documentSelector, nodeSelector,
+								elementSelector,
+								(AttributeSelector) terminalSelector,
+								namespaceContext, appUsage, true);
+					} else {
+						// namespace selector, only GET method is allowed
+						if (logger.isFineEnabled())
+							logger
+							.fine("terminal selector "
+									+ terminalSelector
+									+ " is a namespace selector, not allowed on delete");
+						Map<String, String> map = new HashMap<String, String>();
+						map.put("Allow", "GET");
+						throw new MethodNotAllowedException(map);
+					}
+				} else {
+					// delete element
+					return deleteElement(document, element, documentSelector,
+							nodeSelector, elementSelector, namespaceContext,
+							appUsage,true);
+				}
+			} else {
+				return deleteDocument(document, documentSelector, appUsage,true);
+			}
+
 		} catch (ParseException e) {
-			if (logger.isDebugEnabled())
-				logger.debug("error parsing uri, returning not found");
+			if (logger.isFineEnabled())
+				logger.fine("error parsing uri, returning not found");
 			throw new NotFoundException();
+
 		} finally {
 			if (appUsagePool != null) {
 				appUsagePool.returnInstance(appUsage);
@@ -552,41 +294,409 @@ public abstract class RequestProcessorSbb implements
 
 	}
 
-	public ReadResult get(ResourceSelector resourceSelector, String authenticatedUser)
-			throws NotFoundException, InternalServerErrorException,
-			BadRequestException, NotAuthorizedRequestException {
+	private WriteResult deleteDocument(
+			org.openxdm.xcap.common.datasource.Document document,
+			DocumentSelector documentSelector, AppUsage appUsage, boolean processResourceInterdependencies)
+	throws InternalServerErrorException,
+	ConstraintFailureConflictException,
+	UniquenessFailureConflictException,
+	SchemaValidationErrorConflictException {
+
+		if (logger.isFineEnabled())
+			logger.fine("deleting document " + documentSelector);
+
+		if (logger.isFineEnabled())
+			logger.fine("processing app usage resource interdependencies for "
+					+ documentSelector);
+
+		// process resource interdependencies for the request app usage
+		if(processResourceInterdependencies) {
+			try {
+				appUsage.processResourceInterdependenciesOnDeleteDocument(document
+						.getAsDOMDocument(), documentSelector, this,
+						appUsageDataSource);
+			} catch (SchemaValidationErrorConflictException e) {
+				// must rollback all changes in datasource
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (UniquenessFailureConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (ConstraintFailureConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (InternalServerErrorException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			}
+		}
+		if (logger.isFineEnabled())
+			logger.fine("app usage resource interdependencies processed for "
+					+ documentSelector);
+
+		// delete document
+		try {
+			dataSourceSbbInterface.deleteDocument(documentSelector, document
+					.getETag());
+		} catch (InternalServerErrorException e) {
+			if (!sbbContext.getRollbackOnly())
+				sbbContext.setRollbackOnly();
+			throw e;
+		}
+
+		if (logger.isFineEnabled())
+			logger.fine(documentSelector.toString() + " deleted");
+
+		return new OKWriteResult();
+	}
+
+	private WriteResult deleteElement(
+			final org.openxdm.xcap.common.datasource.Document document,
+			final Element element, final DocumentSelector documentSelector,
+			final NodeSelector nodeSelector,
+			final ElementSelector elementSelector,
+			final NamespaceContext nsContext, AppUsage appUsage, boolean processResourceInterdependencies)
+	throws InternalServerErrorException, NotFoundException,
+	CannotDeleteConflictException,
+	SchemaValidationErrorConflictException, BadRequestException,
+	UniquenessFailureConflictException,
+	ConstraintFailureConflictException {
+
+		if (logger.isFineEnabled())
+			logger.fine("deleting element " + elementSelector + " in document "
+					+ documentSelector);
+
+		final Document domDocument = document.getAsDOMDocument();
+
+		// check cannot delete
+		ElementSelectorStep lastElementSelectorStep = elementSelector
+		.getLastStep();
+		if (lastElementSelectorStep instanceof ElementSelectorStepByPosAttr) {
+			// need to check if it's the last sibring
+			// with the same name and attr value
+			ElementSelectorStepByPosAttr elementSelectorStepByPosAttr = (ElementSelectorStepByPosAttr) lastElementSelectorStep;
+			if (elementSelectorStepByPosAttr.getName().equals("*")) {
+				if (logger.isFineEnabled())
+					logger
+					.fine("element selector by attr and pos with wildcard name");
+				// all elements wildcard
+				Element siblingElement = element;
+				while ((siblingElement = (Element) siblingElement
+						.getNextSibling()) != null) {
+					// get attribute with same name
+					Attr siblingElementAttr = siblingElement
+					.getAttributeNode(elementSelectorStepByPosAttr
+							.getAttrName());
+					// check if it has the same value
+					if (siblingElementAttr != null
+							&& siblingElementAttr.getValue()
+							.equals(
+									elementSelectorStepByPosAttr
+									.getAttrValue())) {
+						// we have a sibling with the
+						// same attribute with the same
+						// value, so when we delete the
+						// element the uri points to
+						// this one
+						if (logger.isFineEnabled())
+							logger
+							.fine("sibling element with same attr name and value, cannot delete");
+						throw new CannotDeleteConflictException();
+					}
+				}
+			} else {
+				if (logger.isFineEnabled())
+					logger
+					.fine("element selector by attr and pos without wildcard name");
+				Element siblingElement = element;
+				while ((siblingElement = (Element) siblingElement
+						.getNextSibling()) != null) {
+					if (element.getNodeName().compareTo(
+							siblingElement.getNodeName()) == 0
+							&& element.getNamespaceURI().compareTo(
+									siblingElement.getNamespaceURI()) == 0) {
+						// sibling with the same name
+						// get attribute with same name
+						Attr siblingElementAttr = siblingElement
+						.getAttributeNode(elementSelectorStepByPosAttr
+								.getAttrName());
+						// check if it has the same
+						// value
+						if (siblingElementAttr != null
+								&& siblingElementAttr.getValue().equals(
+										elementSelectorStepByPosAttr
+										.getAttrValue())) {
+							// we have a sibling with
+							// the same attribute with
+							// the same value, so when
+							// we delete the element the
+							// uri points to this one
+							if (logger.isFineEnabled())
+								logger
+								.fine("sibling element with same attr name and value, cannot delete");
+							throw new CannotDeleteConflictException();
+						}
+					}
+				}
+			}
+		} else if (lastElementSelectorStep instanceof ElementSelectorStepByPos) {
+
+			ElementSelectorStepByPos elementSelectorStepByPos = (ElementSelectorStepByPos) lastElementSelectorStep;
+			/*
+			 * In particular, if a DELETE operation refers to an element by name
+			 * and position alone (parent/elname[n]), this is permitted only
+			 * when the element to be deleted is the last element amongst all
+			 * its siblings with that name. Similarly, if a DELETE operation
+			 * refers to an element by position alone (parent/*[n]), this is
+			 * permitted only when the elemented to be deleted is the last
+			 * amongst all sibling elements, regardless of name.
+			 */
+			// find out if it's the last sibling
+			if (elementSelectorStepByPos.getName().equals("*")) {
+				if (logger.isFineEnabled())
+					logger.fine("element selector by pos with wildcard name");
+				if (element.getNextSibling() != null) {
+					// not the last * sibling
+					if (logger.isFineEnabled())
+						logger.fine("not the last * sibling, cannot delete");
+					throw new CannotDeleteConflictException();
+				}
+			} else {
+				if (logger.isFineEnabled())
+					logger
+					.fine("element selector by pos without wildcard name");
+				// search a next sibling with the same
+				// name
+				Element siblingElement = element;
+				while ((siblingElement = (Element) siblingElement
+						.getNextSibling()) != null) {
+					if (element.getNodeName().compareTo(
+							siblingElement.getNodeName()) == 0
+							&& element.getNamespaceURI().compareTo(
+									siblingElement.getNamespaceURI()) == 0) {
+						if (logger.isFineEnabled())
+							logger
+							.fine("sibling element with same name and ns after the selected element,cannot delete");
+						throw new CannotDeleteConflictException();
+					}
+				}
+			}
+		}
+		if (logger.isFineEnabled())
+			logger.fine("element deleted");
+		// the element can be deleted
+		element.getParentNode().removeChild(element);
+
+		if (logger.isFineEnabled())
+			logger.fine("validating document after delete");
+		// validate the updated document against it's schema
+		appUsage.validateSchema(domDocument);
+
+		if (logger.isFineEnabled())
+			logger
+			.fine("checking app usage constraints and resource interdependencies...");
+		// verify app usage constraints
+		appUsage.checkConstraintsOnDelete(domDocument, CONFIGURATION
+				.getXcapRoot(), documentSelector, appUsageDataSource);
+
+		// create new etag
+		String newETag = ETagGenerator.generate(documentSelector.toString());
+
+		// process resource interdependencies for the request app usage
+		if(processResourceInterdependencies) {
+			try {
+				appUsage.processResourceInterdependenciesOnDeleteElement(element,
+						documentSelector, newETag, nodeSelector, elementSelector, nsContext,
+						this, appUsageDataSource);
+			} catch (SchemaValidationErrorConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (UniquenessFailureConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (ConstraintFailureConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (InternalServerErrorException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			}
+		}
+		// update data source with document
+		try {
+			String xml = TextWriter.toString(domDocument);
+			dataSourceSbbInterface.updateElement(documentSelector,
+					nodeSelector, nsContext.getNamespaces(),
+					document.getETag(), newETag, xml, domDocument, null, null);
+
+			if (logger.isFineEnabled())
+				logger.fine("document updated in data source");
+		} catch (Exception e) {
+			if (!sbbContext.getRollbackOnly())
+				sbbContext.setRollbackOnly();
+			throw new InternalServerErrorException(
+			"Failed to serialize resulting dom document to string");
+		}
+
+		if (logger.isFineEnabled())
+			logger.fine(elementSelector.toString() + " element in "
+					+ documentSelector + " deleted");
+
+		return new OKWriteResult(newETag);
+
+	}
+
+	private WriteResult deleteAttribute(
+			org.openxdm.xcap.common.datasource.Document document,
+			final Element element, final DocumentSelector documentSelector,
+			final NodeSelector nodeSelector,
+			final ElementSelector elementSelector,
+			final AttributeSelector attributeSelector,
+			final NamespaceContext nsContext, final AppUsage appUsage, boolean processResourceInterdependencies)
+	throws InternalServerErrorException, NotFoundException,
+	SchemaValidationErrorConflictException, BadRequestException,
+	UniquenessFailureConflictException,
+	ConstraintFailureConflictException {
+
+		if (logger.isFineEnabled())
+			logger.fine("deleting attribute " + attributeSelector.getAttName()
+					+ " from element " + elementSelector + " in document "
+					+ documentSelector);
+
+		// get doc as dom
+		final Document domDocument = document.getAsDOMDocument();
+
+		final String attrName = attributeSelector.getAttName();
+		if (element.hasAttribute(attrName)) {
+			// exists, delete it
+			element.removeAttribute(attrName);
+			if (logger.isFineEnabled())
+				logger.fine("attribute found and deleted");
+		} else {
+			// does not exists
+			if (logger.isFineEnabled())
+				logger.fine("attribute to delete not found");
+			throw new NotFoundException();
+		}
+
+		if (logger.isFineEnabled())
+			logger.fine("validating document after delete");
+		// validate the updated document against it's schema
+		appUsage.validateSchema(domDocument);
+
+		if (logger.isFineEnabled())
+			logger
+			.fine("checking app usage constraints and resource interdependencies...");
+		// verify app usage constraints
+		appUsage.checkConstraintsOnDelete(domDocument, CONFIGURATION
+				.getXcapRoot(), documentSelector, appUsageDataSource);
+
+		// create new etag
+		String newETag = ETagGenerator.generate(documentSelector.toString());
+
+		// process resource interdependencies
+		if(processResourceInterdependencies) {
+			try {
+				appUsage.processResourceInterdependenciesOnDeleteAttribute(
+						documentSelector, newETag, nodeSelector, elementSelector,
+						attributeSelector, nsContext, this, appUsageDataSource);
+			} catch (SchemaValidationErrorConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (UniquenessFailureConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (ConstraintFailureConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (InternalServerErrorException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			}
+		}
+		if (logger.isFineEnabled())
+			logger.fine("app usage resource interdependencies processed for "
+					+ documentSelector);
+
+		// update data source with document
+		try {
+			String xml = TextWriter.toString(domDocument);
+			dataSourceSbbInterface.updateAttribute(documentSelector,
+					nodeSelector, attributeSelector, nsContext.getNamespaces(),
+					document.getETag(), newETag, xml, domDocument, null);
+			if (logger.isFineEnabled())
+				logger.fine("document updated in data source");
+		} catch (Exception e) {
+			if (!sbbContext.getRollbackOnly())
+				sbbContext.setRollbackOnly();
+			throw new InternalServerErrorException(
+			"Failed to serialize resulting dom document to string");
+		}
+
+		return new OKWriteResult(newETag);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.openxdm.xcap.server.slee.RequestProcessor#get(org.openxdm.xcap.common
+	 * .uri.ResourceSelector, java.lang.String)
+	 */
+	@Override
+	public ReadResult get(ResourceSelector resourceSelector,
+			String authenticatedUser) throws NotFoundException,
+			InternalServerErrorException, BadRequestException,
+			NotAuthorizedRequestException {
 
 		AppUsage appUsage = null;
 		AppUsagePool appUsagePool = null;
-		
+
 		try {
 			// parse document parent String
-			DocumentSelector documentSelector = DocumentSelector.valueOf(resourceSelector
-					.getDocumentSelector());
+			DocumentSelector documentSelector = DocumentSelector
+			.valueOf(resourceSelector.getDocumentSelector());
 			// get app usage from cache
-			appUsagePool = AppUsageManagement.getInstance().getAppUsagePool(documentSelector.getAUID());
+			appUsagePool = APPUSAGE_MANAGEMENT.getAppUsagePool(documentSelector
+					.getAUID());
 			if (appUsagePool == null) {
 				// throw exception
-				if (logger.isDebugEnabled())
-					logger.debug("appusage not found");
+				if (logger.isFineEnabled())
+					logger.fine("appusage not found");
 				throw new NotFoundException();
 			}
 			appUsage = appUsagePool.borrowInstance();
 			// authorize user
-			if (authenticatedUser != null && !appUsage.getAuthorizationPolicy().isAuthorized(authenticatedUser, AuthorizationPolicy.Operation.GET, documentSelector)) {
+			if (authenticatedUser != null
+					&& !appUsage.getAuthorizationPolicy()
+					.isAuthorized(authenticatedUser,
+							AuthorizationPolicy.Operation.GET,
+							documentSelector)) {
 				throw new NotAuthorizedRequestException();
 			}
 			// get document
 			org.openxdm.xcap.common.datasource.Document document = dataSourceSbbInterface
-					.getDocument(documentSelector);
+			.getDocument(documentSelector);
 			if (document == null) {
 				// throw exception
-				if (logger.isDebugEnabled())
-					logger.debug("document not found");
+				if (logger.isFineEnabled())
+					logger.fine("document not found");
 				throw new NotFoundException();
 			}
-			if (logger.isDebugEnabled())
-				logger.debug("document found");
+			if (logger.isFineEnabled())
+				logger.fine("document found");
 			// get document's etag
 			String eTag = document.getETag();
 			// check node selector string from resource selector
@@ -594,137 +704,84 @@ public abstract class RequestProcessorSbb implements
 				// elem, attrib or namespace bind
 				// parse node selector
 				NodeSelector nodeSelector = Parser
-						.parseNodeSelector(resourceSelector.getNodeSelector());
-				if (logger.isDebugEnabled())
-					logger.debug("node selector found and parsed");
+				.parseNodeSelector(resourceSelector.getNodeSelector());
+				if (logger.isFineEnabled())
+					logger.fine("node selector found and parsed");
 				// create xpath
 				XPath xpath = XPathFactory.newInstance().newXPath();
-				// get namespaces bindings from resource selector
-				Map<String, String> namespaces = resourceSelector
-						.getNamespaces();
-				// get default doc namespace binding for app usage and add it to
-				// namespace bindings for empty prefix
-				namespaces.put(XMLConstants.DEFAULT_NS_PREFIX, appUsage
-						.getDefaultDocumentNamespace());
 				// add a namespace context to xpath to resolve bindings
-				NamespaceContext nsContext = new NamespaceContext(namespaces);
+				// config namespace context
+				final NamespaceContext nsContext = resourceSelector
+				.getNamespaceContext();
+				nsContext.setDefaultDocNamespace(appUsage
+						.getDefaultDocumentNamespace());
 				xpath.setNamespaceContext(nsContext);
-				if (logger.isDebugEnabled())
-					logger.debug("xpath initiated with namespace context");
+				if (logger.isFineEnabled())
+					logger.fine("xpath initiated with namespace context");
 				// get document as dom
 				org.w3c.dom.Document domDocument = document.getAsDOMDocument();
-				try {
-					// exec query for element
-					NodeList elementNodeList = (NodeList) xpath.evaluate(
-							nodeSelector.getElementSelectorWithEmptyPrefix(),
-							domDocument, XPathConstants.NODESET);
-
-					if (elementNodeList.getLength() > 1) { // MULTIPLE ELEMENTS
-						if (logger.isDebugEnabled())
+				final Element element = getElementForDeleteOrGet(domDocument,
+						nodeSelector, nsContext);
+				if (nodeSelector.getTerminalSelector() != null) {
+					// parse terminal selector
+					TerminalSelector terminalSelector = Parser
+					.parseTerminalSelector(nodeSelector
+							.getTerminalSelector());
+					if (logger.isFineEnabled())
+						logger.fine("terminal selector found and parsed");
+					if (terminalSelector instanceof AttributeSelector) {
+						// attribute selector, get attribute
+						if (logger.isFineEnabled())
 							logger
-									.debug("xpath query returned more than one element, returning not found");
-						throw new NotFoundException();
-					}
-
-					else if (elementNodeList.getLength() == 1) {
-						if (logger.isDebugEnabled())
-							logger
-									.debug("xpath query returned one element as expected");
-						Element element = (Element) elementNodeList.item(0);
-
-						if (nodeSelector.getTerminalSelector() != null) {
-							// parse terminal selector
-							TerminalSelector terminalSelector = Parser
-									.parseTerminalSelector(nodeSelector
-											.getTerminalSelector());
-							if (logger.isDebugEnabled())
+							.fine("terminal selector is an attribute selector");
+						Attr attr = element
+						.getAttributeNode(((AttributeSelector) terminalSelector)
+								.getAttName());
+						if (attr != null) {
+							// exists, return its value
+							if (logger.isFineEnabled())
 								logger
-										.debug("terminal selector found and parsed");
-							if (terminalSelector instanceof AttributeSelector) {
-								// attribute selector, get attribute
-								if (logger.isDebugEnabled())
-									logger
-											.debug("terminal selector is an attribute selector");
-								Attr attr = element
-										.getAttributeNode(((AttributeSelector) terminalSelector)
-												.getAttName());
-								if (attr != null) {
-									// exists, return its value
-									if (logger.isDebugEnabled())
-										logger
-												.debug("attribute found, returning result");
-									return new ReadResult(eTag,
-											new AttributeResource(attr
-													.getNodeValue()));
-								} else {
-									// does not exists
-									if (logger.isDebugEnabled())
-										logger
-												.debug("attribute to retreive not found");
-									throw new NotFoundException();
-								}
-							} else if (terminalSelector instanceof NamespaceSelector) {
-								// namespace selector, get namespace bindings
-								if (logger.isDebugEnabled())
-									logger
-											.debug("terminal selector is a namespace selector");
-								return new ReadResult(eTag,
-										getNamespaceBindings(element, element
-												.getLocalName(),
-												resourceSelector
-														.getNamespaces()));
-							} else {
-								// invalid terminal selector
-								if (logger.isDebugEnabled())
-									logger.debug("unknow terminal selector");
-								throw new NotFoundException();
-							}
+								.fine("attribute found, returning result");
+							return new ReadResult(eTag, new AttributeResource(
+									attr.getNodeValue()));
 						} else {
-							// element
-							if (logger.isDebugEnabled())
-								logger
-										.debug("terminal selector not found, returining result with the element found");
-							return new ReadResult(eTag, new ElementResource(
-									TextWriter.toString(element)));
+							// does not exists
+							if (logger.isFineEnabled())
+								logger.fine("attribute to retreive not found");
+							throw new NotFoundException();
 						}
-					} else { // ELEMENT DOES NOT EXIST
-						if (logger.isDebugEnabled())
-							logger.debug("element not found");
-						throw new NotFoundException();
-					}
-				} catch (XPathExpressionException e) {
-					// error in xpath expression
-					if (logger.isDebugEnabled())
-						logger.debug("error in xpath expression.");
-					if (nodeSelector
-							.elementSelectorHasUnbindedPrefixes(namespaces)) {
-						// element selector has unbinded prefixe(s)
-						if (logger.isDebugEnabled())
-							logger
-									.debug("element selector doesn't have prefixe(s) bound, bad request");
-						throw new BadRequestException();
 					} else {
-						// nothing wrong with prefixes, return not found
-						// exception
-						if (logger.isDebugEnabled())
-							logger.debug("element not found");
-						throw new NotFoundException();
+						// namespace selector, get namespace bindings
+						if (logger.isFineEnabled())
+							logger
+							.fine("terminal selector is a namespace selector");
+						return new ReadResult(eTag, getNamespaceBindings(
+								element, element.getLocalName(), nsContext
+								.getNamespaces()));
 					}
+				} else {
+					// element
+					if (logger.isFineEnabled())
+						logger
+						.fine("terminal selector not found, returining result with the element found");
+					return new ReadResult(eTag, new ElementResource(TextWriter
+							.toString(element)));
 				}
+
 			} else {
 				// no node selector, just get the document
-				if (logger.isDebugEnabled())
+				if (logger.isFineEnabled())
 					logger
-							.debug("node selector not found, returning the document");
+					.fine("node selector not found, returning the document");
 				return new ReadResult(eTag, new DocumentResource(document
 						.getAsString(), appUsage.getMimetype()));
 			}
 		} catch (ParseException e) {
-			if (logger.isDebugEnabled())
-				logger.debug("error in parsing uri.");
+			if (logger.isFineEnabled())
+				logger.fine("error in parsing uri.");
 			throw new NotFoundException();
 		} catch (TransformerException e) {
-			logger.error("unable to transform dom element to text.", e);
+			logger.severe("unable to transform dom element to text.", e);
 			throw new InternalServerErrorException(e.getMessage());
 		} finally {
 			if (appUsagePool != null) {
@@ -735,7 +792,7 @@ public abstract class RequestProcessorSbb implements
 
 	private NamespaceBindings getNamespaceBindings(Node element,
 			String elementName, Map<String, String> namespacesToGet)
-			throws NotFoundException {
+	throws NotFoundException {
 
 		boolean done = false;
 		// init result namespaces map
@@ -771,677 +828,213 @@ public abstract class RequestProcessorSbb implements
 
 		if (!done) {
 			// at least one was not found
-			if (logger.isDebugEnabled())
+			if (logger.isFineEnabled())
 				logger
-						.debug("didn't found any namespace binding, returning not found");
+				.fine("didn't found any namespace binding, returning not found");
 			throw new NotFoundException();
 		} else {
 			// return namespace bindings
-			if (logger.isDebugEnabled())
-				logger.debug("found namespace binding(s)");
+			if (logger.isFineEnabled())
+				logger.fine("found namespace binding(s)");
 			return new NamespaceBindings(elementName, result);
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.openxdm.xcap.server.slee.RequestProcessor#put(org.openxdm.xcap.common
+	 * .uri.ResourceSelector, java.lang.String, java.io.InputStream,
+	 * org.openxdm.xcap.server.etag.ETagValidator, java.lang.String,
+	 * java.lang.String)
+	 */
+	@Override
 	public WriteResult put(ResourceSelector resourceSelector, String mimetype,
 			InputStream contentStream, ETagValidator eTagValidator,
-			String xcapRoot, String authenticatedUser) throws ConflictException,
-			MethodNotAllowedException, UnsupportedMediaTypeException,
-			InternalServerErrorException, PreconditionFailedException,
-			BadRequestException, NotAuthorizedRequestException {
+			String xcapRoot, String authenticatedUser)
+	throws ConflictException, MethodNotAllowedException,
+	UnsupportedMediaTypeException, InternalServerErrorException,
+	PreconditionFailedException, BadRequestException,
+	NotAuthorizedRequestException {
 
-		WriteResult result = null;
 		DocumentSelector documentSelector = null;
-		NodeSelector nodeSelector = null;
-		AttributeSelector attributeSelector = null;
-		Map<String, String> namespaces = null;
-		Document domDocument = null;
-		String attributeValue = null;
-		String newElementAsString = null;
-		Element newElement = null;
-		AppUsage appUsage = null;
-		AppUsagePool appUsagePool = null;
-		
 		try {
 			// parse document parent String
 			documentSelector = DocumentSelector.valueOf(resourceSelector
 					.getDocumentSelector());
-			// get app usage from cache
-			appUsagePool = AppUsageManagement.getInstance().getAppUsagePool(documentSelector.getAUID());
-			if (appUsagePool == null) {
-				// throw exception
-				if (logger.isDebugEnabled())
-					logger.debug("appusage not found");
-				throw new NoParentConflictException(xcapRoot);
-			}
-			appUsage = appUsagePool.borrowInstance();
+		} catch (ParseException e) {
+			// invalid document selector, throw no parent exception
+			if (logger.isFineEnabled())
+				logger
+				.fine("failed to parse document selector, returning no parent conflict");
+			throw new NoParentConflictException(xcapRoot);
+		}
+
+		// get app usage from cache
+		final AppUsagePool appUsagePool = APPUSAGE_MANAGEMENT
+		.getAppUsagePool(documentSelector.getAUID());
+		if (appUsagePool == null) {
+			// throw exception
+			if (logger.isFineEnabled())
+				logger.fine("appusage not found");
+			throw new NoParentConflictException(xcapRoot);
+		}
+		final AppUsage appUsage = appUsagePool.borrowInstance();
+		try {
+
 			// authorize user
-			if (authenticatedUser != null && !appUsage.getAuthorizationPolicy().isAuthorized(authenticatedUser, AuthorizationPolicy.Operation.PUT, documentSelector)) {
+			if (authenticatedUser != null
+					&& !appUsage.getAuthorizationPolicy()
+					.isAuthorized(authenticatedUser,
+							AuthorizationPolicy.Operation.PUT,
+							documentSelector)) {
 				throw new NotAuthorizedRequestException();
-			}
-			if (CONFIGURATION.getDynamicUserProvision()) {
-				// creates user if does not exist
-				String[] appUsageCollections = dataSourceSbbInterface
-						.getCollections(appUsage.getAUID());
-				boolean found = false;
-				for (String collection : appUsageCollections) {
-					if (collection.equals(documentSelector.getDocumentParent())) {
-						found = true;
-						break;
-					}
-				}
-				if (!found) {
-					dataSourceSbbInterface.addCollection(appUsage.getAUID(),
-							documentSelector.getDocumentParent());
-				}
 			}
 
 			// try to get document's resource
 			org.openxdm.xcap.common.datasource.Document document = dataSourceSbbInterface
-					.getDocument(documentSelector);
-
-			if (document == null) { // DOCUMENTS DOES NOT EXIST
-				if (logger.isDebugEnabled())
-					logger.debug("document not found");
-
-				// check parent exists
-				String existingParent = dataSourceSbbInterface
-						.getExistingCollection(documentSelector.getAUID(),
-								documentSelector.getDocumentParent());
-				if (!existingParent
-						.equals(documentSelector.getDocumentParent())) {
-					throw new NoParentConflictException(xcapRoot + "/"
-							+ documentSelector.getAUID() + "/" + existingParent);
-				}
-
-				if (resourceSelector.getNodeSelector() != null) {
-					// we have a node selector, throw exception with ancestor,
-					// which we already know it's the document parent
-					if (logger.isDebugEnabled())
-						logger.debug("node selector found, no parent conflict");
-					throw new NoParentConflictException(xcapRoot
-							+ documentSelector.getCompleteDocumentParent());
-				}
-
-				else { // PUT NEW DOCUMENT
-					if (logger.isDebugEnabled())
-						logger
-								.debug("node selector not found, put of a document");
-					if (mimetype == null
-							|| !mimetype.equals(appUsage.getMimetype())) {
-						// mimetype is not valid
-						if (logger.isDebugEnabled())
-							logger
-									.debug("invalid mimetype, does not matches the app usage");
-						throw new UnsupportedMediaTypeException();
-					}
-					// verify if content is utf-8
-					Reader utf8reader = XMLValidator
-							.getUTF8Reader(contentStream);
-					if (logger.isDebugEnabled())
-						logger.debug("document content is utf-8");
-					// create document
-					domDocument = XMLValidator
-							.getWellFormedDocument(utf8reader);
-					if (logger.isDebugEnabled())
-						logger.debug("document content parsed with sucess");
-					// create result
-					result = new CreatedWriteResult();
-				}
-
-			} else { // DOCUMENT EXISTS
-				if (logger.isDebugEnabled())
-					logger.debug("document found");
-
-				// get as dom
-				domDocument = document.getAsDOMDocument();
-
-				// check document etag
+			.getDocument(documentSelector);
+			if (document != null) {
+				// validate etag if needed
 				if (eTagValidator != null) {
 					eTagValidator.validate(document.getETag());
-					if (logger.isDebugEnabled())
-						logger.debug("document etag found and validated");
+					if (logger.isFineEnabled())
+						logger.fine("document etag validated");
 				} else {
-					if (logger.isDebugEnabled())
-						logger.debug("document etag not found");
+					if (logger.isFineEnabled())
+						logger.fine("document etag validation not required");
+				}
+			}
+
+			if (resourceSelector.getNodeSelector() != null) {
+				// put elem, attr, namespaces
+
+				if (document == null) {
+					// doc does not exists, throw exception
+					throw new NoParentConflictException(xcapRoot + "/"
+							+ documentSelector.getAUID() + "/" + documentSelector.getDocumentParent());
 				}
 
-				if (resourceSelector.getNodeSelector() != null) { // PUT
-					// ELEMENT
-					// OR ATTR
+				NodeSelector nodeSelector = null;
+				ElementSelector elementSelector = null;
+				try {
 
-					// create xpath
-					XPath xpath = XPathFactory.newInstance().newXPath();
-					// get namespaces bindings from resource selector
-					namespaces = resourceSelector.getNamespaces();
-					// get default doc namespace binding for app usage and add
-					// it to namespace bindings for empty prefix
-					namespaces.put(XMLConstants.DEFAULT_NS_PREFIX, appUsage
-							.getDefaultDocumentNamespace());
-					// add a namespace context to xpath to resolve bindings
-					NamespaceContext nsContext = new NamespaceContext(
-							namespaces);
-					xpath.setNamespaceContext(nsContext);
-					if (logger.isDebugEnabled())
-						logger.debug("xpath initiated with namespace context");
-
+					// parse node selector
+					nodeSelector = Parser.parseNodeSelector(resourceSelector
+							.getNodeSelector());
+					elementSelector = Parser.parseElementSelector(nodeSelector
+							.getElementSelector());
+					if (logger.isFineEnabled())
+						logger.fine("node selector found and parsed");
+				} catch (ParseException e) {
+					// unable to parse the node selector, throw no parent
+					// exception with the document as the existent ancestor
+					if (logger.isFineEnabled())
+						logger
+						.fine("unable to parse the node selector or element selector, returning no parent conflict with the document as the existent ancestor");
+					throw new NoParentConflictException(xcapRoot
+							+ resourceSelector.getDocumentSelector());
+				}
+				// config namespace context
+				final NamespaceContext namespaceContext = resourceSelector
+				.getNamespaceContext();
+				namespaceContext.setDefaultDocNamespace(appUsage
+						.getDefaultDocumentNamespace());
+				// get element
+				final Element element = getElementForPut(documentSelector,
+						document.getAsDOMDocument(), nodeSelector, nodeSelector
+						.getElementSelectorWithEmptyPrefix(),
+						namespaceContext);
+				if (nodeSelector.getTerminalSelector() != null) {
+					// put attr or namespaces
 					try {
-
-						// parse node selector
-						nodeSelector = Parser
-								.parseNodeSelector(resourceSelector
-										.getNodeSelector());
-						if (logger.isDebugEnabled())
-							logger.debug("node selector found and parsed");
-						String elementSelectorWithEmptyPrefix = nodeSelector
-								.getElementSelectorWithEmptyPrefix();
-
-						try {
-							// exec query for element
-
-							NodeList elementNodeList = (NodeList) xpath
-									.evaluate(elementSelectorWithEmptyPrefix,
-											domDocument, XPathConstants.NODESET);
-
-							if (elementNodeList.getLength() > 1) { // MULTIPLE
-								// ELEMENTS
-								if (logger.isDebugEnabled())
-									logger
-											.debug("xpath query returned more than one element, no parent conflict");
-								throw new NoParentConflictException(
-										getElementExistentAncestor(xcapRoot,
-												resourceSelector
-														.getDocumentSelector(),
-												elementSelectorWithEmptyPrefix,
-												domDocument, xpath));
+						TerminalSelector terminalSelector = Parser
+						.parseTerminalSelector(nodeSelector
+								.getTerminalSelector());
+						if (terminalSelector instanceof AttributeSelector) {
+							// verify mimetype
+							if (mimetype == null
+									|| !mimetype
+									.equals(AttributeResource.MIMETYPE)) {
+								// mimetype is not correct
+								throw new UnsupportedMediaTypeException();
 							}
-
-							else if (elementNodeList.getLength() == 1) { // ELEMENT
-								// EXISTS
-								if (logger.isDebugEnabled())
-									logger
-											.debug("xpath query returned one element as expected");
-								Element element = (Element) elementNodeList
-										.item(0);
-
-								if (nodeSelector.getTerminalSelector() != null) { // PUT
-									// ATTR
-									// ?
-									try {
-										// parse terminal selector
-										TerminalSelector terminalSelector = Parser
-												.parseTerminalSelector(nodeSelector
-														.getTerminalSelector());
-										if (logger.isDebugEnabled())
-											logger
-													.debug("terminal selector found and parsed");
-
-										if (terminalSelector instanceof AttributeSelector) { // PUT
-											// ATTR
-											// CONFIRMED
-											if (logger.isDebugEnabled())
-												logger
-														.debug("terminal selector is an attribute selector");
-											// verify mimetype
-											if (mimetype == null
-													|| !mimetype
-															.equals(AttributeResource.MIMETYPE)) {
-												// mimetype is not correct
-												throw new UnsupportedMediaTypeException();
-											}
-											// read and verify if attribute
-											// value is utf-8
-											attributeValue = XMLValidator
-													.getUTF8String(contentStream);
-											if (logger.isDebugEnabled())
-												logger
-														.debug("attr content is utf-8");
-											// verify if attribute value is
-											// valid AttValue
-											XMLValidator
-													.checkAttValue(attributeValue);
-											if (logger.isDebugEnabled())
-												logger
-														.debug("attr value is valid AttValue");
-											// get attribute name
-											attributeSelector = (AttributeSelector) terminalSelector;
-											String attributeName = attributeSelector
-													.getAttName();
-											// get attribute
-											Attr attribute = element
-													.getAttributeNode(attributeName);
-											if (attribute != null) { // ATTR
-												// EXISTS
-												if (logger.isDebugEnabled())
-													logger
-															.debug("attr found in document");
-												try {
-													// verify if cannot insert,
-													// e.g .../x[id1="1"]/@id1
-													// and attValue = 2
-													ElementSelectorStep lastElementSelectorStep = Parser
-															.parseLastElementSelectorStep(nodeSelector
-																	.getElementSelector());
-													if (lastElementSelectorStep instanceof ElementSelectorStepByAttr) {
-														ElementSelectorStepByAttr elementSelectorByAttr = (ElementSelectorStepByAttr) lastElementSelectorStep;
-														// if this step attr
-														// name is the specified
-														// attrName and this
-														// step attrValue is not
-														// the same as the
-														// specified attr value,
-														// it cannot insert
-														if (elementSelectorByAttr
-																.getAttrName()
-																.equals(
-																		attributeName)
-																&& !elementSelectorByAttr
-																		.getAttrValue()
-																		.equals(
-																				attributeValue)) {
-															if (logger
-																	.isDebugEnabled())
-																logger
-																		.debug("element selector's last step attr name is the specified attrName and this step attrValue is not the same as the specified attr value, cannot insert");
-															throw new CannotInsertConflictException();
-														}
-													}
-												} catch (ParseException e) {
-													// this shouldn't happen
-													logger
-															.error(
-																	"error parsing last element selector step",
-																	e);
-													throw new InternalServerErrorException(
-															"error parsing last element selector step");
-												}
-												// create result
-												result = new OKWriteResult();
-											} else { // ATTR DOES NOT EXISTS
-												if (logger.isDebugEnabled())
-													logger
-															.debug("attr not found in document");
-												result = new CreatedWriteResult();
-											}
-											// set attribute
-											element.setAttributeNS(null,attributeName,
-													attributeValue);
-											// element.setAttributeNS(namespace,
-											// attributeName,attributeValue);
-											if (logger.isDebugEnabled())
-												logger.debug("attr set");
-										}
-
-										else if (terminalSelector instanceof NamespaceSelector) { // PUT
-											// NAMESPACE
-											// BINDINGS
-											// onle GET method is allowed for a
-											// namespace selector
-											if (logger.isDebugEnabled())
-												logger
-														.debug("terminal selector is a namespace selector, not allowed on put");
-											Map<String, String> map = new HashMap<String, String>();
-											map.put("Allow", "GET");
-											throw new MethodNotAllowedException(
-													map);
-										}
-
-										else {
-											// unknown terminal selector
-											if (logger.isDebugEnabled())
-												logger
-														.debug("unknown terminal selector");
-											throw new InternalServerErrorException(
-													"unknown terminal selector");
-										}
-									} catch (ParseException e) {
-										// invalid terminal selector, existing
-										// ancestor is the element
-										if (logger.isDebugEnabled())
-											logger
-													.debug("failed to parse terminal selector, returning no parent conflict with element as ancestor");
-										throw new NoParentConflictException(
-												xcapRoot
-														+ resourceSelector
-																.getDocumentSelector()
-														+ "/~~"
-														+ nodeSelector
-																.getElementSelector());
-									}
-
-								}
-
-								else { // REPLACE ELEMENT
-									if (logger.isDebugEnabled())
-										logger.debug("element found");
-									if (mimetype == null
-											|| !mimetype
-													.equals(ElementResource.MIMETYPE)) {
-										// mimetype is not correct
-										throw new UnsupportedMediaTypeException();
-									}
-									// read and verify if content value is utf-8
-									newElementAsString = XMLValidator
-											.getUTF8String(contentStream);
-									if (logger.isDebugEnabled())
-										logger.debug("content is utf-8");
-									// create XML fragment node
-									newElement = XMLValidator
-											.getWellFormedDocumentFragment(new StringReader(
-													newElementAsString));
-									if (logger.isDebugEnabled())
-										logger
-												.debug("content is well formed document fragment");
-									try {
-										// verify if cannot insert
-										ElementSelectorStep lastElementSelectorStep = Parser
-												.parseLastElementSelectorStep(nodeSelector
-														.getElementSelector());
-										// if element's tag name is not equal to
-										// this step's name then cannot insert
-										if (!newElement.getTagName().equals(
-												lastElementSelectorStep
-														.getName())) {
-											if (logger.isDebugEnabled())
-												logger
-														.debug("element's tag name is not equal to this step's name, cannot insert");
-											throw new CannotInsertConflictException();
-										}
-										if (lastElementSelectorStep instanceof ElementSelectorStepByAttr) {
-											ElementSelectorStepByAttr elementSelectorStepByAttr = (ElementSelectorStepByAttr) lastElementSelectorStep;
-											// check attr value
-											String elementAttrValue = newElement
-													.getAttribute(elementSelectorStepByAttr
-															.getAttrName());
-											if (elementAttrValue == null
-													|| !elementAttrValue
-															.equals(elementSelectorStepByAttr
-																	.getAttrValue())) {
-												if (logger.isDebugEnabled())
-													logger
-															.debug("element selector's last step has an attr and it's new value changes this attr value, cannot insert");
-												throw new CannotInsertConflictException();
-											}
-										}
-										// import the element node
-										newElement = (Element) domDocument
-												.importNode(newElement, true);
-										// replace node
-										element.getParentNode().replaceChild(
-												newElement, element);
-										// create result
-										result = new OKWriteResult();
-										if (logger.isDebugEnabled())
-											logger.debug("element replaced");
-									} catch (ParseException e) {
-										// MUST not come here, the element was
-										// found
-										logger
-												.error(
-														"the element was found but the parsing of the element selector's last step thrown an error",
-														e);
-										throw new InternalServerErrorException(
-												"the element was found but the parsing of the element selector's last step thrown an error");
-									}
-								}
-
-							}
-
-							else { // ELEMENT NOT FOUND
-								if (logger.isDebugEnabled())
-									logger.debug("element not found");
-
-								if (nodeSelector.getTerminalSelector() != null) {
-									// throw no parent exception since there is
-									// no element but we have a terminal
-									// selector
-									if (logger.isDebugEnabled())
-										logger
-												.debug("element not found but terminal selector exists, returning no parent conflict with document as ancestor");
-									throw new NoParentConflictException(
-											getElementExistentAncestor(
-													xcapRoot,
-													resourceSelector
-															.getDocumentSelector(),
-													elementSelectorWithEmptyPrefix,
-													domDocument, xpath));
-								} else { // NEW ELEMENT
-									if (mimetype == null
-											|| !mimetype
-													.equals(ElementResource.MIMETYPE)) {
-										// mimetype is not correct
-										throw new UnsupportedMediaTypeException();
-									}
-									try {
-										// parse the element selector
-										ElementSelector elementSelector = Parser
-												.parseElementSelector(nodeSelector
-														.getElementSelector());
-										if (logger.isDebugEnabled())
-											logger
-													.debug("element selector parsed with sucess");
-										// get element parent selector with
-										// empty prefix
-										String elementParentSelectorWithEmptyPrefix = nodeSelector
-												.getElementParentSelectorWithEmptyPrefix();
-										boolean elementParentExists = true;
-										try {
-											// get element parent
-											NodeList parentElementNodeList = (NodeList) xpath
-													.evaluate(
-															elementParentSelectorWithEmptyPrefix,
-															domDocument,
-															XPathConstants.NODESET);
-											if (parentElementNodeList
-													.getLength() == 1
-													&& parentElementNodeList
-															.item(0) instanceof Element) { // ELEMENT
-												// PARENT
-												// EXISTS
-												Element elementParent = (Element) parentElementNodeList
-														.item(0);
-												// read and verify if content
-												// value is utf-8
-												newElementAsString = XMLValidator
-														.getUTF8String(contentStream);
-												if (logger.isDebugEnabled())
-													logger
-															.debug("element content is utf-8");
-												// create XML fragment node
-												newElement = XMLValidator
-														.getWellFormedDocumentFragment(new StringReader(
-																newElementAsString));
-												if (logger.isDebugEnabled())
-													logger
-															.debug("element content is well formed document fragment");
-												newElement = (Element) domDocument
-														.importNode(newElement,
-																true);
-												// put new element
-												domDocument = putNewElementInDocument(
-														newElement,
-														elementSelector,
-														elementParent,
-														domDocument, nsContext);
-												if (logger.isDebugEnabled())
-													logger
-															.debug("element parent found, new element added");
-											} else {
-												elementParentExists = false;
-											}
-										} catch (XPathExpressionException e) {
-											// invalid xpath expression
-											elementParentExists = false;
-										}
-
-										if (!elementParentExists) { // ELEMENT
-											// PARENT
-											// DOES NOT
-											// EXIST
-											// find it's existing ancestor &
-											// throw exception
-											if (logger.isDebugEnabled())
-												logger
-														.debug("element parent not found, returning no parent conflict");
-											throw new NoParentConflictException(
-													getElementExistentAncestor(
-															xcapRoot,
-															resourceSelector
-																	.getDocumentSelector(),
-															elementParentSelectorWithEmptyPrefix,
-															domDocument, xpath));
-										}
-									} catch (ParseException e) {
-										// failed to parse the element selector,
-										// throw no parent exception
-										if (logger.isDebugEnabled())
-											logger
-													.debug("failed to parse element selector, returning no parent conflict");
-										throw new NoParentConflictException(
-												getElementExistentAncestor(
-														xcapRoot,
-														resourceSelector
-																.getDocumentSelector(),
-														elementSelectorWithEmptyPrefix,
-														domDocument, xpath));
-									}
-
-									// create result
-									result = new CreatedWriteResult();
-								}
-							}
-						} catch (XPathExpressionException e) {
-							// invalid xpath expression
-							if (logger.isInfoEnabled()) {
-								logger.info("error in xpath expression");
-							}
-							// check element selector for unbinded prefixes
-							if (nodeSelector
-									.elementSelectorHasUnbindedPrefixes(namespaces)) {
-								if (logger.isDebugEnabled())
-									logger
-											.debug("element selector doesn't have prefixe(s) bound, bad request");
-								throw new BadRequestException();
-							} else {
-								// find existing ancestor
-								if (logger.isDebugEnabled())
-									logger
-											.debug("element not found, returning no parent conflict");
-								throw new NoParentConflictException(
-										getElementExistentAncestor(xcapRoot,
-												resourceSelector
-														.getDocumentSelector(),
-												elementSelectorWithEmptyPrefix,
-												domDocument, xpath));
-							}
+							// read attribute value (checking if is utf-8 too)
+							final String newAttributeValue = XMLValidator
+							.getUTF8String(contentStream);
+							if (logger.isFineEnabled())
+								logger.fine("attr content is utf-8");
+							return putAttribute(document, element,
+									documentSelector, nodeSelector,
+									elementSelector,
+									(AttributeSelector) terminalSelector,
+									namespaceContext, newAttributeValue,
+									appUsage,true);
+						} else {
+							if (logger.isFineEnabled())
+								logger
+								.fine("terminal selector is a namespace selector, not allowed on put");
+							Map<String, String> map = new HashMap<String, String>();
+							map.put("Allow", "GET");
+							throw new MethodNotAllowedException(map);
 						}
 					} catch (ParseException e) {
 						// unable to parse the node selector, throw no parent
 						// exception with the document as the existent ancestor
-						if (logger.isDebugEnabled())
+						if (logger.isFineEnabled())
 							logger
-									.debug("unable to parse the node selector, returning no parent conflict with the document as the existent ancestor");
+							.fine("unable to parse the node selector or element selector, returning no parent conflict with the document as the existent ancestor");
 						throw new NoParentConflictException(xcapRoot
 								+ resourceSelector.getDocumentSelector());
 					}
-
-				} else { // DOCUMENT EXISTS, REPLACE IT
-					if (logger.isDebugEnabled())
-						logger.debug("document found");
+				} else {
+					// check mimetype
 					if (mimetype == null
-							|| !mimetype.equals(appUsage.getMimetype())) {
-						// mimetype is not valid
-						if (logger.isDebugEnabled())
-							logger
-									.debug("invalid mimetype, does not matches the app usage");
+							|| !mimetype.equals(ElementResource.MIMETYPE)) {
+						// mimetype is not correct
 						throw new UnsupportedMediaTypeException();
 					}
-					// verify if content is utf-8
-					Reader utf8reader = XMLValidator
-							.getUTF8Reader(contentStream);
-					if (logger.isDebugEnabled())
-						logger.debug("document content is utf-8");
-					// get document
-					domDocument = XMLValidator
-							.getWellFormedDocument(utf8reader);
-					if (logger.isDebugEnabled())
-						logger.debug("document content is well formed");
-					// create result
-					result = new OKWriteResult();
+					// read and verify if content value is utf-8
+					final String newElementAsString = XMLValidator
+					.getUTF8String(contentStream);
+					if (logger.isFineEnabled())
+						logger.fine("content is utf-8");
+					// create XML fragment node
+					final Element newElement = XMLValidator
+					.getWellFormedDocumentFragment(new StringReader(
+							newElementAsString));
+					if (logger.isFineEnabled())
+						logger.fine("content is well formed document fragment");
+					return putElement(document, element, documentSelector,
+							nodeSelector, elementSelector, namespaceContext,
+							newElement, appUsage,true);
 				}
+			} else {
+				// put document
 
-			}
-
-			// validate the updated document against it's schema
-			appUsage.validateSchema(domDocument);
-			if (logger.isDebugEnabled())
-				logger.debug("document validated by schema");
-			// verify app usage constraints
-			appUsage.checkConstraintsOnPut(domDocument, xcapRoot,
-					documentSelector, dataSourceSbbInterface);
-			if (logger.isDebugEnabled())
-				logger.debug("app usage constraints checked");
-			// process resource interdependencies
-			appUsage.processResourceInterdependenciesOnPut(domDocument,
-					documentSelector, dataSourceSbbInterface);
-			if (logger.isDebugEnabled())
-				logger.debug("app usage resource interdependencies processed");
-			// create new document etag
-			String newETag = ETagGenerator.generate(resourceSelector
-					.getDocumentSelector());
-			if (logger.isDebugEnabled())
-				logger
-						.debug("new document etag generated and stored in data source");
-			// update data source with document
-			try {
-				String xml = TextWriter.toString(domDocument);
-				if (document == null) {
-					dataSourceSbbInterface.createDocument(documentSelector,
-							newETag, xml, domDocument);
-					if (logger.isDebugEnabled())
-						logger.debug("document created in data source");
-				} else {
-					if (attributeSelector != null) {
-						// attribute update
-						dataSourceSbbInterface.updateAttribute(
-								documentSelector, nodeSelector,
-								attributeSelector, namespaces, document
-										.getETag(), newETag, xml, domDocument,
-								attributeValue);
-					} else if (nodeSelector != null) {
-						// element update
-						dataSourceSbbInterface.updateElement(documentSelector,
-								nodeSelector, namespaces, document.getETag(),
-								newETag, xml, domDocument, newElementAsString,
-								newElement);
-					} else {
-						// whole doc
-						dataSourceSbbInterface.updateDocument(documentSelector,
-								document.getETag(), newETag, xml, domDocument);
-					}
-					if (logger.isDebugEnabled())
-						logger.debug("document updated in data source");
+				// validate mimetype
+				if (mimetype == null
+						|| !mimetype.equals(appUsage.getMimetype())) {
+					// mimetype is not valid
+					if (logger.isFineEnabled())
+						logger
+						.fine("invalid mimetype, does not matches the app usage");
+					throw new UnsupportedMediaTypeException();
 				}
-			} catch (Exception e) {
-				logger.error(e);
-				throw new InternalServerErrorException(
-						"Failed to serialize resulting dom document to string");
+				// verify if content is utf-8
+				final Reader utf8reader = XMLValidator
+				.getUTF8Reader(contentStream);
+				if (logger.isFineEnabled())
+					logger.fine("document content is utf-8");
+				// build new document
+				final Document newDomDocument = XMLValidator
+				.getWellFormedDocument(utf8reader);
+				if (logger.isFineEnabled())
+					logger.fine("document content is well formed");
+				return putDocument(documentSelector, document, newDomDocument,
+						appUsage,true);
 			}
-			// add it to the result
-			result.setResponseEntityTag(newETag);
-			// and return that result
-			return result;
-
-		} catch (ParseException e) {
-			// invalid document selector, throw no parent exception
-			if (logger.isDebugEnabled())
-				logger
-						.debug("failed to parse document selector, returning no parent conflict");
-			throw new NoParentConflictException(getDocumentExistingAncestor(
-					xcapRoot, documentSelector != null ? documentSelector.getAUID() : null,
-					documentSelector != null ? documentSelector
-							.getDocumentParent() : e.getValidParent(),
-					dataSourceSbbInterface));		
 		} finally {
 			if (appUsagePool != null) {
 				appUsagePool.returnInstance(appUsage);
@@ -1449,23 +1042,888 @@ public abstract class RequestProcessorSbb implements
 		}
 	}
 
-	private String getDocumentExistingAncestor(String xcapRoot, String auid,
-			String documentParent, DataSource dataSource)
-			throws InternalServerErrorException {
-		StringBuilder sb = new StringBuilder(xcapRoot).append('/').append(auid);
-		String existingDocumentParent = null;
-		if (documentParent != null) {
-			if (documentParent.startsWith("/" + auid + "/")) {
-				existingDocumentParent = dataSource.getExistingCollection(auid,
-						documentParent.substring(3 + auid.length()));
-			} else {
-				existingDocumentParent = dataSource.getExistingCollection(auid,
-						documentParent);
+	// -- APP USAGE REQUEST PROCESSOR METHODS
+
+	private WriteResult putDocument(DocumentSelector documentSelector,
+			org.openxdm.xcap.common.datasource.Document oldDocument,
+			Document newDomDocument, AppUsage appUsage, boolean processResourceInterdependencies)
+	throws ConflictException, MethodNotAllowedException,
+	UnsupportedMediaTypeException, InternalServerErrorException,
+	PreconditionFailedException, BadRequestException,
+	NotAuthorizedRequestException {
+
+		Document oldDomDocument = null;
+
+		if (oldDocument == null) { // DOCUMENTS DOES NOT EXIST
+
+			if (logger.isFineEnabled())
+				logger.fine("document not found");
+
+		} else {
+			// DOCUMENT EXISTS
+			if (logger.isFineEnabled())
+				logger.fine("document found");
+
+			oldDomDocument = oldDocument.getAsDOMDocument();
+		}
+
+		// validate the updated document against it's schema
+		appUsage.validateSchema(newDomDocument);
+		if (logger.isFineEnabled())
+			logger.fine("document validated by schema");
+
+		// verify app usage constraints
+		appUsage.checkConstraintsOnPut(newDomDocument, CONFIGURATION
+				.getXcapRoot(), documentSelector, appUsageDataSource);
+		if (logger.isFineEnabled())
+			logger.fine("app usage constraints checked");
+
+		// create new document etag
+		String newETag = ETagGenerator.generate(documentSelector.toString());
+		if (logger.isFineEnabled())
+			logger
+			.fine("new document etag generated");
+
+		// process resource interdependencies for the request app usage
+		if(processResourceInterdependencies) {
+			try {
+				appUsage.processResourceInterdependenciesOnPutDocument(
+						oldDomDocument, newDomDocument, documentSelector, newETag, this,
+						appUsageDataSource);
+			} catch (SchemaValidationErrorConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (UniquenessFailureConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (InternalServerErrorException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (ConstraintFailureConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
 			}
 		}
-		return existingDocumentParent != null ? sb.append('/').append(
-				existingDocumentParent).toString() : sb.toString();
+		if (logger.isFineEnabled())
+			logger.fine("app usage resource interdependencies processed");
+
+		// update data source with document
+		try {
+			String xml = TextWriter.toString(newDomDocument);
+			if (oldDocument == null) {
+				dataSourceSbbInterface.createDocument(documentSelector,
+						newETag, xml, newDomDocument);
+				if (logger.isFineEnabled())
+					logger.fine("document created in data source");
+			} else {
+				dataSourceSbbInterface.updateDocument(documentSelector,
+						oldDocument.getETag(), newETag, xml, newDomDocument);
+				if (logger.isFineEnabled())
+					logger.fine("document updated in data source");
+			}
+		} catch (Exception e) {
+			logger.severe(
+					"Failed to serialize resulting dom document to string", e);
+			throw new InternalServerErrorException(
+					"Failed to serialize resulting dom document to string", e);
+		}
+
+		return oldDocument == null ? new CreatedWriteResult(newETag)
+		: new OKWriteResult(newETag);
+
 	}
+
+	private WriteResult putElement(
+			final org.openxdm.xcap.common.datasource.Document document,
+			final Element oldElement, final DocumentSelector documentSelector,
+			final NodeSelector nodeSelector,
+			final ElementSelector elementSelector,
+			final NamespaceContext nsContext, Element newElement,
+			final AppUsage appUsage, boolean processResourceInterdependencies) throws InternalServerErrorException,
+			NoParentConflictException, SchemaValidationErrorConflictException,
+			UniquenessFailureConflictException,
+			ConstraintFailureConflictException, CannotInsertConflictException,
+			NotValidXMLFragmentConflictException, NotUTF8ConflictException,
+			BadRequestException {
+
+		if (logger.isFineEnabled())
+			logger.fine("putting element " + elementSelector + " in "
+					+ documentSelector);
+
+		Document newDomDocument = document.getAsDOMDocument();
+
+		if (oldElement != null) {
+			// replace element
+			// verify if cannot insert
+			ElementSelectorStep lastElementSelectorStep = elementSelector
+			.getLastStep();
+			// if element's tag name is not equal to
+			// this step's name then cannot insert
+			if (!newElement.getTagName().equals(
+					lastElementSelectorStep.getName())) {
+				if (logger.isFineEnabled())
+					logger
+					.fine("element's tag name is not equal to this step's name, cannot insert");
+				throw new CannotInsertConflictException();
+			}
+			if (lastElementSelectorStep instanceof ElementSelectorStepByAttr) {
+				ElementSelectorStepByAttr elementSelectorStepByAttr = (ElementSelectorStepByAttr) lastElementSelectorStep;
+				// check attr value
+				String elementAttrValue = newElement
+				.getAttribute(elementSelectorStepByAttr.getAttrName());
+				if (elementAttrValue == null
+						|| !elementAttrValue.equals(elementSelectorStepByAttr
+								.getAttrValue())) {
+					if (logger.isFineEnabled())
+						logger
+						.fine("element selector's last step has an attr and it's new value changes this attr value, cannot insert");
+					throw new CannotInsertConflictException();
+				}
+			}
+			// import the element node
+			newElement = (Element) document.getAsDOMDocument().importNode(
+					newElement, true);
+			// replace node
+			oldElement.getParentNode().replaceChild(newElement, oldElement);
+			if (logger.isFineEnabled())
+				logger.fine("element " + elementSelector + " replaced in "
+						+ documentSelector);
+		} else {
+			// new element
+			final Element elementParent = getElementForPut(documentSelector,
+					document.getAsDOMDocument(), nodeSelector, nodeSelector
+					.getElementParentSelectorWithEmptyPrefix(),
+					nsContext);
+			if (elementParent == null) {
+				if (logger.isFineEnabled())
+					logger
+					.fine("element parent not found, returning no parent conflict");
+				XPath xpath = XPathFactory.newInstance().newXPath();
+				xpath.setNamespaceContext(nsContext);
+				throw new NoParentConflictException(getElementExistentAncestor(
+						CONFIGURATION.getXcapRoot(), documentSelector
+						.toString(), nodeSelector
+						.getElementParentSelectorWithEmptyPrefix(),
+						newDomDocument, xpath));
+			} else {
+				// put new element
+				newElement = (Element) newDomDocument.importNode(newElement,
+						true);
+
+				// get element step
+				ElementSelectorStep elementLastStep = elementSelector
+				.getLastStep();
+
+				// get element name & namespace
+				String elementNamespace = null;
+				String elementName = null;
+				String elementNamePrefix = elementLastStep.getPrefix();
+				if (elementNamePrefix != null) {
+					// get element name without prefix
+					elementName = elementLastStep.getNameWithoutPrefix();
+					// and get namespace
+					elementNamespace = nsContext
+					.getNamespaceURI(elementNamePrefix);
+				} else {
+					// get element name without prefix
+					elementName = elementLastStep.getName();
+					// and get namespace
+					elementNamespace = nsContext.getNamespaceURI("");
+				}
+
+				// if new element node name is not the same as in the uri then
+				// cannot
+				// insert
+				if (!newElement.getNodeName().equals(elementName)) {
+					if (logger.isFineEnabled())
+						logger
+						.fine("element node name is not the same as in the uri, cannot insert");
+					throw new CannotInsertConflictException();
+				}
+
+				if (elementLastStep instanceof ElementSelectorStepByPos) {
+					// position defined
+					if (logger.isFineEnabled())
+						logger
+						.fine("element selector's last step with position defined");
+					ElementSelectorStepByPos elementSelectorStepByPos = (ElementSelectorStepByPos) elementLastStep;
+					if (elementSelectorStepByPos.getPos() == 1) {
+						// POS = 1
+						if (!(elementLastStep instanceof ElementSelectorStepByPosAttr)) {
+							// NO ATTR TEST, *[1] e name[1], either way, just
+							// append to
+							// the parent
+							if (logger.isFineEnabled())
+								logger
+								.fine("element selector's last step without attr test defined");
+							elementParent.appendChild(newElement);
+							if (logger.isFineEnabled())
+								logger.fine("element appended to parent");
+						} else {
+							// ATTR TEST
+							if (logger.isFineEnabled())
+								logger
+								.fine("element selector's last step with attr test defined");
+							// verify that the element has this step atribute
+							// with this
+							// step attribute value, if not it cannot insert
+							ElementSelectorStepByPosAttr elementSelectorStepByPosAttr = (ElementSelectorStepByPosAttr) elementLastStep;
+							String elementAttrName = elementSelectorStepByPosAttr
+							.getAttrName();
+							String elementAttrValue = newElement
+							.getAttribute(elementAttrName);
+							if (elementAttrValue == null
+									|| !elementAttrValue
+									.equals(elementSelectorStepByPosAttr
+											.getAttrValue())) {
+								if (logger.isFineEnabled())
+									logger
+									.fine("element selector's last step has an atribute and the attribute value does not matches, cannot insert");
+								throw new CannotInsertConflictException();
+							}
+							// *[1][attr-test], insert before the first element
+							// name[1][attr-test], insert before the first
+							// element with
+							// same name
+							NodeList elementParentChilds = elementParent
+							.getChildNodes();
+							boolean inserted = false;
+							for (int i = 0; i < elementParentChilds.getLength(); i++) {
+								if (elementParentChilds.item(i) instanceof Element
+										&& ((elementName
+												.equals(elementParentChilds
+														.item(i).getNodeName()) && elementParentChilds
+														.item(i).getNamespaceURI()
+														.equals(elementNamespace)) || (elementName
+																.equals("*")))) {
+									elementParent.insertBefore(newElement,
+											elementParentChilds.item(i));
+									if (logger.isFineEnabled())
+										logger.fine("element inserted at pos "
+												+ i);
+									inserted = true;
+									break;
+								}
+							}
+							if (!inserted) {
+								// didn't found an element just append to parent
+								elementParent.appendChild(newElement);
+								if (logger.isFineEnabled())
+									logger.fine("element appended to parent");
+							}
+						}
+					}
+
+					else {
+						// POS > 1, must find the pos-1 element and insert after
+						if (elementLastStep instanceof ElementSelectorStepByPosAttr) {
+							// ATTR TEST
+							if (logger.isFineEnabled())
+								logger
+								.fine("element selector's last step with attr test defined");
+							// verify that the element has this step atribute
+							// with this
+							// step attribute value, if not it cannot insert
+							ElementSelectorStepByPosAttr elementSelectorStepByPosAttr = (ElementSelectorStepByPosAttr) elementLastStep;
+							String elementAttrName = elementSelectorStepByPosAttr
+							.getAttrName();
+							String elementAttrValue = newElement
+							.getAttribute(elementAttrName);
+							if (elementAttrValue == null
+									|| !elementAttrValue
+									.equals(elementSelectorStepByPosAttr
+											.getAttrValue())) {
+								if (logger.isFineEnabled())
+									logger
+									.fine("element selector's last step has an atribute and the attribute value does not matches, cannot insert");
+								throw new CannotInsertConflictException();
+							}
+						}
+						// *[pos>1], name[pos>1], *[pos>1][attr-test],
+						// name[pos>1][attr-test], insert in the parent after
+						// the pos-1
+						// element
+						NodeList elementParentChilds = elementParent
+						.getChildNodes();
+						boolean inserted = false;
+						int elementsFound = 0;
+						for (int i = 0; i < elementParentChilds.getLength(); i++) {
+							if (elementParentChilds.item(i) instanceof Element
+									&& ((elementName.equals(elementParentChilds
+											.item(i).getNodeName()) && elementParentChilds
+											.item(i).getNamespaceURI().equals(
+													elementNamespace)) || (elementName
+															.equals("*")))) {
+								elementsFound++;
+								if (elementsFound == elementSelectorStepByPos
+										.getPos() - 1) {
+									// insert after
+									if (i == elementParentChilds.getLength() - 1) {
+										// no node after, use append
+										elementParent.appendChild(newElement);
+										if (logger.isFineEnabled())
+											logger
+											.fine("element appended to parent");
+									} else {
+										// node after exists, insert before
+										elementParent
+										.insertBefore(newElement,
+												elementParentChilds
+												.item(i + 1));
+										if (logger.isFineEnabled())
+											logger
+											.fine("element inserted at pos "
+													+ i + 1);
+									}
+									inserted = true;
+									break;
+								}
+							}
+						}
+						if (!inserted) {
+							// didn't found pos-1 element, cannot insert
+							if (logger.isFineEnabled())
+								logger
+								.fine("didn't found "
+										+ (elementSelectorStepByPos
+												.getPos() - 1)
+												+ " element, cannot insert");
+							throw new CannotInsertConflictException();
+						}
+					}
+				}
+
+				else if (elementLastStep instanceof ElementSelectorStepByAttr) {
+					// no position defined
+					if (logger.isFineEnabled())
+						logger
+						.fine("element selector's last step with attr test defined only");
+					// first verify element has this step atribute with this
+					// step
+					// attribute value, if not it cannot insert
+					ElementSelectorStepByAttr elementSelectorStepByAttr = (ElementSelectorStepByAttr) elementLastStep;
+					String elementAttrValue = newElement
+					.getAttribute(elementSelectorStepByAttr
+							.getAttrName());
+					if (elementAttrValue == null
+							|| !elementAttrValue
+							.equals(elementSelectorStepByAttr
+									.getAttrValue())) {
+						if (logger.isFineEnabled())
+							logger
+							.fine("element selector's last step has an atribute and the attribute value does not matches, cannot insert");
+						throw new CannotInsertConflictException();
+					}
+					// insert after the last with same name
+					NodeList elementParentChilds = elementParent
+					.getChildNodes();
+					boolean inserted = false;
+					for (int i = elementParentChilds.getLength() - 1; i > -1; i--) {
+						if (elementParentChilds.item(i) instanceof Element) {
+							if (elementParentChilds.item(i) instanceof Element
+									&& ((elementName.equals(elementParentChilds
+											.item(i).getNodeName()) && elementParentChilds
+											.item(i).getNamespaceURI().equals(
+													elementNamespace)) || (elementName
+															.equals("*")))) {
+								// insert after this element
+								if (i == elementParentChilds.getLength() - 1) {
+									elementParent.appendChild(newElement);
+									if (logger.isFineEnabled())
+										logger
+										.fine("element appended to parent");
+								} else {
+									elementParent.insertBefore(newElement,
+											elementParentChilds.item(i + 1));
+									if (logger.isFineEnabled())
+										logger.fine("element inserted at pos "
+												+ i + 1);
+								}
+								inserted = true;
+								break;
+							}
+						}
+					}
+					if (!inserted) {
+						// didn't found an element with same name and namespace,
+						// just
+						// append to parent
+						elementParent.appendChild(newElement);
+						if (logger.isFineEnabled())
+							logger.fine("element appended to parent");
+					}
+				}
+
+				else {
+					// no position and attr defined, it's the first child or the
+					// first
+					// with this name so just append new element
+					elementParent.appendChild(newElement);
+					if (logger.isFineEnabled())
+						logger
+						.fine("element selector's last step without attr test or position defined, element appended to parent");
+				}
+				if (logger.isFineEnabled())
+					logger.fine("element parent found, new element added");
+			}
+
+		}
+
+		// validate the updated document against it's schema
+		appUsage.validateSchema(newDomDocument);
+		if (logger.isFineEnabled())
+			logger.fine("document validated by schema");
+
+		// verify app usage constraints
+		appUsage.checkConstraintsOnPut(newDomDocument, CONFIGURATION
+				.getXcapRoot(), documentSelector, appUsageDataSource);
+		if (logger.isFineEnabled())
+			logger.fine("app usage constraints checked");
+
+		// create new document etag
+		String newETag = ETagGenerator.generate(documentSelector.toString());
+		if (logger.isFineEnabled())
+			logger
+			.fine("new document etag generated");
+
+		// process resource interdependencies for the request app usage
+		if(processResourceInterdependencies) {
+			try {
+				appUsage.processResourceInterdependenciesOnPutElement(oldElement,
+						newElement, newDomDocument, documentSelector, newETag, nodeSelector,
+						elementSelector, nsContext, this, appUsageDataSource);
+			} catch (SchemaValidationErrorConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (UniquenessFailureConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (InternalServerErrorException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (ConstraintFailureConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			}
+		}
+		if (logger.isFineEnabled())
+			logger.fine("app usage resource interdependencies processed");
+
+		// update data source with document
+		try {
+			String xml = TextWriter.toString(newDomDocument);
+			dataSourceSbbInterface.updateElement(documentSelector,
+					nodeSelector, nsContext.getNamespaces(),
+					document.getETag(), newETag, xml, newDomDocument,
+					TextWriter.toString(newElement), newElement);
+			if (logger.isFineEnabled())
+				logger.fine("document updated in data source");
+		} catch (Exception e) {
+			logger.severe(
+					"Failed to serialize resulting dom document to string", e);
+			throw new InternalServerErrorException(
+					"Failed to serialize resulting dom document to string", e);
+		}
+
+		return oldElement == null ? new CreatedWriteResult(newETag)
+		: new OKWriteResult(newETag);
+	}
+
+	private WriteResult putAttribute(
+			final org.openxdm.xcap.common.datasource.Document document,
+			final Element oldElement, final DocumentSelector documentSelector,
+			final NodeSelector nodeSelector,
+			final ElementSelector elementSelector,
+			final AttributeSelector attributeSelector,
+			final NamespaceContext nsContext, final String newAttributeValue,
+			final AppUsage appUsage, boolean processResourceInterdependencies) throws InternalServerErrorException,
+			NoParentConflictException, SchemaValidationErrorConflictException,
+			UniquenessFailureConflictException,
+			ConstraintFailureConflictException,
+			NotXMLAttributeValueConflictException, BadRequestException,
+			CannotInsertConflictException {
+
+		if (logger.isFineEnabled())
+			logger.fine("putting attribute " + attributeSelector
+					+ " in element " + elementSelector + ", in doc "
+					+ documentSelector);
+
+		Document newDomDocument = document.getAsDOMDocument();
+		String oldAttributeValue = null;
+
+		if (oldElement == null) {
+			// throw no parent exception since there is
+			// no element but we have a terminal
+			// selector
+			XPath xpath = XPathFactory.newInstance().newXPath();
+			xpath.setNamespaceContext(nsContext);
+			throw new NoParentConflictException(getElementExistentAncestor(
+					CONFIGURATION.getXcapRoot(), documentSelector.toString(),
+					nodeSelector.getElementSelectorWithEmptyPrefix(),
+					newDomDocument, xpath));
+		}
+
+		// verify if attribute value is
+		// valid AttValue
+		XMLValidator.checkAttValue(newAttributeValue);
+		if (logger.isFineEnabled())
+			logger.fine("attr value is valid AttValue");
+
+		// get attribute
+		final Attr attribute = oldElement.getAttributeNode(attributeSelector
+				.getAttName());
+		if (attribute != null) {
+			// ATTR EXISTS
+			if (logger.isFineEnabled())
+				logger.fine("attr found in document");
+			oldAttributeValue = attribute.getNodeValue();
+
+			// verify if cannot insert,
+			// e.g .../x[id1="1"]/@id1
+			// and attValue = 2
+			ElementSelectorStep lastElementSelectorStep = elementSelector
+			.getLastStep();
+			if (lastElementSelectorStep instanceof ElementSelectorStepByAttr) {
+				ElementSelectorStepByAttr elementSelectorByAttr = (ElementSelectorStepByAttr) lastElementSelectorStep;
+				// if this step attr
+				// name is the specified
+				// attrName and this
+				// step attrValue is not
+				// the same as the
+				// specified attr value,
+				// it cannot insert
+				if (elementSelectorByAttr.getAttrName().equals(
+						attributeSelector.getAttName())
+						&& !elementSelectorByAttr.getAttrValue().equals(
+								newAttributeValue)) {
+					if (logger.isFineEnabled())
+						logger
+						.fine("element selector's last step attr name is the specified attrName and this step attrValue is not the same as the specified attr value, cannot insert");
+					throw new CannotInsertConflictException();
+				}
+			}
+
+		} else { // ATTR DOES NOT EXISTS
+			if (logger.isFineEnabled())
+				logger.fine("attr not found in document");
+		}
+		// set attribute
+		oldElement.setAttributeNS(null, attributeSelector.getAttName(),
+				newAttributeValue);
+		if (logger.isFineEnabled())
+			logger.fine("attr set");
+
+		// validate the updated document against it's schema
+		appUsage.validateSchema(newDomDocument);
+		if (logger.isFineEnabled())
+			logger.fine("document validated by schema");
+
+		// verify app usage constraints
+		appUsage.checkConstraintsOnPut(newDomDocument, CONFIGURATION
+				.getXcapRoot(), documentSelector, appUsageDataSource);
+		if (logger.isFineEnabled())
+			logger.fine("app usage constraints checked");
+
+		// create new document etag
+		String newETag = ETagGenerator.generate(documentSelector.toString());
+		if (logger.isFineEnabled())
+			logger
+			.fine("new document etag generated");
+
+		// process resource interdependencies for the request app usage
+		if(processResourceInterdependencies) {
+			try {
+				appUsage.processResourceInterdependenciesOnPutAttribute(
+						oldAttributeValue, newAttributeValue, documentSelector,
+						newETag, nodeSelector, elementSelector, attributeSelector,
+						nsContext, this, appUsageDataSource);
+			} catch (SchemaValidationErrorConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (UniquenessFailureConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (InternalServerErrorException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			} catch (ConstraintFailureConflictException e) {
+				if (!sbbContext.getRollbackOnly())
+					sbbContext.setRollbackOnly();
+				throw e;
+			}
+		}
+		if (logger.isFineEnabled())
+			logger.fine("app usage resource interdependencies processed");
+
+		// update data source with document
+		try {
+			String xml = TextWriter.toString(newDomDocument);
+			if (document == null) {
+				dataSourceSbbInterface.createDocument(documentSelector,
+						newETag, xml, newDomDocument);
+				if (logger.isFineEnabled())
+					logger.fine("document created in data source");
+			} else {
+				// attribute update
+				dataSourceSbbInterface.updateAttribute(documentSelector,
+						nodeSelector, attributeSelector, nsContext
+						.getNamespaces(), document.getETag(), newETag,
+						xml, newDomDocument, newAttributeValue);
+
+				if (logger.isFineEnabled())
+					logger.fine("document updated in data source");
+			}
+		} catch (Exception e) {
+			logger.severe(
+					"Failed to serialize resulting dom document to string", e);
+			throw new InternalServerErrorException(
+					"Failed to serialize resulting dom document to string", e);
+		}
+
+		return attribute != null ? new OKWriteResult(newETag)
+		: new CreatedWriteResult(newETag);
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.mobicents.xdm.server.appusage.AppUsageRequestProcessor#deleteDocument
+	 * (org.openxdm.xcap.common.uri.DocumentSelector,
+	 * org.mobicents.xdm.server.appusage.AppUsage)
+	 */
+	@Override
+	public void deleteDocument(DocumentSelector documentSelector,
+			AppUsage appUsage) throws InternalServerErrorException,
+			NotFoundException, SchemaValidationErrorConflictException,
+			UniquenessFailureConflictException,
+			ConstraintFailureConflictException {
+
+		// get document
+		org.openxdm.xcap.common.datasource.Document document = dataSourceSbbInterface
+		.getDocument(documentSelector);
+		if (document == null) {
+			// throw exception
+			if (logger.isFineEnabled())
+				logger.fine("document " + documentSelector + " not found");
+			throw new NotFoundException();
+		}
+		;
+
+		// document exists
+		if (logger.isFineEnabled())
+			logger.fine("document " + documentSelector + " found");
+
+		deleteDocument(document, documentSelector, appUsage,false);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.mobicents.xdm.server.appusage.AppUsageRequestProcessor#deleteElement
+	 * (org.openxdm.xcap.common.uri.DocumentSelector,
+	 * org.openxdm.xcap.common.uri.NodeSelector,
+	 * org.openxdm.xcap.common.uri.ElementSelector,
+	 * org.openxdm.xcap.common.xml.NamespaceContext,
+	 * org.mobicents.xdm.server.appusage.AppUsage)
+	 */
+	@Override
+	public void deleteElement(final DocumentSelector documentSelector,
+			final NodeSelector nodeSelector,
+			final ElementSelector elementSelector,
+			final NamespaceContext nsContext, AppUsage appUsage)
+	throws InternalServerErrorException,
+	UniquenessFailureConflictException,
+	ConstraintFailureConflictException, NotFoundException,
+	CannotDeleteConflictException,
+	SchemaValidationErrorConflictException, BadRequestException {
+
+		// get document
+		final org.openxdm.xcap.common.datasource.Document document = dataSourceSbbInterface
+		.getDocument(documentSelector);
+		if (document == null) {
+			// throw exception
+			if (logger.isFineEnabled())
+				logger.fine("document not found");
+			throw new NotFoundException();
+		}
+
+		// get element
+		final Element element = getElementForDeleteOrGet(document
+				.getAsDOMDocument(), nodeSelector, nsContext);
+
+		deleteElement(document, element, documentSelector, nodeSelector,
+				elementSelector, nsContext, appUsage,false);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.mobicents.xdm.server.appusage.AppUsageRequestProcessor#deleteAttribute
+	 * (org.openxdm.xcap.common.uri.DocumentSelector,
+	 * org.openxdm.xcap.common.uri.NodeSelector,
+	 * org.openxdm.xcap.common.uri.ElementSelector,
+	 * org.openxdm.xcap.common.uri.AttributeSelector,
+	 * org.openxdm.xcap.common.xml.NamespaceContext,
+	 * org.mobicents.xdm.server.appusage.AppUsage)
+	 */
+	@Override
+	public void deleteAttribute(final DocumentSelector documentSelector,
+			final NodeSelector nodeSelector,
+			final ElementSelector elementSelector,
+			final AttributeSelector attributeSelector,
+			final NamespaceContext nsContext, final AppUsage appUsage)
+	throws InternalServerErrorException, BadRequestException,
+	NotFoundException, SchemaValidationErrorConflictException,
+	UniquenessFailureConflictException,
+	ConstraintFailureConflictException {
+
+		// get document
+		final org.openxdm.xcap.common.datasource.Document document = dataSourceSbbInterface
+		.getDocument(documentSelector);
+		if (document == null) {
+			// throw exception
+			if (logger.isFineEnabled())
+				logger.fine("document not found");
+			throw new NotFoundException();
+		}
+		// get element
+		final Element element = getElementForDeleteOrGet(document
+				.getAsDOMDocument(), nodeSelector, nsContext);
+		deleteAttribute(document, element, documentSelector, nodeSelector,
+				elementSelector, attributeSelector, nsContext, appUsage,false);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.mobicents.xdm.server.appusage.AppUsageRequestProcessor#putDocument
+	 * (org.openxdm.xcap.common.uri.DocumentSelector, org.w3c.dom.Document,
+	 * org.mobicents.xdm.server.appusage.AppUsage)
+	 */
+	@Override
+	public boolean putDocument(DocumentSelector documentSelector,
+			Document newDomDocument, AppUsage appUsage)
+	throws InternalServerErrorException, NoParentConflictException,
+	SchemaValidationErrorConflictException,
+	UniquenessFailureConflictException,
+	ConstraintFailureConflictException, ConflictException,
+	MethodNotAllowedException, UnsupportedMediaTypeException,
+	PreconditionFailedException, BadRequestException,
+	NotAuthorizedRequestException {
+
+		// try to get document's resource
+		org.openxdm.xcap.common.datasource.Document oldDocument = dataSourceSbbInterface
+		.getDocument(documentSelector);
+
+		WriteResult result = putDocument(documentSelector, oldDocument,
+				newDomDocument, appUsage,false);
+		return result.getResponseStatus() == 201;
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.mobicents.xdm.server.appusage.AppUsageRequestProcessor#putElement
+	 * (org.openxdm.xcap.common.uri.DocumentSelector,
+	 * org.openxdm.xcap.common.uri.NodeSelector,
+	 * org.openxdm.xcap.common.uri.ElementSelector,
+	 * org.openxdm.xcap.common.xml.NamespaceContext, org.w3c.dom.Element,
+	 * org.mobicents.xdm.server.appusage.AppUsage)
+	 */
+	@Override
+	public boolean putElement(final DocumentSelector documentSelector,
+			final NodeSelector nodeSelector,
+			final ElementSelector elementSelector,
+			final NamespaceContext nsContext, Element newElement,
+			final AppUsage appUsage) throws InternalServerErrorException,
+			NoParentConflictException, SchemaValidationErrorConflictException,
+			UniquenessFailureConflictException,
+			ConstraintFailureConflictException, CannotInsertConflictException,
+			NotValidXMLFragmentConflictException, NotUTF8ConflictException,
+			BadRequestException {
+
+		// get doc
+		org.openxdm.xcap.common.datasource.Document document = dataSourceSbbInterface
+		.getDocument(documentSelector);
+		if (document == null) {
+			// doc does not exists, throw exception
+			throw new NoParentConflictException(CONFIGURATION.getXcapRoot()
+					+ "/" + documentSelector.getCompleteDocumentParent());
+		}
+		// get old element
+		final Element oldElement = getElementForPut(documentSelector, document
+				.getAsDOMDocument(), nodeSelector, nodeSelector
+				.getElementSelectorWithEmptyPrefix(), nsContext);
+		// put element
+		WriteResult result = putElement(document, oldElement, documentSelector,
+				nodeSelector, elementSelector, nsContext, newElement, appUsage,false);
+		return result.getResponseStatus() == 201;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.mobicents.xdm.server.appusage.AppUsageRequestProcessor#putAttribute
+	 * (org.openxdm.xcap.common.uri.DocumentSelector,
+	 * org.openxdm.xcap.common.uri.NodeSelector,
+	 * org.openxdm.xcap.common.uri.ElementSelector,
+	 * org.openxdm.xcap.common.uri.AttributeSelector,
+	 * org.openxdm.xcap.common.xml.NamespaceContext, java.lang.String,
+	 * org.mobicents.xdm.server.appusage.AppUsage)
+	 */
+	@Override
+	public boolean putAttribute(final DocumentSelector documentSelector,
+			final NodeSelector nodeSelector,
+			final ElementSelector elementSelector,
+			final AttributeSelector attributeSelector,
+			final NamespaceContext nsContext, final String newAttributeValue,
+			final AppUsage appUsage) throws InternalServerErrorException,
+			NoParentConflictException, SchemaValidationErrorConflictException,
+			UniquenessFailureConflictException,
+			ConstraintFailureConflictException,
+			NotXMLAttributeValueConflictException, BadRequestException,
+			CannotInsertConflictException {
+
+		// get doc
+		org.openxdm.xcap.common.datasource.Document document = dataSourceSbbInterface
+		.getDocument(documentSelector);
+		if (document == null) {
+			// doc does not exists, throw exception
+			throw new NoParentConflictException(CONFIGURATION.getXcapRoot()
+					+ "/" + documentSelector.getCompleteDocumentParent());
+		}
+		// get old element
+		final Element oldElement = getElementForPut(documentSelector, document
+				.getAsDOMDocument(), nodeSelector, nodeSelector
+				.getElementSelectorWithEmptyPrefix(), nsContext);
+		// put element
+		WriteResult result = putAttribute(document, oldElement,
+				documentSelector, nodeSelector, elementSelector,
+				attributeSelector, nsContext, newAttributeValue, appUsage,false);
+		return result.getResponseStatus() == 201;
+
+	}
+
+	// AUX
 
 	private String getElementExistentAncestor(String xcapRoot,
 			String documentSelector, String elementSelectorWithEmptyPrefix,
@@ -1479,7 +1937,7 @@ public abstract class RequestProcessorSbb implements
 		int index = -1;
 		while ((index = elementSelectorWithEmptyPrefix.lastIndexOf('/')) > 0) {
 			elementSelectorWithEmptyPrefix = elementSelectorWithEmptyPrefix
-					.substring(0, index);
+			.substring(0, index);
 			try {
 				Element element = (Element) xpath.evaluate(
 						elementSelectorWithEmptyPrefix, document,
@@ -1503,250 +1961,118 @@ public abstract class RequestProcessorSbb implements
 		}
 
 		String ancestor = sb.toString();
-		if (logger.isDebugEnabled())
-			logger.debug("existing ancestor is " + ancestor);
+		if (logger.isFineEnabled())
+			logger.fine("existing ancestor is " + ancestor);
 		return ancestor;
 	}
 
-	private Document putNewElementInDocument(Element newElement,
-			ElementSelector elementSelector, Element elementParent,
-			Document domDocument, NamespaceContext namespaceContext)
-			throws InternalServerErrorException, CannotInsertConflictException,
-			NotValidXMLFragmentConflictException, NotUTF8ConflictException {
+	private Element getElement(Document domDocument,
+			String elementSelectorWithEmptyPrefixes,
+			NamespaceContext namespaceContext) throws IllegalArgumentException {
 
-		// get element step
-		ElementSelectorStep elementLastStep = elementSelector.getLastStep();
+		if (logger.isFineEnabled())
+			logger.fine("retrieving element "
+					+ elementSelectorWithEmptyPrefixes);
 
-		// get element name & namespace
-		String elementNamespace = null;
-		String elementName = null;
-		String elementNamePrefix = elementLastStep.getPrefix();
-		if (elementNamePrefix != null) {
-			// get element name without prefix
-			elementName = elementLastStep.getNameWithoutPrefix();
-			// and get namespace
-			elementNamespace = namespaceContext
-					.getNamespaceURI(elementNamePrefix);
-		} else {
-			// get element name without prefix
-			elementName = elementLastStep.getName();
-			// and get namespace
-			elementNamespace = namespaceContext.getNamespaceURI("");
-		}
-
-		// if new element node name is not the same as in the uri then cannot
-		// insert
-		if (!newElement.getNodeName().equals(elementName)) {
-			if (logger.isDebugEnabled())
-				logger
-						.debug("element node name is not the same as in the uri, cannot insert");
-			throw new CannotInsertConflictException();
-		}
-
-		if (elementLastStep instanceof ElementSelectorStepByPos) {
-			// position defined
-			if (logger.isDebugEnabled())
-				logger
-						.debug("element selector's last step with position defined");
-			ElementSelectorStepByPos elementSelectorStepByPos = (ElementSelectorStepByPos) elementLastStep;
-			if (elementSelectorStepByPos.getPos() == 1) {
-				// POS = 1
-				if (!(elementLastStep instanceof ElementSelectorStepByPosAttr)) {
-					// NO ATTR TEST, *[1] e name[1], either way, just append to
-					// the parent
-					if (logger.isDebugEnabled())
-						logger
-								.debug("element selector's last step without attr test defined");
-					elementParent.appendChild(newElement);
-					if (logger.isDebugEnabled())
-						logger.debug("element appended to parent");
-				} else {
-					// ATTR TEST
-					if (logger.isDebugEnabled())
-						logger
-								.debug("element selector's last step with attr test defined");
-					// verify that the element has this step atribute with this
-					// step attribute value, if not it cannot insert
-					ElementSelectorStepByPosAttr elementSelectorStepByPosAttr = (ElementSelectorStepByPosAttr) elementLastStep;
-					String elementAttrName = elementSelectorStepByPosAttr
-							.getAttrName();
-					String elementAttrValue = newElement
-							.getAttribute(elementAttrName);
-					if (elementAttrValue == null
-							|| !elementAttrValue
-									.equals(elementSelectorStepByPosAttr
-											.getAttrValue())) {
-						if (logger.isDebugEnabled())
-							logger
-									.debug("element selector's last step has an atribute and the attribute value does not matches, cannot insert");
-						throw new CannotInsertConflictException();
-					}
-					// *[1][attr-test], insert before the first element
-					// name[1][attr-test], insert before the first element with
-					// same name
-					NodeList elementParentChilds = elementParent
-							.getChildNodes();
-					boolean inserted = false;
-					for (int i = 0; i < elementParentChilds.getLength(); i++) {
-						if (elementParentChilds.item(i) instanceof Element
-								&& ((elementName.equals(elementParentChilds
-										.item(i).getNodeName()) && elementParentChilds
-										.item(i).getNamespaceURI().equals(
-												elementNamespace)) || (elementName
-										.equals("*")))) {
-							elementParent.insertBefore(newElement,
-									elementParentChilds.item(i));
-							if (logger.isDebugEnabled())
-								logger.debug("element inserted at pos " + i);
-							inserted = true;
-							break;
-						}
-					}
-					if (!inserted) {
-						// didn't found an element just append to parent
-						elementParent.appendChild(newElement);
-						if (logger.isDebugEnabled())
-							logger.debug("element appended to parent");
-					}
+		// lets use xpath
+		final XPath xpath = XPathFactory.newInstance().newXPath();
+		// set context to resolve namespace bindings
+		xpath.setNamespaceContext(namespaceContext);
+		try {
+			// exec query to get element
+			final NodeList elementNodeList = (NodeList) xpath.evaluate(
+					elementSelectorWithEmptyPrefixes, domDocument,
+					XPathConstants.NODESET);
+			if (elementNodeList.getLength() == 1) {
+				if (logger.isFineEnabled())
+					logger.fine("element " + elementSelectorWithEmptyPrefixes
+							+ " found");
+				return (Element) elementNodeList.item(0);
+			} else if (elementNodeList.getLength() == 0) {
+				if (logger.isFineEnabled()) {
+					logger.fine("element " + elementSelectorWithEmptyPrefixes
+							+ " not found");
 				}
+				return null;
+			} else {
+				if (logger.isFineEnabled()) {
+					logger.fine("multiple elements match "
+							+ elementSelectorWithEmptyPrefixes);
+				}
+				throw new IllegalArgumentException("multiple elements match "
+						+ elementSelectorWithEmptyPrefixes);
 			}
-
-			else {
-				// POS > 1, must find the pos-1 element and insert after
-				if (elementLastStep instanceof ElementSelectorStepByPosAttr) {
-					// ATTR TEST
-					if (logger.isDebugEnabled())
-						logger
-								.debug("element selector's last step with attr test defined");
-					// verify that the element has this step atribute with this
-					// step attribute value, if not it cannot insert
-					ElementSelectorStepByPosAttr elementSelectorStepByPosAttr = (ElementSelectorStepByPosAttr) elementLastStep;
-					String elementAttrName = elementSelectorStepByPosAttr
-							.getAttrName();
-					String elementAttrValue = newElement
-							.getAttribute(elementAttrName);
-					if (elementAttrValue == null
-							|| !elementAttrValue
-									.equals(elementSelectorStepByPosAttr
-											.getAttrValue())) {
-						if (logger.isDebugEnabled())
-							logger
-									.debug("element selector's last step has an atribute and the attribute value does not matches, cannot insert");
-						throw new CannotInsertConflictException();
-					}
-				}
-				// *[pos>1], name[pos>1], *[pos>1][attr-test],
-				// name[pos>1][attr-test], insert in the parent after the pos-1
-				// element
-				NodeList elementParentChilds = elementParent.getChildNodes();
-				boolean inserted = false;
-				int elementsFound = 0;
-				for (int i = 0; i < elementParentChilds.getLength(); i++) {
-					if (elementParentChilds.item(i) instanceof Element
-							&& ((elementName.equals(elementParentChilds.item(i)
-									.getNodeName()) && elementParentChilds
-									.item(i).getNamespaceURI().equals(
-											elementNamespace)) || (elementName
-									.equals("*")))) {
-						elementsFound++;
-						if (elementsFound == elementSelectorStepByPos.getPos() - 1) {
-							// insert after
-							if (i == elementParentChilds.getLength() - 1) {
-								// no node after, use append
-								elementParent.appendChild(newElement);
-								if (logger.isDebugEnabled())
-									logger.debug("element appended to parent");
-							} else {
-								// node after exists, insert before
-								elementParent.insertBefore(newElement,
-										elementParentChilds.item(i + 1));
-								if (logger.isDebugEnabled())
-									logger.debug("element inserted at pos " + i
-											+ 1);
-							}
-							inserted = true;
-							break;
-						}
-					}
-				}
-				if (!inserted) {
-					// didn't found pos-1 element, cannot insert
-					if (logger.isDebugEnabled())
-						logger.debug("didn't found "
-								+ (elementSelectorStepByPos.getPos() - 1)
-								+ " element, cannot insert");
-					throw new CannotInsertConflictException();
-				}
-			}
+		} catch (XPathExpressionException e) {
+			// error in xpath expression
+			if (logger.isFineEnabled())
+				logger.fine("unable to retrieve element "
+						+ elementSelectorWithEmptyPrefixes
+						+ " error in xpath expression", e);
+			throw new IllegalArgumentException("unable to retrieve element "
+					+ elementSelectorWithEmptyPrefixes
+					+ " error in xpath expression", e);
 		}
+	}
 
-		else if (elementLastStep instanceof ElementSelectorStepByAttr) {
-			// no position defined
-			if (logger.isDebugEnabled())
-				logger
-						.debug("element selector's last step with attr test defined only");
-			// first verify element has this step atribute with this step
-			// attribute value, if not it cannot insert
-			ElementSelectorStepByAttr elementSelectorStepByAttr = (ElementSelectorStepByAttr) elementLastStep;
-			String elementAttrValue = newElement
-					.getAttribute(elementSelectorStepByAttr.getAttrName());
-			if (elementAttrValue == null
-					|| !elementAttrValue.equals(elementSelectorStepByAttr
-							.getAttrValue())) {
-				if (logger.isDebugEnabled())
+	private Element getElementForDeleteOrGet(Document document,
+			NodeSelector nodeSelector, NamespaceContext namespaceContext)
+	throws BadRequestException, NotFoundException {
+		// get element
+		Element element = null;
+		try {
+			element = getElement(document, nodeSelector
+					.getElementSelectorWithEmptyPrefix(), namespaceContext);
+		} catch (IllegalArgumentException e) {
+			if (nodeSelector
+					.elementSelectorHasUnbindedPrefixes(namespaceContext
+							.getNamespaces())) {
+				// element selector has unbinded prefixe(s)
+				if (logger.isFineEnabled())
 					logger
-							.debug("element selector's last step has an atribute and the attribute value does not matches, cannot insert");
-				throw new CannotInsertConflictException();
-			}
-			// insert after the last with same name
-			NodeList elementParentChilds = elementParent.getChildNodes();
-			boolean inserted = false;
-			for (int i = elementParentChilds.getLength() - 1; i > -1; i--) {
-				if (elementParentChilds.item(i) instanceof Element) {
-					if (elementParentChilds.item(i) instanceof Element
-							&& ((elementName.equals(elementParentChilds.item(i)
-									.getNodeName()) && elementParentChilds
-									.item(i).getNamespaceURI().equals(
-											elementNamespace)) || (elementName
-									.equals("*")))) {
-						// insert after this element
-						if (i == elementParentChilds.getLength() - 1) {
-							elementParent.appendChild(newElement);
-							if (logger.isDebugEnabled())
-								logger.debug("element appended to parent");
-						} else {
-							elementParent.insertBefore(newElement,
-									elementParentChilds.item(i + 1));
-							if (logger.isDebugEnabled())
-								logger
-										.debug("element inserted at pos " + i
-												+ 1);
-						}
-						inserted = true;
-						break;
-					}
-				}
-			}
-			if (!inserted) {
-				// didn't found an element with same name and namespace, just
-				// append to parent
-				elementParent.appendChild(newElement);
-				if (logger.isDebugEnabled())
-					logger.debug("element appended to parent");
+					.fine("element selector doesn't have prefixe(s) bound, bad request");
+				throw new BadRequestException();
+			} else {
+				// nothing wrong with prefixes, return not found
+				// exception
+				if (logger.isFineEnabled())
+					logger.fine("element not found");
+				throw new NotFoundException();
 			}
 		}
-
-		else {
-			// no position and attr defined, it's the first child or the first
-			// with this name so just append new element
-			elementParent.appendChild(newElement);
-			if (logger.isDebugEnabled())
-				logger
-						.debug("element selector's last step without attr test or position defined, element appended to parent");
+		if (element == null) {
+			if (logger.isFineEnabled())
+				logger.fine("element not found");
+			throw new NotFoundException();
 		}
+		return element;
+	}
 
-		return domDocument;
-
+	private Element getElementForPut(DocumentSelector documentSelector,
+			Document document, NodeSelector nodeSelector,
+			String elementSelectorWithEmptyPrefix,
+			NamespaceContext namespaceContext) throws BadRequestException,
+			NoParentConflictException {
+		// get element
+		try {
+			return getElement(document, elementSelectorWithEmptyPrefix,
+					namespaceContext);
+		} catch (IllegalArgumentException e) {
+			if (nodeSelector
+					.elementSelectorHasUnbindedPrefixes(namespaceContext
+							.getNamespaces())) {
+				if (logger.isFineEnabled())
+					logger
+					.fine("element selector doesn't have prefixe(s) bound, bad request");
+				throw new BadRequestException();
+			} else {
+				XPath xpath = XPathFactory.newInstance().newXPath();
+				xpath.setNamespaceContext(namespaceContext);
+				throw new NoParentConflictException(getElementExistentAncestor(
+						CONFIGURATION.getXcapRoot(), documentSelector
+						.toString(), elementSelectorWithEmptyPrefix,
+						document, xpath));
+			}
+		}
 	}
 
 }

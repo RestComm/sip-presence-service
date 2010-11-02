@@ -88,7 +88,7 @@ public class XCAPCapsAppUsage extends AppUsage {
 	public static final String MIMETYPE = "application/xcap-caps+xml";
 	
 	public XCAPCapsAppUsage(Validator schemaValidator) {
-		super(ID,DEFAULT_DOC_NAMESPACE,MIMETYPE,schemaValidator);
+		super(ID,DEFAULT_DOC_NAMESPACE,MIMETYPE,schemaValidator,new XCAPCapsAppUsageAuthorizationPolicy());
 	}
 	
 }

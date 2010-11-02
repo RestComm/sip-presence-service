@@ -9,8 +9,6 @@
 		
 		<jta-data-source>java:/DefaultDS</jta-data-source>
 				
-		<class>org.mobicents.slee.xdm.server.datasource.jpa.AppUsage</class>
-		<class>org.mobicents.slee.xdm.server.datasource.jpa.Collection</class>
 		<class>org.mobicents.slee.xdm.server.datasource.jpa.Document</class>
 		
 		<properties>

@@ -155,7 +155,7 @@
                 <resource-adaptor-entity-link>DataSourceRA</resource-adaptor-entity-link>
             </resource-adaptor-entity-binding>
         </resource-adaptor-type-binding>
-                
+		        
     </sbb>
         <sbb>
         

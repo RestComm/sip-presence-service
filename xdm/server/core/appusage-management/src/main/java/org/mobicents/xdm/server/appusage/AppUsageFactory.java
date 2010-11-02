@@ -1,5 +1,6 @@
 package org.mobicents.xdm.server.appusage;
 
+
 /**
  * Factory to generate AppUsage instances.
  * @author Eduardo Martins
@@ -18,5 +19,11 @@ public interface AppUsageFactory {
 	 * @return
 	 */
 	public String getAppUsageId();
+	
+	/**
+	 * Retrieves the interceptor to build docs content on request.
+	 * @return null if the app usage defines no interceptor.
+	 */
+	public AppUsageDataSourceInterceptor getDataSourceInterceptor();
 	
 }

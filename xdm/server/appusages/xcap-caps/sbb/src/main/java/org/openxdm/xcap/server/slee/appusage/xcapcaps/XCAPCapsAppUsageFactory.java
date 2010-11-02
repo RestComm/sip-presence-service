@@ -3,6 +3,7 @@ package org.openxdm.xcap.server.slee.appusage.xcapcaps;
 import javax.xml.validation.Schema;
 
 import org.mobicents.xdm.server.appusage.AppUsage;
+import org.mobicents.xdm.server.appusage.AppUsageDataSourceInterceptor;
 import org.mobicents.xdm.server.appusage.AppUsageFactory;
 
 public class XCAPCapsAppUsageFactory implements AppUsageFactory {
@@ -13,12 +14,18 @@ public class XCAPCapsAppUsageFactory implements AppUsageFactory {
 		this.schema = schema;
 	}
 	
+	@Override
 	public AppUsage getAppUsageInstance() {
 		return new XCAPCapsAppUsage(schema.newValidator());
 	}
 
+	@Override
 	public String getAppUsageId() {
 		return XCAPCapsAppUsage.ID;
 	}
 	
+	@Override
+	public AppUsageDataSourceInterceptor getDataSourceInterceptor() {
+		return null;
+	}
 }

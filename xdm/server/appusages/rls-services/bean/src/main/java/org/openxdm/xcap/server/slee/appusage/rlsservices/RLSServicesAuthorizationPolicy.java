@@ -29,44 +29,31 @@ import org.openxdm.xcap.common.uri.DocumentSelector;
 
 public class RLSServicesAuthorizationPolicy extends AuthorizationPolicy {
 
+	private final static String authorizedUserDocumentName = "index";
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.xdm.server.appusage.AuthorizationPolicy#isAuthorized(java.lang.String, org.mobicents.xdm.server.appusage.AuthorizationPolicy.Operation, org.openxdm.xcap.common.uri.DocumentSelector)
+	 */
+	@Override
 	public boolean isAuthorized(String user, AuthorizationPolicy.Operation operation, DocumentSelector documentSelector) throws NullPointerException {
-		
-		// check args
-		if (user == null) {
-			throw new NullPointerException("user is null");
-		}
-		else if (operation == null) {
-			throw new NullPointerException("operation is null");
-		}			
-		else if (documentSelector == null) {
-			throw new NullPointerException("document selector is null");
-		}
-				
-		try {
-			// split document parent, FIXME use getDocumentPArent
-			String[] documentParentParts = documentSelector.getCompleteDocumentParent().split("/");
-			// check auid child directory
-			if (documentParentParts[2].equalsIgnoreCase("global")) {
-				// /auid/global dir, never authorize operation except pre-authorized users
-				// which will not need to use the auth policy
-				return false;				
-			} else if (documentParentParts[2].equalsIgnoreCase("users")) {
-				// /auid/users directory, get it's child, the user directory 
-				String userDirectory = documentParentParts[3];
-				// only the user is authorized to operate on it's directory 
-				if (user.equalsIgnoreCase(userDirectory)) {
-					return true;
-				} else {
+		if (documentSelector.isUserDocument()) {
+			final String[] documentParentParts = documentSelector.getDocumentParent().split("/");
+			if (user.equalsIgnoreCase(documentParentParts[1])) {
+				if (operation == Operation.PUT && !documentSelector.getDocumentName().equals(authorizedUserDocumentName) && documentParentParts.length != 2) {
+					// doc name checked for puts 
 					return false;
 				}
+				return true;
 			} else {
 				return false;
 			}
 		}
-		catch (IndexOutOfBoundsException e) {
-			throw new IllegalArgumentException("invalid document selector");
-		}
-		
+		else {
+			// /auid/global dir, never authorize operation except pre-authorized users
+			// which will not need to use the auth policy
+			return false;
+		}		
 	}
 
 }

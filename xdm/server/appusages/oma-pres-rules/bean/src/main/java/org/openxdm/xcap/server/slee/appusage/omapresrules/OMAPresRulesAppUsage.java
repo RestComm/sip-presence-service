@@ -12,6 +12,6 @@ public class OMAPresRulesAppUsage extends AppUsage {
 	public static final String MIMETYPE = "application/auth-policy+xml";
 	
 	public OMAPresRulesAppUsage(Validator schemaValidator) {
-		super(ID,DEFAULT_DOC_NAMESPACE,MIMETYPE,schemaValidator);
+		super(ID,DEFAULT_DOC_NAMESPACE,MIMETYPE,schemaValidator,"pres-rules");
 	}
 }

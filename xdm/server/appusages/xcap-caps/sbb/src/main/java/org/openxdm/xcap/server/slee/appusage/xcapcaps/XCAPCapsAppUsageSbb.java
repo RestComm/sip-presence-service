@@ -2,9 +2,6 @@ package org.openxdm.xcap.server.slee.appusage.xcapcaps;
 
 import java.io.ByteArrayInputStream;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.slee.ActivityContextInterface;
 import javax.slee.ActivityEndEvent;
 import javax.slee.ChildRelation;
@@ -23,7 +20,6 @@ import org.mobicents.xdm.server.appusage.AppUsageRemovedEvent;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
 import org.openxdm.xcap.common.uri.ResourceSelector;
 import org.openxdm.xcap.server.slee.RequestProcessorSbbLocalObject;
-import org.openxdm.xcap.server.slee.resource.datasource.DataSourceSbbInterface;
 
 /**
  * JAIN SLEE Root Sbb for xcap-caps Xcap application usage.  
@@ -34,7 +30,6 @@ public abstract class XCAPCapsAppUsageSbb implements Sbb {
 
 	private SbbContext sbbContext;
 	private Tracer tracer;
-	private DataSourceSbbInterface dataSource = null;
 
 	/**
 	 * Called when an sbb object is instantied and enters the pooled state.
@@ -42,14 +37,6 @@ public abstract class XCAPCapsAppUsageSbb implements Sbb {
 	public void setSbbContext(SbbContext context) {
 		this.sbbContext = context;
 		this.tracer = context.getTracer(getClass().getSimpleName());
-		try {
-			Context myEnv = (Context) new InitialContext().lookup("java:comp/env");			
-			dataSource = (DataSourceSbbInterface) myEnv
-					.lookup("slee/resources/openxdm/datasource/sbbrainterface");
-
-		} catch (NamingException e) {
-			tracer.severe("Can't set sbb context.", e);
-		}
 	}
 
 	public void unsetSbbContext() {
@@ -137,56 +124,53 @@ public abstract class XCAPCapsAppUsageSbb implements Sbb {
 		final String xcapCapsAUID = "xcap-caps";
 		final String xcapCapsMimetype = "application/xcap-caps+xml";
 
-		if (dataSource.containsAppUsage(xcapCapsAUID)) {
-			// create xcap-caps global/index doc
-			StringBuilder sb1 = new StringBuilder(
-					"<?xml version='1.0' encoding='UTF-8'?><xcap-caps xmlns='urn:ietf:params:xml:ns:xcap-caps'><auids>");
-			StringBuilder sb2 = new StringBuilder(
-					"</auids><extensions/><namespaces>");
-			AppUsageManagement appUsageManagement = AppUsageManagement.getInstance();
-			AppUsagePool xcapCapsAppUsagePool = null;
-			AppUsage xcapCapsAppUsage = null;
-			for (String auid : appUsageManagement.getAppUsages()) {
-				dataSource.addAppUsage(auid);
-				AppUsagePool appUsagePool = appUsageManagement.getAppUsagePool(auid);
-				if (appUsagePool != null) {
-					// borrow one app usage object from cache
-					AppUsage appUsage = appUsagePool.borrowInstance();
-					// add auid and namespace
-					sb1.append("<auid>").append(appUsage.getAUID()).append(
-					"</auid>");
-					sb2.append("<namespace>").append(
-							appUsage.getDefaultDocumentNamespace()).append(
-							"</namespace>");
-					if (auid.equals(xcapCapsAUID)) {
-						xcapCapsAppUsage = appUsage;
-						xcapCapsAppUsagePool = appUsagePool;
-					} else {
-						// release app usage object
-						appUsagePool.returnInstance(appUsage);
-					}
+		// create xcap-caps global/index doc
+		StringBuilder sb1 = new StringBuilder(
+		"<?xml version='1.0' encoding='UTF-8'?><xcap-caps xmlns='urn:ietf:params:xml:ns:xcap-caps'><auids>");
+		StringBuilder sb2 = new StringBuilder(
+		"</auids><extensions/><namespaces>");
+		AppUsageManagement appUsageManagement = AppUsageManagement.getInstance();
+		AppUsagePool xcapCapsAppUsagePool = null;
+		AppUsage xcapCapsAppUsage = null;
+		for (String auid : appUsageManagement.getAppUsages()) {
+			AppUsagePool appUsagePool = appUsageManagement.getAppUsagePool(auid);
+			if (appUsagePool != null) {
+				// borrow one app usage object from cache
+				AppUsage appUsage = appUsagePool.borrowInstance();
+				// add auid and namespace
+				sb1.append("<auid>").append(appUsage.getAUID()).append(
+				"</auid>");
+				sb2.append("<namespace>").append(
+						appUsage.getDefaultDocumentNamespace()).append(
+								"</namespace>");
+				if (auid.equals(xcapCapsAUID)) {
+					xcapCapsAppUsage = appUsage;
+					xcapCapsAppUsagePool = appUsagePool;
+				} else {
+					// release app usage object
+					appUsagePool.returnInstance(appUsage);
 				}
 			}
-			sb1.append(sb2).append("</namespaces></xcap-caps>");
+		}
+		sb1.append(sb2).append("</namespaces></xcap-caps>");
 
-			if (xcapCapsAppUsage != null) {
-				try {
-					getRequestProcessor().put(
-							new ResourceSelector("/" + xcapCapsAUID
-									+ "/global/index", null),
-							xcapCapsMimetype,
-							new ByteArrayInputStream(sb1.toString().getBytes(
-									"utf-8")), null,
-							ServerConfiguration.getInstance().getXcapRoot(),null);
-				} catch (Exception e) {
-					throw new InternalServerErrorException(
-							"Failed to put xcap-caps global document. Cause: "
-									+ e.getCause() + " Message:"
-									+ e.getMessage());
-				}
-				// release app usage object
-				xcapCapsAppUsagePool.returnInstance(xcapCapsAppUsage);
+		if (xcapCapsAppUsage != null) {
+			try {
+				getRequestProcessor().put(
+						new ResourceSelector("/" + xcapCapsAUID
+								+ "/global/index", null),
+								xcapCapsMimetype,
+								new ByteArrayInputStream(sb1.toString().getBytes(
+								"utf-8")), null,
+								ServerConfiguration.getInstance().getXcapRoot(),null);
+			} catch (Exception e) {
+				throw new InternalServerErrorException(
+						"Failed to put xcap-caps global document. Cause: "
+						+ e.getCause() + " Message:"
+						+ e.getMessage());
 			}
+			// release app usage object
+			xcapCapsAppUsagePool.returnInstance(xcapCapsAppUsage);
 		}
 
 	}
@@ -197,7 +181,6 @@ public abstract class XCAPCapsAppUsageSbb implements Sbb {
 		new XCAPCapsAppUsageDeployer().start();
 		// update xcap caps global doc
 		try {
-			dataSource.addAppUsage(XCAPCapsAppUsage.ID);
 			updateXCAPCapsGlobalDoc();
 		} catch (InternalServerErrorException e) {
 			tracer.severe("failed to update xcap caps global doc", e);

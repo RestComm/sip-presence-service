@@ -15,7 +15,6 @@ import org.openxdm.xcap.common.uri.DocumentSelector;
  */
 public class JPADataSource implements DataSource {
 
-	private static final String[] EMPTY_STRING_ARRAY = {};
 	private static final org.openxdm.xcap.common.datasource.Document[] EMPTY_DOC_ARRAY = {};
 	
 	private EntityManagerFactory entityManagerFactory = null;
@@ -28,46 +27,11 @@ public class JPADataSource implements DataSource {
 		entityManagerFactory.close();
 	}
 
-	public String getExistingCollection(String auid, String startingCollection)
-			throws InternalServerErrorException {
-		
-		EntityManager entityManager = entityManagerFactory
-				.createEntityManager();
-		while (true) {
-			if (!entityManager
-					.createNamedQuery("selectCollectionFromKey")
-					.setParameter("collectionName", startingCollection)
-					.setParameter("auid", auid).getResultList().isEmpty()) {
-				entityManager.close();
-				return startingCollection;
-			} else {
-				int index = startingCollection.lastIndexOf('/');
-				if (index > 0) {
-					startingCollection = startingCollection.substring(0, index);
-				} else {
-					break;
-				}
-			}
-		}
-		entityManager.close();
-		return "";
-		
-	}
-
 	public org.openxdm.xcap.common.datasource.Document getDocument(DocumentSelector documentSelector)
 			throws InternalServerErrorException {
 		
 		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		Document document = null;
-		List<?> resultList = entityManager
-		.createNamedQuery("selectDocumentFromKey")
-		.setParameter("auid", documentSelector.getAUID())
-		.setParameter("collectionName", documentSelector.getDocumentParent())
-		.setParameter("documentName", documentSelector.getDocumentName())
-		.getResultList();
-		if (!resultList.isEmpty()) {
-			document = (Document) resultList.get(0);
-		}
+		final Document document = entityManager.find(Document.class, new DocumentPrimaryKey(documentSelector.getAUID(), documentSelector.getDocumentParent(), documentSelector.getDocumentName()));
 		entityManager.close();
 		return document;
 	}
@@ -90,9 +54,9 @@ public class JPADataSource implements DataSource {
 			throws InternalServerErrorException {
 
 		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		entityManager.createNamedQuery("updateDocumentFromKey")
+		entityManager.createNamedQuery(Document.JPA_QUERY_UPDATE_DOCUMENTS_FROM_KEY)
 		.setParameter("auid", documentSelector.getAUID())
-		.setParameter("collectionName", documentSelector.getDocumentParent())
+		.setParameter("documentParent", documentSelector.getDocumentParent())
 		.setParameter("documentName", documentSelector.getDocumentName())
 		.setParameter("eTag", newETag)
 		.setParameter("xml", documentAsString)
@@ -105,97 +69,21 @@ public class JPADataSource implements DataSource {
 			throws InternalServerErrorException {
 		
 		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		entityManager.createNamedQuery("deleteDocumentFromKey")
+		entityManager.createNamedQuery(Document.JPA_QUERY_DELETE_DOCUMENTS_FROM_KEY)
 		.setParameter("auid", documentSelector.getAUID())
-		.setParameter("collectionName", documentSelector.getDocumentParent())
+		.setParameter("documentParent", documentSelector.getDocumentParent())
 		.setParameter("documentName", documentSelector.getDocumentName())
 		.executeUpdate();
 		entityManager.flush();
 		entityManager.close();
 	}
 
-	public void addAppUsage(String auid)
-			throws InternalServerErrorException {
 		
-		if (!containsAppUsage(auid)) {
-			EntityManager entityManager = entityManagerFactory
-					.createEntityManager();
-			AppUsage appUsage = new AppUsage(auid);
-			entityManager.persist(appUsage);
-			entityManager.flush();
-			entityManager.close();
-		}
-	}
-
-	public String[] getAppUsages() throws InternalServerErrorException {
-
-		String[] result = null;
-		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		List<?> resultList = entityManager.createNamedQuery("selectAppUsages").getResultList();
-		int resultListSize = resultList.size();
-		if (resultListSize > 0) {
-			result = new String[resultListSize];
-			for(int i=0;i<resultListSize;i++) {
-				result[i] = ((AppUsage)resultList.get(i)).getId();
-			}
-		}
-		else {
-			result = EMPTY_STRING_ARRAY;
-		}
-		entityManager.close();
-		return result;
-	}
-
-	public boolean containsAppUsage(String auid)
-			throws InternalServerErrorException {
-		
-		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		boolean result = false;
-		if(!
-			entityManager.createNamedQuery("selectAppUsageFromKey")
-					.setParameter("id", auid)
-					.getResultList()
-					.isEmpty()) {
-			result = true;
-		} 
-		entityManager.close();
-		return result;
-	}
-
-	public void removeAppUsage(String auid)
-			throws InternalServerErrorException {
-		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		// remove all docs
-		entityManager.createNamedQuery("deleteDocumentsFromAppUsage").setParameter("auid", auid).executeUpdate();
-		// remove all collections
-		entityManager.createNamedQuery("deleteCollectionsFromAppUsage").setParameter("auid", auid).executeUpdate();
-		// remove the app usage
-		entityManager.createNamedQuery("deleteAppUsageFromKey").setParameter("auid", auid).executeUpdate();
-		entityManager.flush();
-		entityManager.close();
-	}
-
-	public void addCollection(String appUsage, String collectionName)
-			throws InternalServerErrorException {
-
-		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		Collection collection = new Collection(appUsage,collectionName);
-		entityManager.persist(collection);
-		entityManager.flush();
-		entityManager.close();
-	}
-
-	/*
-	public void addUser(String appUsage, String user)
-			throws InternalServerErrorException {
-		addCollection(appUsage, "users/" + user);
-	}*/
-	
 	public org.openxdm.xcap.common.datasource.Document[] getDocuments(String auid) throws InternalServerErrorException {
 		
 		org.openxdm.xcap.common.datasource.Document[] result = null;
 		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		List<?> resultList = entityManager.createNamedQuery("selectDocumentsFromAppUsage")
+		List<?> resultList = entityManager.createNamedQuery(Document.JPA_QUERY_SELECT_DOCUMENTS_FROM_APPUSAGE)
 		.setParameter("auid", auid)
 		.getResultList();
 		int resultListSize = resultList.size();
@@ -213,14 +101,14 @@ public class JPADataSource implements DataSource {
 		
 	};
 	
-	public org.openxdm.xcap.common.datasource.Document[] getDocuments(String auid, String collection)
+	public org.openxdm.xcap.common.datasource.Document[] getDocuments(String auid, String documentParent)
 			throws InternalServerErrorException {
 	
 		org.openxdm.xcap.common.datasource.Document[] result = null;
 		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		List<?> resultList = entityManager.createNamedQuery("selectDocumentsFromCollection")
+		List<?> resultList = entityManager.createNamedQuery(Document.JPA_QUERY_SELECT_DOCUMENTS_FROM_DOCUMENT_PARENT)
 		.setParameter("auid", auid)
-		.setParameter("collectionName", collection)
+		.setParameter("documentParent", documentParent)
 		.getResultList();
 		int resultListSize = resultList.size();
 		if (resultListSize > 0) {
@@ -235,100 +123,5 @@ public class JPADataSource implements DataSource {
 		entityManager.close();
 		return result;
 	}
-	
-	public String[] getCollections(String auid)
-			throws InternalServerErrorException {
-		return getCollections(auid, null);
-	}
-
-	private String[] getCollections(String auid, String expression)
-			throws InternalServerErrorException {
-		
-		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		List<?> resultList = null;
-		if (expression != null) {
-			resultList = entityManager.createNamedQuery("selectCollectionsFromAppUsageAndExpression")
-			.setParameter("auid", auid)
-			.setParameter("expression", expression)
-			.getResultList();
-		}
-		else {
-			resultList = entityManager.createNamedQuery("selectCollectionsFromAppUsage")
-			.setParameter("auid", auid)
-			.getResultList();
-		}
-		
-		String[] result = null;
-		int resultListSize = resultList.size();
-		if (resultListSize > 0) {
-			result = new String[resultListSize];
-			for(int i=0;i<resultListSize;i++) {
-				result[i] = ((Collection)resultList.get(i)).getKey().getCollectionName();
-			}
-		}
-		else {
-			result = EMPTY_STRING_ARRAY;
-		}
-		entityManager.close();
-		return result;
-	}
-	
-	/*
-	public String[] getUsers(String auid)
-			throws InternalServerErrorException {
-		
-		HashSet<String> resultSet = new HashSet<String>();
-		for(String collectionName: getCollections(auid, "users/%")) {
-			collectionName = collectionName.substring("users/".length());
-			int slashIndex = collectionName.indexOf('/');
-			if (slashIndex > 0) {
-				resultSet.add(collectionName.substring(0,slashIndex));
-			}
-			else {
-				resultSet.add(collectionName);
-			}
-		}
-	
-		int resultSetSize = resultSet.size();
-		if (resultSetSize > 0) {
-			return resultSet.toArray(new String[resultSetSize]);
-		}
-		else {
-			return EMPTY_STRING_ARRAY;
-		}
-		
-	}
-
-	public void removeUser(String auid, String user)
-			throws InternalServerErrorException {
-		try {
-			EntityManager entityManager = entityManagerFactory.createEntityManager();
-			XCAPClient client = new XCAPClientImpl(
-					ServerConfiguration.SERVER_HOST,
-					ServerConfiguration.SERVER_PORT,
-					ServerConfiguration.XCAP_ROOT);
-			// get user collections
-			String[] collectionNames = getCollections(auid, "users/" + user
-					+ '%');
-			for (String collectionName : collectionNames) {
-				for (String documentName : getDocuments(auid, collectionName)) {
-					// remove docs through xcap so app usages process
-					// interdependencies
-					client.delete(new DocumentUriKey(new DocumentSelector(auid,
-							collectionName, documentName)),null);
-				}
-				// remove collection
-				entityManager.createNamedQuery("deleteCollectionFromKey")
-					.setParameter("auid", auid)
-					.setParameter("collectionName", collectionName)
-					.executeUpdate();
-			}
-			client.shutdown();
-			entityManager.flush();
-			entityManager.close();
-		} catch (Exception e) {
-			throw new InternalServerErrorException(e.getMessage(),e);
-		}
-	}*/
 
 }

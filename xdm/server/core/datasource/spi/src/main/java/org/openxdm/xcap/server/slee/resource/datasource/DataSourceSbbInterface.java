@@ -24,30 +24,6 @@ public class DataSourceSbbInterface implements DataSource {
 		this.ra = ra;
 	}
 
-	public String[] getAppUsages() throws InternalServerErrorException {
-		return ra.getDataSource().getAppUsages();
-	}
-
-	public void addAppUsage(String appUsage) throws InternalServerErrorException {
-		ra.getDataSource().addAppUsage(appUsage);		
-	}
-
-	public void removeAppUsage(String appUsage) throws InternalServerErrorException {
-		ra.getDataSource().removeAppUsage(appUsage);		
-	}
-
-	/*public String[] getUsers(String appUsage) throws InternalServerErrorException {		
-		return ra.getDataSource().getUsers(appUsage);
-	}
-
-	public void addUser(String appUsage, String user) throws InternalServerErrorException {
-		ra.getDataSource().addUser(appUsage,user);		
-	}
-
-	public void removeUser(String appUsage, String user) throws InternalServerErrorException {
-		ra.getDataSource().removeUser(appUsage,user);
-	}*/
-
 	@Deprecated
 	public void open() throws InternalServerErrorException {
 		throw new InternalServerErrorException("forbidden to open datasource from sbb");		
@@ -57,10 +33,6 @@ public class DataSourceSbbInterface implements DataSource {
 	public void close() throws InternalServerErrorException {
 		throw new InternalServerErrorException("forbidden to close datasource from sbb");		
 	}	
-
-	public void addCollection(String appUsage, String collection) throws InternalServerErrorException {
-		ra.getDataSource().addCollection(appUsage, collection);
-	}
 			
 	public void createDocument(DocumentSelector documentSelector, String eTag, String documentAsString, org.w3c.dom.Document document) throws InternalServerErrorException {
 		ra.getDataSource().createDocument(documentSelector, eTag, documentAsString, document);
@@ -76,31 +48,19 @@ public class DataSourceSbbInterface implements DataSource {
 		ra.postDocumentUpdatedEvent(new DocumentUpdatedEvent(documentSelector,oldETag,null,null,null));
 	}
 	
-	public String[] getCollections(String appUsage) throws InternalServerErrorException {
-		return ra.getDataSource().getCollections(appUsage);
-	}
-
 	@Override
 	public Document[] getDocuments(String auid)
 			throws InternalServerErrorException {
 		return ra.getDataSource().getDocuments(auid);
 	}
 	
-	public Document[] getDocuments(String auid, String collection)
+	public Document[] getDocuments(String auid, String documentParent)
 			throws InternalServerErrorException {
-		return ra.getDataSource().getDocuments(auid,collection);
+		return ra.getDataSource().getDocuments(auid,documentParent);
 	}
 	
 	public Document getDocument(DocumentSelector documentSelector) throws InternalServerErrorException {
 		return ra.getDataSource().getDocument(documentSelector);
-	}
-
-	public String getExistingCollection(String auid, String startingCollection) throws InternalServerErrorException {
-		return ra.getDataSource().getExistingCollection(auid, startingCollection);
-	}
-
-	public boolean containsAppUsage(String appUsage) throws InternalServerErrorException {
-		return ra.getDataSource().containsAppUsage(appUsage);
 	}
 
 	public void updateAttribute(DocumentSelector documentSelector,NodeSelector nodeSelector,

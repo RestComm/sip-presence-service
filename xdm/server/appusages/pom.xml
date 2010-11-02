@@ -19,6 +19,7 @@
 		<module>resource-lists</module>
 		<module>rls-services</module>
 		<module>xcap-caps</module>
+		<module>oma-xcap-directory</module>
 	</modules>
 	
 </project>

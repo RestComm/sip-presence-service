@@ -3,6 +3,7 @@ package org.openxdm.xcap.server.slee.appusage.resourcelists;
 import javax.xml.validation.Schema;
 
 import org.mobicents.xdm.server.appusage.AppUsage;
+import org.mobicents.xdm.server.appusage.AppUsageDataSourceInterceptor;
 import org.mobicents.xdm.server.appusage.AppUsageFactory;
 
 public class ResourceListsAppUsageFactory implements AppUsageFactory {
@@ -19,5 +20,10 @@ public class ResourceListsAppUsageFactory implements AppUsageFactory {
 	
 	public String getAppUsageId() {
 		return ResourceListsAppUsage.ID;
+	}
+	
+	@Override
+	public AppUsageDataSourceInterceptor getDataSourceInterceptor() {
+		return null;
 	}
 }

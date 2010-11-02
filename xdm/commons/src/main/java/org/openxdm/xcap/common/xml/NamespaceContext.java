@@ -13,6 +13,10 @@ public class NamespaceContext implements javax.xml.namespace.NamespaceContext {
 		this.namespaces = namespaces;
 	}
 	
+	/*
+	 * (non-Javadoc)
+	 * @see javax.xml.namespace.NamespaceContext#getNamespaceURI(java.lang.String)
+	 */
     public String getNamespaceURI(String prefix) {
         if (prefix == null) {
         	throw new IllegalArgumentException("Null prefix");
@@ -27,6 +31,10 @@ public class NamespaceContext implements javax.xml.namespace.NamespaceContext {
         }        
     }
 
+    /*
+     * (non-Javadoc)
+     * @see javax.xml.namespace.NamespaceContext#getPrefix(java.lang.String)
+     */
     public String getPrefix(String uri) {
         for(Iterator<String> i=namespaces.keySet().iterator();i.hasNext();) {
         	String prefix = i.next();
@@ -37,8 +45,28 @@ public class NamespaceContext implements javax.xml.namespace.NamespaceContext {
         return null;
     }
 
+    /*
+     * (non-Javadoc)
+     * @see javax.xml.namespace.NamespaceContext#getPrefixes(java.lang.String)
+     */
     public Iterator<String> getPrefixes(String uri) {
         return namespaces.keySet().iterator();
     }
 
+    /**
+     * 
+     * @return
+     */
+    public Map<String, String> getNamespaces() {
+		return namespaces;
+	}
+    
+    /**
+     * 
+     * @param namespace
+     */
+    public void setDefaultDocNamespace(String namespace) {
+    	namespaces.put(XMLConstants.DEFAULT_NS_PREFIX,namespace);
+    }
+    
 }

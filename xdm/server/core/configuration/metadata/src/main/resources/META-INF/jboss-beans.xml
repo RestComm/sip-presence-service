@@ -27,9 +27,6 @@
       <!-- the xcap root of the server, must begin with / -->
       <property name="xcapRoot">${xdm.server.xcap.root}</property>
       
-      <!-- if a xcap put creates doc collections/folders needed to hold the new doc, if false those must be provisioned -->
-      <property name="dynamicUserProvision">${xdm.server.xcap.dynamicUserProvision}</property>	      
-      
       <!--  realm for http digest user authentication, if not set the server host will be used
       <property name="authenticationRealm">...</property>
        -->

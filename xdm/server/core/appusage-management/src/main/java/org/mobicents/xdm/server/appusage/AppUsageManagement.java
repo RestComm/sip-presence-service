@@ -27,6 +27,8 @@ public class AppUsageManagement {
 	private static final EventTypeID APPUSAGE_REMOVED_EVENT_TYPE = new EventTypeID("AppUsageRemovedEvent", "org.mobicents.xdm", "1.0");
 	
 	private final ConcurrentHashMap<String, AppUsagePool> pools = new ConcurrentHashMap<String, AppUsagePool>();
+	
+	private final ConcurrentHashMap<String, AppUsageDataSourceInterceptor> interceptors = new ConcurrentHashMap<String, AppUsageDataSourceInterceptor>();
 
 	private static final AppUsageManagement INSTANCE = new AppUsageManagement();
 	
@@ -90,6 +92,9 @@ public class AppUsageManagement {
 		AppUsagePool pool = new AppUsagePool(objectPool);
 		if (pools.putIfAbsent(appUsageFactory.getAppUsageId(),pool) == null) {
 			LOGGER.info("Added app usage "+appUsageFactory.getAppUsageId());
+			if (appUsageFactory.getDataSourceInterceptor() != null) {
+				interceptors.put(appUsageFactory.getAppUsageId(), appUsageFactory.getDataSourceInterceptor());
+			}
 			// inform SLEE
 			fireEventToSLEE(new AppUsageAddedEvent(appUsageFactory.getAppUsageId()), APPUSAGE_ADDED_EVENT_TYPE);
 		}
@@ -126,6 +131,7 @@ public class AppUsageManagement {
 		if (pool != null) {
 			LOGGER.info("Removed app usage "+auid);
 			pool.close();
+			interceptors.remove(auid);
 			// inform SLEE
 			fireEventToSLEE(new AppUsageRemovedEvent(auid),APPUSAGE_REMOVED_EVENT_TYPE);
 		}
@@ -139,4 +145,12 @@ public class AppUsageManagement {
 		return pools.keySet();
 	}
 	
+	/**
+	 * 
+	 * @param auid
+	 * @return
+	 */
+	public AppUsageDataSourceInterceptor getDataSourceInterceptor(String auid) {
+		return interceptors.get(auid);
+	}
 }

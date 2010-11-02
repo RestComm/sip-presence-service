@@ -304,7 +304,7 @@ public class XcapDiffSubscriptionControl {
 				try {
 					for (Document document : sbb.getDataSourceSbbInterface().getDocuments(auid)) {
 						DocumentSelector documentSelector = new DocumentSelector(
-								auid, document.getCollectionName(), document.getDocumentName());
+								auid, document.getDocumentParent(), document.getDocumentName());
 						if (document != null) {
 							// TODO authorize inclusion of the document
 							documentEtags.put(documentSelector, document

@@ -7,7 +7,7 @@ import java.util.Set;
 import javax.xml.validation.Validator;
 
 import org.mobicents.xdm.server.appusage.AppUsage;
-import org.openxdm.xcap.common.datasource.DataSource;
+import org.mobicents.xdm.server.appusage.AppUsageDataSource;
 import org.openxdm.xcap.common.error.ConstraintFailureConflictException;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
 import org.openxdm.xcap.common.error.UniquenessFailureConflictException;
@@ -25,7 +25,7 @@ public class ResourceListsAppUsage extends AppUsage {
 	public static final String MIMETYPE = "application/resource-lists+xml";
 	
 	public ResourceListsAppUsage(Validator schemaValidator) {
-		super(ID,DEFAULT_DOC_NAMESPACE,MIMETYPE,schemaValidator);
+		super(ID,DEFAULT_DOC_NAMESPACE,MIMETYPE,schemaValidator,"index");
 	}	
 	
 	public static void checkNodeResourceListConstraints(Node node) throws UniquenessFailureConflictException, ConstraintFailureConflictException {
@@ -153,9 +153,13 @@ public class ResourceListsAppUsage extends AppUsage {
 			}
 		}		
 	}
-		
-	public void checkConstraintsOnPut(Document document, String xcapRoot, DocumentSelector documentSelector, DataSource dataSource) throws UniquenessFailureConflictException, ConstraintFailureConflictException, InternalServerErrorException {
-		// reuse default check
+	
+	@Override
+	public void checkConstraintsOnPut(Document document, String xcapRoot,
+			DocumentSelector documentSelector, AppUsageDataSource dataSource)
+			throws UniquenessFailureConflictException,
+			InternalServerErrorException, ConstraintFailureConflictException {
+	
 		super.checkConstraintsOnPut(document, xcapRoot, documentSelector, dataSource);
 		// check this app usage constraints below the root resource-lists node
 		checkNodeResourceListConstraints(document.getDocumentElement());		

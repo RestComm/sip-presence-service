@@ -23,12 +23,10 @@ import org.openxdm.xcap.common.xml.XMLValidator;
 @Entity
 @Table(name = "XDM_DATASOURCE_DOCUMENTS")
 @NamedQueries({
-	@NamedQuery(name="selectDocumentFromKey",query="SELECT x FROM Document x WHERE x.key.collection.key.appUsage.id = :auid AND x.key.collection.key.collectionName = :collectionName AND x.key.documentName = :documentName"),
-	@NamedQuery(name="selectDocumentsFromCollection",query="SELECT x FROM Document x WHERE x.key.collection.key.appUsage.id = :auid AND x.key.collection.key.collectionName = :collectionName"),
-	@NamedQuery(name="selectDocumentsFromAppUsage",query="SELECT x FROM Document x WHERE x.key.collection.key.appUsage.id = :auid"),
-	@NamedQuery(name="updateDocumentFromKey",query="UPDATE Document x SET x.xml=:xml,x.eTag=:eTag WHERE x.key.collection.key.appUsage.id = :auid AND x.key.collection.key.collectionName = :collectionName AND x.key.documentName = :documentName"),
-	@NamedQuery(name="deleteDocumentFromKey",query="DELETE FROM Document x WHERE x.key.collection.key.appUsage.id = :auid AND x.key.collection.key.collectionName = :collectionName AND x.key.documentName = :documentName"),
-	@NamedQuery(name="deleteDocumentsFromAppUsage",query="DELETE FROM Document x WHERE x.key.collection.key.appUsage.id = :auid")
+	@NamedQuery(name=Document.JPA_QUERY_SELECT_DOCUMENTS_FROM_DOCUMENT_PARENT,query="SELECT x FROM Document x WHERE x.key.appUsage = :auid AND x.key.documentParent = :documentParent"),
+	@NamedQuery(name=Document.JPA_QUERY_SELECT_DOCUMENTS_FROM_APPUSAGE,query="SELECT x FROM Document x WHERE x.key.appUsage = :auid"),
+	@NamedQuery(name=Document.JPA_QUERY_UPDATE_DOCUMENTS_FROM_KEY,query="UPDATE Document x SET x.xml=:xml,x.eTag=:eTag WHERE x.key.appUsage = :auid AND x.key.documentParent = :documentParent AND x.key.documentName = :documentName"),
+	@NamedQuery(name=Document.JPA_QUERY_DELETE_DOCUMENTS_FROM_KEY,query="DELETE FROM Document x WHERE x.key.appUsage = :auid AND x.key.documentParent = :documentParent AND x.key.documentName = :documentName")
 	})
 public class Document implements org.openxdm.xcap.common.datasource.Document, Serializable {
 	
@@ -37,6 +35,13 @@ public class Document implements org.openxdm.xcap.common.datasource.Document, Se
 	 */
 	private static final long serialVersionUID = 3697052553779974529L;
 
+	public static final String JPA_QUERY_SELECT_DOCUMENTS_FROM_DOCUMENT_PARENT = "selectDocumentsFromDocumentParent";
+	public static final String JPA_QUERY_SELECT_DOCUMENTS_FROM_APPUSAGE = "selectDocumentsFromAppUsage";
+	public static final String JPA_QUERY_UPDATE_DOCUMENTS_FROM_KEY = "updateDocumentFromKey";
+	public static final String JPA_QUERY_DELETE_DOCUMENTS_FROM_KEY = "deleteDocumentFromKey";
+	
+	private transient org.w3c.dom.Document domDocument = null;
+	
 	@EmbeddedId
 	protected DocumentPrimaryKey key;
 	
@@ -56,8 +61,8 @@ public class Document implements org.openxdm.xcap.common.datasource.Document, Se
 		// TODO Auto-generated constructor stub
 	}
 	
-	public Document(String auid, String collectionName, String documentName) {
-		setKey(new DocumentPrimaryKey(documentName,new Collection(auid,collectionName)));
+	public Document(String auid, String documentParent, String documentName) {
+		setKey(new DocumentPrimaryKey(auid,documentParent,documentName));
 	}
 	
 	@Override
@@ -105,11 +110,11 @@ public class Document implements org.openxdm.xcap.common.datasource.Document, Se
 	//
 	
 	public String getAUID() {
-		return key.getCollection().getKey().getAppUsage().getId();
+		return key.getAppUsage();
 	}
 	
-	public String getCollectionName() {
-		return key.getCollection().getKey().getCollectionName();
+	public String getDocumentParent() {
+		return key.getDocumentParent();
 	}
 	
 	public String getDocumentName() {
@@ -121,10 +126,13 @@ public class Document implements org.openxdm.xcap.common.datasource.Document, Se
     }
 
     public org.w3c.dom.Document getAsDOMDocument() throws InternalServerErrorException {
-        try {
-            return XMLValidator.getWellFormedDocument(new StringReader(xml));
-        } catch (NotWellFormedConflictException e) {
-            throw new InternalServerErrorException(e.getMessage());
+        if (domDocument == null) {
+        	try {
+        		domDocument = XMLValidator.getWellFormedDocument(new StringReader(xml));
+            } catch (NotWellFormedConflictException e) {
+                throw new InternalServerErrorException(e.getMessage());
+            }
         }
+    	return domDocument;
     }
 }

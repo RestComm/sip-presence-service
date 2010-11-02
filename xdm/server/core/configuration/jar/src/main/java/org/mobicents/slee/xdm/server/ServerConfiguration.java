@@ -14,9 +14,7 @@ public class ServerConfiguration implements ServerConfigurationMBean {
 	private String schemeAndAuthority = "http://"+serverHost+":"+serverPort;
 	
 	private String xcapRoot = "/mobicents";
-	
-	private boolean dynamicUserProvision;
-	
+		
 	private String authenticationRealm;
 	
 	private static final ServerConfiguration INSTANCE = new ServerConfiguration();
@@ -84,20 +82,6 @@ public class ServerConfiguration implements ServerConfigurationMBean {
 	 */
 	public void setXcapRoot(String xcapRoot) {
 		this.xcapRoot = xcapRoot;
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.mobicents.slee.xdm.server.ServerConfigurationMBean#getDynamicUserProvision()
-	 */
-	public boolean getDynamicUserProvision() {
-		return dynamicUserProvision;
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.mobicents.slee.xdm.server.ServerConfigurationMBean#setDynamicUserProvision(boolean)
-	 */
-	public void setDynamicUserProvision(boolean value) {
-		this.dynamicUserProvision = value;
 	}
 	
 	/* (non-Javadoc)

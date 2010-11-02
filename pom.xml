@@ -75,7 +75,6 @@
 		<!-- PRESENCE SERVICE BUILD CONFIGURATION -->
 		
 		<xdm.server.xcap.root>/mobicents</xdm.server.xcap.root>
-		<xdm.server.xcap.dynamicUserProvision>true</xdm.server.xcap.dynamicUserProvision>
 		
 		<presence.server.notifier.presrules.auid>org.openmobilealliance.pres-rules</presence.server.notifier.presrules.auid>
 		<presence.server.notifier.presrules.documentName>pres-rules</presence.server.notifier.presrules.documentName>

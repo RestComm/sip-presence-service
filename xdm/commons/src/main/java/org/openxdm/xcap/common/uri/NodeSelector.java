@@ -95,34 +95,38 @@ public class NodeSelector {
 	 */
 	public String getElementSelectorWithEmptyPrefix() {
 		if (elementSelectorWithEmptyPrefix == null) {
-			StringBuilder sb = new StringBuilder();
-			String[] elementSelectorParts = elementSelector.split("/");
-			// ignore the first part because its ""
-			for (int i = 1; i < elementSelectorParts.length; i++) {
-				if (elementSelectorParts[i].charAt(0) == '*') {
-					// wildcard, just copy
-					sb.append('/').append(elementSelectorParts[i]);
-				} else if (elementSelectorParts[i].indexOf(':') > -1) {
-					// it has at least one :, check if it's not inside an attr
-					// value
-					int pos = elementSelectorParts[i].indexOf('[');
-					if (pos > 0 && elementSelectorParts[i].indexOf(':') > pos) {
-						// insert empty prefix
-						sb.append("/:").append(elementSelectorParts[i]);
-					} else {
-						// already has a prefix
-						sb.append('/').append(elementSelectorParts[i]);
-					}
-				} else {
-					// insert empty prefix
-					sb.append("/:").append(elementSelectorParts[i]);
-				}
-			}
-			elementSelectorWithEmptyPrefix = sb.toString();
+			elementSelectorWithEmptyPrefix = getElementSelectorWithEmptyPrefix(elementSelector);
 		}
 		return elementSelectorWithEmptyPrefix;
 	}
 
+	public static String getElementSelectorWithEmptyPrefix(String elementSelector) {
+		StringBuilder sb = new StringBuilder();
+		String[] elementSelectorParts = elementSelector.split("/");
+		// ignore the first part because its ""
+		for (int i = 1; i < elementSelectorParts.length; i++) {
+			if (elementSelectorParts[i].charAt(0) == '*') {
+				// wildcard, just copy
+				sb.append('/').append(elementSelectorParts[i]);
+			} else if (elementSelectorParts[i].indexOf(':') > -1) {
+				// it has at least one :, check if it's not inside an attr
+				// value
+				int pos = elementSelectorParts[i].indexOf('[');
+				if (pos > 0 && elementSelectorParts[i].indexOf(':') > pos) {
+					// insert empty prefix
+					sb.append("/:").append(elementSelectorParts[i]);
+				} else {
+					// already has a prefix
+					sb.append('/').append(elementSelectorParts[i]);
+				}
+			} else {
+				// insert empty prefix
+				sb.append("/:").append(elementSelectorParts[i]);
+			}
+		}
+		return sb.toString();
+	}
+	
 	/**
 	 * Retreives the element parent selector, that is, the parent of the element
 	 * selected by the element selector.

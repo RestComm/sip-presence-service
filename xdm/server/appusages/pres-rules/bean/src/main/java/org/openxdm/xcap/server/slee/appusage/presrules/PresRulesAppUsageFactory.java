@@ -3,6 +3,7 @@ package org.openxdm.xcap.server.slee.appusage.presrules;
 import javax.xml.validation.Schema;
 
 import org.mobicents.xdm.server.appusage.AppUsage;
+import org.mobicents.xdm.server.appusage.AppUsageDataSourceInterceptor;
 import org.mobicents.xdm.server.appusage.AppUsageFactory;
 
 public class PresRulesAppUsageFactory implements AppUsageFactory {
@@ -19,5 +20,10 @@ public class PresRulesAppUsageFactory implements AppUsageFactory {
 	
 	public String getAppUsageId() {
 		return PresRulesAppUsage.ID;
+	}
+	
+	@Override
+	public AppUsageDataSourceInterceptor getDataSourceInterceptor() {
+		return null;
 	}
 }

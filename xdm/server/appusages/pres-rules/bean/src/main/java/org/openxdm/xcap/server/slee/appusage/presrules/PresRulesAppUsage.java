@@ -12,7 +12,7 @@ public class PresRulesAppUsage extends AppUsage {
 	public static final String MIMETYPE = "application/auth-policy+xml";
 	
 	public PresRulesAppUsage(Validator schemaValidator) {
-		super(ID,DEFAULT_DOC_NAMESPACE,MIMETYPE,schemaValidator);
+		super(ID,DEFAULT_DOC_NAMESPACE,MIMETYPE,schemaValidator,"index");
 	}
 		
 }

@@ -10,7 +10,7 @@ public interface Document {
 	
 	public String getAUID();
 	
-	public String getCollectionName();
+	public String getDocumentParent();
 	
 	public String getDocumentName(); 
 	

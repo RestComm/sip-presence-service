@@ -23,6 +23,12 @@ public class DefaultAuthorizationPolicy extends AuthorizationPolicy {
 	private static final String USERS = "users";
 	private static final String GLOBAL = "global";
 	
+	private final String authorizedUserDocumentName;
+	
+	public DefaultAuthorizationPolicy(String authorizedUserDocumentName) {
+		this.authorizedUserDocumentName = authorizedUserDocumentName;
+	}
+	
 	public boolean isAuthorized(String user, AuthorizationPolicy.Operation operation, DocumentSelector documentSelector) throws NullPointerException {
 		
 		// check args
@@ -39,19 +45,25 @@ public class DefaultAuthorizationPolicy extends AuthorizationPolicy {
 		try {
 			// split document parent
 			final String[] documentParentParts = documentSelector.getDocumentParent().split(PATH_SEPARATOR);
-			// part 0 is the auid child directory, global or index	
-			if (documentParentParts[0].equalsIgnoreCase(USERS)) {
+			// part 0 is the auid child directory, global or users	
+			if (documentParentParts[0].equals(USERS)) {
 				// /auid/users directory, get its child, the user directory 
 				final String userDirectory = documentParentParts[1];
 				// only the user is authorized to operate on it's directory 
 				if (user.equalsIgnoreCase(userDirectory)) {
-					return true;
+					if (operation == Operation.PUT) {
+						// check doc name and parent path length
+						return documentParentParts.length == 2 && authorizedUserDocumentName.equals(documentSelector.getDocumentName());
+					}
+					else {
+						return true;
+					}
 				} else {
 					return false;
 				}
-			} else if (documentParentParts[0].equalsIgnoreCase(GLOBAL)) {
+			} else if (documentParentParts[0].equals(GLOBAL)) {
 				// /auid/global dir, authorize operation only if is a get operation
-				if(operation.equals(AuthorizationPolicy.Operation.GET)) {
+				if(operation == Operation.GET) {
 					return true;
 				}
 				else {
