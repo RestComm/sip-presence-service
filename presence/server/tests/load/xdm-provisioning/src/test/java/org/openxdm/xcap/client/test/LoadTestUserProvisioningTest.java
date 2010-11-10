@@ -3,10 +3,8 @@ package org.openxdm.xcap.client.test;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Properties;
-import java.util.Random;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanException;
@@ -65,7 +63,7 @@ public class LoadTestUserProvisioningTest {
 		rmiAdaptor.invoke(userProfileMBeanObjectName, "addUser", args, sigs);	
 	}
 	
-	private void provisionUser(String user) throws InstanceNotFoundException, MBeanException, ReflectionException, IOException, URISyntaxException {
+	private void provisionUser(String user, int userNumber) throws InstanceNotFoundException, MBeanException, ReflectionException, IOException, URISyntaxException {
 		
 		System.out.println("Provisioning user "+user+" in the XDMS:");
 		
@@ -96,18 +94,10 @@ public class LoadTestUserProvisioningTest {
 			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
 			"\n<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\">" +
 				"\n\t<list name=\"Default\">";
-		HashSet<Integer> entries = new HashSet<Integer>();
-		Random random= new Random();
-		int entryUserNumber = -1;
+		int users_size = Integer.valueOf(properties.getProperty("USERS_SIZE"));
 		int users_size_length = properties.getProperty("USERS_SIZE").length(); 
 		for (int i=1;i<Integer.valueOf(properties.getProperty("USERS_RESOURCE_LIST_SIZE"));i++) {
-			while(true) {
-				entryUserNumber = random.nextInt(Integer.valueOf(properties.getProperty("USERS_SIZE"))-1)+1;
-				// ensures no repeated entries
-				if (entries.add(entryUserNumber)) {
-					break;
-				}
-			}
+			int entryUserNumber = (userNumber+i)%users_size;
 			String entryUserNumberString = Integer.toString(entryUserNumber);
 			while(entryUserNumberString.length() < users_size_length) {
 				// sipp adds 0s to usernames to make them of same length
@@ -121,7 +111,7 @@ public class LoadTestUserProvisioningTest {
 		
 		// put the doc in the xdms
 		int putResult = client.put(resourceListDocumentURI,"application/resource-lists+xml",resourceList,null,credentials).getCode();
-		System.out.println("Put result for resource lists doc:"+putResult);
+		System.out.println("Put result for resource lists doc: "+putResult+". Doc:\n"+resourceList);
 		Assert.assertTrue(putResult < 300);
 		
 		// create pres-rules doc uri
@@ -184,13 +174,13 @@ public class LoadTestUserProvisioningTest {
 		initRmiAdaptor();		
 		
 		int users_size_length = properties.getProperty("USERS_SIZE").length(); 
-		for (int i=0;i<Integer.valueOf(properties.getProperty("USERS_SIZE"));i++) {
-			String userNumber = Integer.toString(i+1);
+		for (int i=1;i<=Integer.valueOf(properties.getProperty("USERS_SIZE"));i++) {
+			String userNumber = Integer.toString(i);
 			while(userNumber.length() < users_size_length) {
 				// sipp adds 0s to usernames to make them of same length
 				userNumber = "0"+userNumber;				
 			}
-			provisionUser("sip:"+properties.getProperty("USERS_NAME_PREFIX")+userNumber+"@"+properties.getProperty("SERVER_HOST"));
+			provisionUser("sip:"+properties.getProperty("USERS_NAME_PREFIX")+userNumber+"@"+properties.getProperty("SERVER_HOST"),i);
 		}
 		
 		client.shutdown();

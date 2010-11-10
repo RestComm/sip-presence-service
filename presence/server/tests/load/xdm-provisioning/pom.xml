@@ -40,7 +40,12 @@
 			<artifactId>jbossall-client</artifactId>
 			<version>5.0.0.GA</version>
 			<scope>test</scope>
-		</dependency>				
+		</dependency>	
+		<dependency>
+			<artifactId>xdms-core-xcap-control-sbb</artifactId>
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<version>${pom.version}</version>
+		</dependency>			
 	</dependencies>
 	
 	<profiles>
