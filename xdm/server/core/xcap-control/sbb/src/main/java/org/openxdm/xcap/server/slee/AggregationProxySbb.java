@@ -20,6 +20,7 @@ import org.openxdm.xcap.common.error.ConflictException;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
 import org.openxdm.xcap.common.error.MethodNotAllowedException;
 import org.openxdm.xcap.common.error.NoParentConflictException;
+import org.openxdm.xcap.common.error.NotAuthorizedRequestException;
 import org.openxdm.xcap.common.error.NotFoundException;
 import org.openxdm.xcap.common.error.PreconditionFailedException;
 import org.openxdm.xcap.common.error.UnsupportedMediaTypeException;
@@ -242,7 +243,14 @@ public abstract class AggregationProxySbb implements javax.slee.Sbb {
 					logger.fine("bad request, replying "
 							+ e.getResponseStatus(),e);
 				response.setStatus(e.getResponseStatus());
+			
+			} catch (NotAuthorizedRequestException e) {
+				if (logger.isFineEnabled())
+					logger.fine("not authorized, replying "
+							+ e.getResponseStatus(),e);
+				response.setStatus(e.getResponseStatus());
 			}
+			
 			// send to client
 			responseWriter.close();
 
@@ -320,7 +328,14 @@ public abstract class AggregationProxySbb implements javax.slee.Sbb {
 					logger.fine("bad request, replying "
 							+ e.getResponseStatus(),e);
 				response.setStatus(e.getResponseStatus());
+			
+			} catch (NotAuthorizedRequestException e) {
+				if (logger.isFineEnabled())
+					logger.fine("not authorized, replying "
+							+ e.getResponseStatus(),e);
+				response.setStatus(e.getResponseStatus());
 			}
+			
 			// send to client
 			responseWriter.close();
 
@@ -461,7 +476,14 @@ public abstract class AggregationProxySbb implements javax.slee.Sbb {
 					logger.fine("invalid xcap uri, replying "
 							+ e.getResponseStatus(),e);
 				response.setStatus(e.getResponseStatus());
-			}
+			
+			} catch (NotAuthorizedRequestException e) {
+				if (logger.isFineEnabled())
+					logger.fine("not authorized, replying "
+							+ e.getResponseStatus(),e);
+				response.setStatus(e.getResponseStatus());
+			}	
+						
 			// send to client
 			responseWriter.close();
 
