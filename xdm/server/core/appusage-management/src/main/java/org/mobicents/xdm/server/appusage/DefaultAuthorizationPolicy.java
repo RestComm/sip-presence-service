@@ -19,10 +19,6 @@ import org.openxdm.xcap.common.uri.DocumentSelector;
  */
 public class DefaultAuthorizationPolicy extends AuthorizationPolicy {
 
-	private static final String PATH_SEPARATOR = "/";
-	private static final String USERS = "users";
-	private static final String GLOBAL = "global";
-	
 	private final String authorizedUserDocumentName;
 	
 	public DefaultAuthorizationPolicy(String authorizedUserDocumentName) {
@@ -43,17 +39,18 @@ public class DefaultAuthorizationPolicy extends AuthorizationPolicy {
 		}
 				
 		try {
-			// split document parent
-			final String[] documentParentParts = documentSelector.getDocumentParent().split(PATH_SEPARATOR);
-			// part 0 is the auid child directory, global or users	
-			if (documentParentParts[0].equals(USERS)) {
-				// /auid/users directory, get its child, the user directory 
-				final String userDirectory = documentParentParts[1];
+			if (documentSelector.isUserDocument()) {
+				String xui = documentSelector.getDocumentParent().substring(6);
 				// only the user is authorized to operate on it's directory 
-				if (user.equalsIgnoreCase(userDirectory)) {
+				if (user.equalsIgnoreCase(xui)) {
 					if (operation == Operation.PUT) {
-						// check doc name and parent path length
-						return documentParentParts.length == 2 && authorizedUserDocumentName.equals(documentSelector.getDocumentName());
+						// check doc name if is set
+						if (authorizedUserDocumentName != null) {
+							return authorizedUserDocumentName.equals(documentSelector.getDocumentName());
+						}
+						else {
+							return true;
+						}
 					}
 					else {
 						return true;
@@ -61,16 +58,15 @@ public class DefaultAuthorizationPolicy extends AuthorizationPolicy {
 				} else {
 					return false;
 				}
-			} else if (documentParentParts[0].equals(GLOBAL)) {
-				// /auid/global dir, authorize operation only if is a get operation
+			}
+			else {
+				// /auid/global  or invalid dir, authorize operation only if is a get operation
 				if(operation == Operation.GET) {
 					return true;
 				}
 				else {
 					return false;
 				}
-			} else {
-				return false;
 			}
 		}
 		catch (IndexOutOfBoundsException e) {
