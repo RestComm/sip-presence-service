@@ -78,7 +78,7 @@ public class ListReferenceEndpointAddressParser {
 				NodeSelector nodeSelector = Parser.parseNodeSelector(resourceSelector.getNodeSelector());
 				elementSelector = Parser.parseElementSelector(nodeSelector.getElementSelector());
 				if (elementSelector.getStepsSize() < 2) {
-					tracer.warning("List reference element selector does not selects a list. Uri: "+uri);
+					tracer.warning("List reference element selector does not select a list. Uri: "+uri);
 					return null;
 				}
 				// only support element selectors with steps by attribute value (except root one), otherwise due to doc changes the ref may become invalid or point to a different list
