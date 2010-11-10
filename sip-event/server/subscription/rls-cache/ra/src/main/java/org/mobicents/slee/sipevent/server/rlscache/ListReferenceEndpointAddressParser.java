@@ -77,10 +77,14 @@ public class ListReferenceEndpointAddressParser {
 			if (resourceSelector.getNodeSelector() != null) {
 				NodeSelector nodeSelector = Parser.parseNodeSelector(resourceSelector.getNodeSelector());
 				elementSelector = Parser.parseElementSelector(nodeSelector.getElementSelector());
-				// FIXME atm only support element selectors with steps by attribute value (except root one)
+				if (elementSelector.getStepsSize() < 2) {
+					tracer.warning("List reference element selector does not selects a list. Uri: "+uri);
+					return null;
+				}
+				// only support element selectors with steps by attribute value (except root one), otherwise due to doc changes the ref may become invalid or point to a different list
 				for (int i=1;i<elementSelector.getStepsSize();i++) {
 					if (!(elementSelector.getStep(i) instanceof ElementSelectorStepByAttr)) {
-						tracer.warning("List reference element selector includes steps not selected by attribute value. Uri: "+uri);
+						tracer.warning("List reference element selector includes steps not selected by attribute value, not supported, all references will become with BAD GATEWAY 502 state. Uri: "+uri);
 						return null;
 					}
 				}
