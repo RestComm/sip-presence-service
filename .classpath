@@ -83,8 +83,16 @@
   <classpathentry kind="src" path="xdm/server/appusages/oma-group-usage-list/bean/src/main/resources"/>
   <classpathentry kind="src" path="xdm/server/appusages/oma-group-usage-list/tests/src/test/java"/>
   <classpathentry kind="src" path="xdm/server/appusages/oma-group-usage-list/tests/src/test/resources"/>
+  <classpathentry kind="src" path="xdm/server/appusages/oma-locked-user-profile/bean/src/main/java"/>
+  <classpathentry kind="src" path="xdm/server/appusages/oma-locked-user-profile/bean/src/main/resources"/>
+  <classpathentry kind="src" path="xdm/server/appusages/oma-locked-user-profile/tests/src/test/java"/>
+  <classpathentry kind="src" path="xdm/server/appusages/oma-locked-user-profile/tests/src/test/resources"/>
   <classpathentry kind="src" path="xdm/server/appusages/oma-pres-rules/bean/src/main/java"/>
   <classpathentry kind="src" path="xdm/server/appusages/oma-pres-rules/bean/src/main/resources"/>
+  <classpathentry kind="src" path="xdm/server/appusages/oma-user-profile/bean/src/main/java"/>
+  <classpathentry kind="src" path="xdm/server/appusages/oma-user-profile/bean/src/main/resources"/>
+  <classpathentry kind="src" path="xdm/server/appusages/oma-user-profile/tests/src/test/java"/>
+  <classpathentry kind="src" path="xdm/server/appusages/oma-user-profile/tests/src/test/resources"/>
   <classpathentry kind="src" path="xdm/server/appusages/oma-xcap-directory/bean/src/main/java"/>
   <classpathentry kind="src" path="xdm/server/appusages/oma-xcap-directory/bean/src/main/resources"/>
   <classpathentry kind="src" path="xdm/server/appusages/oma-xcap-directory/tests/src/test/java"/>
@@ -239,24 +247,24 @@
   <classpathentry kind="var" path="M2_REPO/org/mobicents/javax/sip/mobicents-jain-sip-ext/1.0.BETA1/mobicents-jain-sip-ext-1.0.BETA1.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/mobicents/resources/http-servlet-events/2.2.0.FINAL/http-servlet-events-2.2.0.FINAL.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/mobicents/resources/http-servlet-ratype/2.2.0.FINAL/http-servlet-ratype-2.2.0.FINAL.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/mobicents/resources/mobicents-slee-ra-xcap-client-events/3.0.0-SNAPSHOT/mobicents-slee-ra-xcap-client-events-3.0.0-SNAPSHOT.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/mobicents/resources/mobicents-slee-ra-xcap-client-library/3.0.0-SNAPSHOT/mobicents-slee-ra-xcap-client-library-3.0.0-SNAPSHOT.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/mobicents/resources/mobicents-slee-ra-xcap-client-ratype/3.0.0-SNAPSHOT/mobicents-slee-ra-xcap-client-ratype-3.0.0-SNAPSHOT.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/resources/mobicents-slee-ra-xcap-client-events/2.2.2.FINAL/mobicents-slee-ra-xcap-client-events-2.2.2.FINAL.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/resources/mobicents-slee-ra-xcap-client-library/2.2.2.FINAL/mobicents-slee-ra-xcap-client-library-2.2.2.FINAL.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/resources/mobicents-slee-ra-xcap-client-ratype/2.2.2.FINAL/mobicents-slee-ra-xcap-client-ratype-2.2.2.FINAL.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/mobicents/resources/sip11-events/2.2.0.FINAL/sip11-events-2.2.0.FINAL.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/mobicents/resources/sip11-jain-sip-ha/2.2.0.FINAL/sip11-jain-sip-ha-2.2.0.FINAL.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/mobicents/resources/sip11-library/2.2.0.FINAL/sip11-library-2.2.0.FINAL.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/mobicents/resources/sip11-ratype/2.2.0.FINAL/sip11-ratype-2.2.0.FINAL.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/mobicents/servers/jainslee/api/jain-slee-11-ext/1.0.0.BETA1/jain-slee-11-ext-1.0.0.BETA1.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/mobicents/servers/jainslee/core/fault-tolerant-ra-api/2.2.0.FINAL/fault-tolerant-ra-api-2.2.0.FINAL.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/mobicents/servers/jainslee/core/jmx-property-editors/2.2.0.FINAL/jmx-property-editors-2.2.0.FINAL.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/mobicents/servers/jainslee/core/spi/2.2.0.FINAL/spi-2.2.0.FINAL.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/mobicents/servers/jainslee/enablers/xdm-client-sbb/1.0.0-SNAPSHOT/xdm-client-sbb-1.0.0-SNAPSHOT.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/servers/jainslee/core/fault-tolerant-ra-api/2.2.1.FINAL/fault-tolerant-ra-api-2.2.1.FINAL.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/servers/jainslee/core/jmx-property-editors/2.2.1.FINAL/jmx-property-editors-2.2.1.FINAL.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/servers/jainslee/core/spi/2.2.1.FINAL/spi-2.2.1.FINAL.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/servers/jainslee/enablers/xdm-client-sbb/1.0.0.BETA1/xdm-client-sbb-1.0.0.BETA1.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/mobicents/servers/sippresence/xcap-client-api/1.0.0.BETA5/xcap-client-api-1.0.0.BETA5.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/mobicents/servers/xdm/commons/1.0.0-SNAPSHOT/commons-1.0.0-SNAPSHOT.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/mobicents/servers/xdm/core/commons/1.0.0.BETA5/commons-1.0.0.BETA5.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/mobicents/servers/xdm/xdm-client-sbb-local-object/1.0.0-SNAPSHOT/xdm-client-sbb-local-object-1.0.0-SNAPSHOT.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/mobicents/tools/sip-balancer-jar/1.0.4.FINAL/sip-balancer-jar-1.0.4.FINAL.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/mobicents/xcap-client-api/3.0.0-SNAPSHOT/xcap-client-api-3.0.0-SNAPSHOT.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/mobicents/xcap-client-api/2.2.2.FINAL/xcap-client-api-2.2.2.FINAL.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-api/1.4.2/slf4j-api-1.4.2.jar"/>
   <classpathentry kind="var" path="M2_REPO/oswego-concurrent/concurrent/1.3.4-jboss-update1/concurrent-1.3.4-jboss-update1.jar"/>
   <classpathentry kind="var" path="M2_REPO/qdox/qdox/1.6.1/qdox-1.6.1.jar"/>

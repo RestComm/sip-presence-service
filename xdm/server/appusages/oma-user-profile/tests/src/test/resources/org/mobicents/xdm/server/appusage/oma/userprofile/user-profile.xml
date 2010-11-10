@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<user-profiles xmlns="urn:oma:xml:xdm:user-profile">
+	<user-profile uri="sip:alice@example.com">
+		<communication-addresses>
+			<comm-addr>+1 858 623 0743</comm-addr>
+			<comm-addr>asmith@omaorg.org</comm-addr>
+			<comm-addr>sip:alice@example.com</comm-addr>
+		</communication-addresses>
+		<display-name xml:lang="en">Alice</display-name>
+		<birth-date>1995-05-20</birth-date>
+		<name xml:lang="en">
+			<given-name>Alice</given-name>
+			<family-name>Smith</family-name>
+			<middle-name>Pamela</middle-name>
+			<name-suffix></name-suffix>
+			<name-prefix></name-prefix>
+		</name>
+		<address xml:lang="en">
+			<country>USA</country>
+			<region>California</region>
+			<locality>La Jolla</locality>
+			<area></area>
+			<street-name>Executive Square</street-name>
+			<street-number>4275</street-number>
+			<postal-code>Ca 92037</postal-code>
+		</address>
+		<gender>female</gender>
+		<freetext xml:lang="en">I’m an OMA freak</freetext>
+		<communication-types>
+			<comm-type xml:lang="en">Push to talk</comm-type>
+			<comm-type xml:lang="en">Instant messaging</comm-type>
+		</communication-types>
+		<hobbies>
+			<hobby xml:lang="en">Butterfly collecting</hobby>
+			<hobby xml:lang="en">Bird watching</hobby>
+		</hobbies>
+		<favourite-links>
+			<link>http://www.openmobilealliance.org/</link>
+			<link>http://ietf.org</link>
+		</favourite-links>
+	</user-profile>
+</user-profiles>
