@@ -102,8 +102,21 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 		 */
 		try {
 			String user = null;
-			if(!request.getRemoteAddr().equals(request.getLocalAddr())) {
-				// remote request, use http digest authentication
+			if(!CONFIGURATION.getLocalXcapAuthentication() && request.getRemoteAddr().equals(request.getLocalAddr())) {
+				if (logger.isInfoEnabled()) {
+					logger.info("Skipping authentication for local request.");
+				}
+				// use asserted id header if present
+				user = request.getHeader(HEADER_X_3GPP_Asserted_Identity);
+				if (user == null) {
+					user = request.getHeader(HEADER_X_XCAP_Asserted_Identity);					
+				}		
+				if (logger.isInfoEnabled()) {
+					logger.info("Asserted user: "+user);
+				}
+			}
+			else {
+				// use http digest authentication
 				if (logger.isInfoEnabled()) {
 					logger.info("Remote request, using http digest authentication");
 				}
@@ -122,19 +135,6 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 						response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 						response.getWriter().close();
 					}
-				}
-			}
-			else {
-				if (logger.isInfoEnabled()) {
-					logger.info("Local request, skipping authentication");
-				}
-				// use asserted id header if present
-				user = request.getHeader(HEADER_X_3GPP_Asserted_Identity);
-				if (user == null) {
-					user = request.getHeader(HEADER_X_XCAP_Asserted_Identity);					
-				}		
-				if (logger.isInfoEnabled()) {
-					logger.info("Asserted user: "+user);
 				}
 			}
 			return user;			

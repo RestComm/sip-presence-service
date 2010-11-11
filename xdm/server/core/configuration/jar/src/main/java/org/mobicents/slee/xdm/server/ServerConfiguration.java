@@ -17,6 +17,8 @@ public class ServerConfiguration implements ServerConfigurationMBean {
 		
 	private String authenticationRealm;
 	
+	private boolean localXcapAuthentication;
+	
 	private static final ServerConfiguration INSTANCE = new ServerConfiguration();
 	
 	public static ServerConfiguration getInstance() {
@@ -102,5 +104,23 @@ public class ServerConfiguration implements ServerConfigurationMBean {
 		if (authenticationRealm == null) {
 			authenticationRealm = getServerHost();
 		}
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.ServerConfigurationMBean#getLocalXcapAuthentication()
+	 */
+	@Override
+	public boolean getLocalXcapAuthentication() {
+		return localXcapAuthentication;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.ServerConfigurationMBean#setLocalXcapAuthentication(boolean)
+	 */
+	@Override
+	public void setLocalXcapAuthentication(boolean value) {
+		this.localXcapAuthentication = true;
 	}
 }

@@ -29,4 +29,8 @@ public interface ServerConfigurationMBean {
 
 	public void setAuthenticationRealm(String realm);
 	
+	public boolean getLocalXcapAuthentication();
+	
+	public void setLocalXcapAuthentication(boolean value);
+		
 }

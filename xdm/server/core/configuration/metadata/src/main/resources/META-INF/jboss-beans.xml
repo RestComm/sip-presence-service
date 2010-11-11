@@ -27,6 +27,9 @@
       <!-- the xcap root of the server, must begin with / -->
       <property name="xcapRoot">${xdm.server.xcap.root}</property>
       
+      <!-- enables authentication for local xcap requests -->
+      <property name="localXcapAuthentication">false</property>
+      
       <!--  realm for http digest user authentication, if not set the server host will be used
       <property name="authenticationRealm">...</property>
        -->
