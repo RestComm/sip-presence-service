@@ -12,11 +12,6 @@
 		
 	<dependencies>
 		<dependency>
-			<artifactId>xdm-client-sbb-local-object</artifactId>
-			<groupId>org.mobicents.servers.xdm</groupId>
-			<version>${pom.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>${pom.groupId}</groupId>
 			<version>${pom.version}</version>	
 			<artifactId>sip-presence-client-sbb-local-object</artifactId>
