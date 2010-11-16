@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [<!ENTITY % BOOK_ENTITIES SYSTEM "SIP_Presence_Service_User_Guide.ent">
+%BOOK_ENTITIES;]>
+
+<section id="msps-sip_event_subscription_client_enabler">
+
+	<title>The &PLATFORM_NAME; SIP Event Subscription Client Enabler</title>
+
+	<para>The <application>&PLATFORM_NAME; SIP Event Publication</application> exposes a JAIN SLEE enabler for applications which want to interact as clients of a SIP Event Subscription Server, such as a PS or RLS. The enabler does not uses SIP network protocols, thus providing better performance and less overhead to network communications.</para>
+
+	<para>The Enabler consists in an SBB which can be used in child relations, with a simple asynchronous interface.</para>
+	
+	<xi:include
+		xmlns:xi="http://www.w3.org/2001/XInclude"
+		href="Section-SIP_Event_Subscription_Client_Enabler_Integrating_The_Enabler.xml" />
+	
+	<xi:include
+		xmlns:xi="http://www.w3.org/2001/XInclude"
+		href="Section-SIP_Event_Subscription_Client_Enabler_Using_The_Enabler.xml" />	
+	
+</section>

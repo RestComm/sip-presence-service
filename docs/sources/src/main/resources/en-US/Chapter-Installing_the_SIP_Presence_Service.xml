@@ -1,10 +1,8 @@
 <?xml version='1.0'?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY PLATFORM_NAME "${platform.name}">
-<!ENTITY RELEASE_INTEGRATED_FILENAME "${release.integrated.filename}">
-<!ENTITY RELEASE_XDMS_FILENAME "${release.xdms.filename}">
-<!ENTITY VERSION "${version}">
-]><!-- chapter id nickname: itsps -->
+<!ENTITY % BOOK_ENTITIES SYSTEM "SIP_Presence_Service_User_Guide.ent">
+%BOOK_ENTITIES;
+]>
 <chapter
 	id="itsps-Installing_the_SIP_Presence_Service">
 	<title>Installing the &PLATFORM_NAME; SIP Presence Service</title>
@@ -71,7 +69,7 @@
 				<varlistentry>
 					<term>Apache Ant 1.6 or later</term>
 					<listitem>
-						<para>A working installation of the Apache Ant 1.6 or later is required in order to install the <application>&PLATFORM_NAME; SIP Presence Service</application> release without <application>$PLATFORM_NAME JAIN SLEE</application>.</para>
+						<para>A working installation of the Apache Ant 1.6 or later is required in order to install the <application>&PLATFORM_NAME; SIP Presence Service</application> release without <application>&PLATFORM_NAME; JAIN SLEE</application>.</para>
 					</listitem>
 				</varlistentry>
 				<varlistentry>
@@ -163,11 +161,6 @@
 Shutdown complete
 Halting VM]]></programlisting>
 		</section>		
-		<section
-			id="itsps-binary-SIP_Presence_Service-Testing">
-			<title>Testing</title>
-			<para>TODO</para>
-		</section>
 		<section
 			id="itsps-binary-SIP_Presence_Service-Uninstalling">
 			<title>Uninstalling</title>

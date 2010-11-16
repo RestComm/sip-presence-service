@@ -1,7 +1,8 @@
 <?xml version='1.0'?>
 <!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY PLATFORM_NAME "${platform.name}">
-]><!-- chapter id nickname: spsug -->
+<!ENTITY % BOOK_ENTITIES SYSTEM "SIP_Presence_Service_User_Guide.ent">
+%BOOK_ENTITIES;
+]>
 <appendix
 	id="spsug-appe-Publican-Revision_History">
 	<title>Revision History</title>

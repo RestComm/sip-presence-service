@@ -1,0 +1,59 @@
+<?xml version='1.0'?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [<!ENTITY % BOOK_ENTITIES SYSTEM "SIP_Presence_Service_User_Guide.ent">
+%BOOK_ENTITIES;]>
+
+<section id="msps-sip_event_publication_client_enabler-integrating">
+
+	<title>Integrating the &PLATFORM_NAME; SIP Event Publication Client Enabler</title>
+	
+	<para>This chapter explains how to setup a JAIN SLEE Service Sbb to use the Enabler.</para>
+
+	<para>In short terms, a Service's Sbb will define the Enabler's Sbb as a child, and to achieve that it will need to setup the XML Descriptor, Abstract Class and SbbLocalObject interface.</para>
+	
+	<important><para>The Service's Sbb will be referred as the Parent Sbb in the following sections.</para></important>
+	
+	<section id="msps-sip_event_publication_client_enabler-parent_sbb_local_object_interface">
+		
+		<title>The Parent's SbbLocalObject Interface</title>
+		
+		<para>The &PLATFORM_NAME; SIP Event Publication Client Enabler Sbb does not provides asynchronous callbacks to the Parent's Sbb at the moment, that is, all operations invoked in the child sbb will return a response. Thus the Parent does not needs to implement a specific interface.</para>
+				
+	</section>
+	
+	<section id="msps-sip_event_publication_client_enabler-parent_sbb_abstract_class">
+		<title>The Parent's Sbb Abstract Class</title>
+		<para>The Enabler's Sbb is a Child Sbb, and JAIN SLEE 1.1 Child Relations requires an abstract method in the Sbb Abstract Class, to retrieve the <literal>javax.slee.ChildRelation</literal> object, which is used to create or access specific Child Sbbs. This method should be:</para>
+		<programlisting language="Java" role="JAVA"><![CDATA[
+	public abstract ChildRelation getSIPEventPublicationClientChildRelation();
+		]]>
+		</programlisting>
+	</section>
+	
+	<section id="msps-sip_event_publication_client_enabler-parent_sbb_xml_descriptor">
+		<title>The Parent's Sbb XML Descriptor</title>
+		<para>The Parent's Sbb must define a reference to the Enabler's Child Sbb, declare which is the method name to get the related ChildRelation object, and also ensure the SbbLocalObject interface is defined correctly.</para>
+		<para>A reference to the Enabler's Child Sbb is defined right after the Parent's Sbb Vendor ID element, using the following XML element:</para>
+		<programlisting language="XML" role="XML"><![CDATA[
+		<sbb-ref>
+			<sbb-name>PublicationControlSbb</sbb-name>
+        	<sbb-vendor>org.mobicents</sbb-vendor>
+        	<sbb-version>1.0</sbb-version>
+    		<sbb-alias>sipEventPublicationClientChildSbb</sbb-alias>
+    	</sbb-ref>
+		]]>
+		</programlisting>
+		<para>The method name to get the Enabler's ChildRelation object must be defined after the CMP Fields (if any), this XML element links the sbb-alias previously defined with the abstract method declared in the Parent's Sbb Abstract Class:</para>
+		<programlisting language="XML" role="XML"><![CDATA[
+		<get-child-relation-method>                	
+        	<sbb-alias-ref>sipEventPublicationClientChildSbb</sbb-alias-ref>
+            <get-child-relation-method-name>getSIPEventPublicationClientChildRelation</get-child-relation-method-name>
+            <default-priority>0</default-priority>
+        </get-child-relation-method>
+		]]>
+		</programlisting>        
+	</section>
+	
+	 
+		
+</section>
+

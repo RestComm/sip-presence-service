@@ -30,6 +30,9 @@
       <!-- enables authentication for local xcap requests -->
       <property name="localXcapAuthentication">false</property>
       
+      <!-- allows bypassing user authentication through asserted user ids -->
+      <property name="allowAssertedUserIDs">true</property>
+      
       <!--  realm for http digest user authentication, if not set the server host will be used
       <property name="authenticationRealm">...</property>
        -->

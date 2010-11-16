@@ -1,0 +1,331 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "SIP_Presence_Service_User_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<section id="xdm-xcap_app_usages">
+	
+	<title>XCAP Application Usages</title>
+	
+	<para>What is an XCAP Application Usage?</para>
+	
+	<para>"Each XCAP resource on a server is associated with an application.  In order for an application to use those resources, application specific conventions must be specified.  Those conventions include the XML schema that defines the structure and constraints of the data, well-known URIs to bootstrap access to the data, and so on.  All of those application specific conventions are defined by the application usage." RFC 4825</para>
+	
+	<para>Each XCAP Application Usage defines:</para>
+	
+	<variablelist>
+		<varlistentry>
+			<term>Application Unique ID</term>
+			<listitem>
+				<para>The AUID used in XCAP URIs to point to a specific App Usage, e.g. <literal>resource-lists</literal> in http://xdms.mobicents.org:8080/xcap-root/resource-lists/users/sip:user@mobicents.org/index</para>
+			</listitem>
+		</varlistentry>
+		<varlistentry>
+			<term>Default Document Namespace</term>
+			<listitem>
+				<para>Defines the namespace of elements/attributes without prefix in XCAP URIs, usually it matches the default namespace of the XML Schema for documents of the App Usage,e.g. in http://xdms.mobicents.org/xcap-root/pres-rules/users/sip:eduardo@mobicents.org/index/~~/watcherinfo/watcher-list/watcher[@id="8ajksjda7s"],  selection is made on <literal>watcher</literal> elements with the pres-rules default document namespace.</para>
+			</listitem>
+		</varlistentry>
+		<varlistentry>
+			<term>MIME Type</term>
+			<listitem>
+				<para>MIME Type used when exchanging XML content.</para>
+			</listitem>
+		</varlistentry>
+		<varlistentry>
+			<term>XML Schema and Data Constraints</term>
+			<listitem>
+				<para>The XML Schema to validate documents; Data constraints, which are impossible to validate with XML Schema, e.g. one element value must be a ISO country name (2 char) that belongs to Europe.</para>
+			</listitem>
+		</varlistentry>
+		<varlistentry>
+			<term>Data Semantics</term>
+			<listitem>
+				<para>Semantic definition on documents content, used by applications filling data, not validated by servers.</para>
+			</listitem>
+		</varlistentry>
+		<varlistentry>
+			<term>Naming Conventions</term>
+			<listitem>
+				<para>What is the document name for each user? Are there global documents under a specific name? XCAP Clients usually forget to follow these!</para>
+			</listitem>
+		</varlistentry>
+		<varlistentry>
+			<term>Resource Interdependencies</term>
+			<listitem>
+				<para>One request may update other documents as well, e.g. global/index document in rls-services, a composition of all users/*/index <literal>service</literal> elements.</para>
+			</listitem>
+		</varlistentry>
+		<varlistentry>
+			<term>Authorization Policies</term>
+			<listitem>
+				<para>What each user can read or write?</para>
+			</listitem>
+		</varlistentry>
+	</variablelist>
+	
+	<section id="xdm-xcap-app-usages_deployed">
+		<title>XCAP Application Usages Deployed</title>
+		<para>The <application>&PLATFORM_NAME; XDM Server</application> includes the following XCAP application usages:</para>
+	<itemizedlist>
+		<listitem>
+			<para>
+				<ulink url="http://tools.ietf.org/html/rfc5025">IETF Presence Rules (RFC 5025)</ulink>
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<ulink
+					url="http://www.openmobilealliance.org/Technical/release_program/Presence_simple_v1_1.aspx">OMA Presence Rules (OMA Presence Simple v1.1)</ulink>
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<ulink url="http://tools.ietf.org/html/rfc4826">IETF Resource Lists</ulink>
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<ulink
+					url="http://www.openmobilealliance.org/Technical/release_program/xdm_v1_1.aspx">OMA Group Usage List (OMA XDM v1.1)</ulink>
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<ulink url="http://tools.ietf.org/html/rfc4826">IETF RLS Services (RFC 4826)</ulink>
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<ulink
+					url="http://www.openmobilealliance.org/Technical/release_program/xdm_v2_0.aspx">OMA User Profile (OMA XDM v2.0)</ulink>
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<ulink
+					url="http://www.openmobilealliance.org/Technical/release_program/xdm_v2_0.aspx">OMA Locked User Profile (OMA XDM v2.0)</ulink>
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<ulink url="http://tools.ietf.org/html/rfc4825">IETF XCAP-CAPS (RFC 4825)</ulink>
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<ulink
+					url="http://www.openmobilealliance.org/Technical/release_program/xdm_v1_1.aspx">OMA XCAP Directory (OMA XDM v1.1)</ulink>
+			</para>
+		</listitem>
+	</itemizedlist>
+	</section>
+	<section id="xdm-developing_xcap_app_usages">
+		<title>Developing XCAP Application Usages</title>
+		<para>The <application>&PLATFORM_NAME; XDM Server</application> XCAP Application Usages are implemented with a few simple Java classes and some meta data, it is very easy to develop additional ones.</para>
+		
+		<section id="xdm-developing_xcap_app_usages-app_usage_class">
+			<title>The AppUsage Class</title>
+			<para>Each Application Usage is represented by a Java class extending the abstract <literal>org.mobicents.xdm.server.appusage.AppUsage</literal> class:</para>
+			<programlisting language="Java" role="JAVA"><![CDATA[
+package org.mobicents.xcap.server.slee.appusage.presrules;
+
+// ...
+
+public class PresRulesAppUsage extends AppUsage {
+
+	public static final String ID = "pres-rules";
+	public static final String DEFAULT_DOC_NAMESPACE = "urn:ietf:params:xml:ns:pres-rules";
+	public static final String MIMETYPE = "application/auth-policy+xml";
+	private static final String AUTH_ONLY_DOCUMENT_NAME = “index”;
+
+	public PresRulesAppUsage(Validator schemaValidator) {
+		super(ID,DEFAULT_DOC_NAMESPACE,MIMETYPE,schemaValidator,AUTH_ONLY_DOCUMENT_NAME);
+	}
+}
+]]>
+        	</programlisting>
+			<para>Methods for data constraints and resource interdependencies can be overriden:</para>
+			<programlisting language="Java" role="JAVA"><![CDATA[
+public void checkConstraintsOnPut();
+public void checkConstraintsOnDelete();
+public void processResourceInterdependenciesOnPutDocument();
+public void processResourceInterdependenciesOnDeleteElement();
+//...
+]]>
+        	</programlisting>
+        	<important>
+        		<para>RLSServicesAppUsage and ResourceListsAppUsage are good examples on how to implement those methods.</para>
+        	</important>
+        	<para>Multiple constructors exposed to provide your App Usage XML Schemas Validators and/or Authorization Policies:</para>
+ 			<programlisting language="Java" role="JAVA"><![CDATA[
+public AppUsage(String auid, String defaultDocumentNamespace, String mimetype, 
+	Validator schemaValidator, String authorizedUserDocumentName);
+
+public AppUsage(String auid, String defaultDocumentNamespace, String mimetype, 
+	Validator schemaValidator, AuthorizationPolicy authorizationPolicy);
+
+public AppUsage(String auid, String defaultDocumentNamespace, String mimetype, 
+	Validator schemaValidator, Validator uniquenessSchemaValidator, 
+	String authorizedUserDocumentName);
+
+public AppUsage(String auid, String defaultDocumentNamespace, String mimetype, 
+	Validator schemaValidator, Validator uniquenessSchemaValidator,
+	AuthorizationPolicy authorizationPolicy);
+]]>
+        	</programlisting>
+        	<important>
+        		<para>Default Authorization Policy if custom is not provided, an user can read/write his/her own documents, with the specified document name.</para>
+        	</important>
+		</section>
+		
+		<section id="xdm-developing_xcap_app_usages-app_usage_factory_class">
+			<title>The AppUsageFactory Class</title>
+			<para>An implementation of an object factory is required, which should extend class named <literal>org.mobicents.xdm.server.appusage.AppUsageFactory</literal>:</para>
+			<programlisting language="Java" role="JAVA"><![CDATA[
+package org.mobicents.xcap.server.slee.appusage.presrules;
+
+// ...
+
+public class PresRulesAppUsageFactory implements AppUsageFactory {
+
+	private Schema schema = null;
+	
+	public PresRulesAppUsageFactory(Schema schema) {
+		this.schema = schema;
+	}
+	
+	public AppUsage getAppUsageInstance() {
+		return new PresRulesAppUsage(schema.newValidator());
+	}
+	
+	public String getAppUsageId() {
+		return PresRulesAppUsage.ID;
+	}
+
+	public AppUsageDataSourceInterceptor getDataSourceInterceptor() {
+		return null;
+	}
+}
+]]>
+        	</programlisting>
+			<para>The factory is used to maintain a cache/pool of your app usage objects, since XML Schema Validator are expensive objects to create.</para>
+			<para>The factory can also provide a DataSource Interceptor, which will be used to generate a document on request (for instance the oma-xcap-directory generates the user document for each request).</para>
+		</section>
+		
+		<section id="xdm-developing_xcap_app_usages-app_usage_deployer_class">
+			<title>The AppUsageDeployer Class And XML Descriptor</title>
+			<para>A deployer to load/unload the App Usage into the XDM Server, it should extend class named <literal>org.mobicents.xdm.server.appusage.AppUsageDeployer</literal>:</para>
+			<programlisting language="Java" role="JAVA"><![CDATA[
+package org.mobicents.xcap.server.slee.appusage.presrules;
+
+// ...
+
+public class PresRulesAppUsageDeployer extends AppUsageDeployer {
+	
+	@Override
+	public AppUsageFactory createAppUsageFactory(Schema schema) {
+		return new PresRulesAppUsageFactory(schema);
+	}
+
+	@Override
+	public String getSchemaRootNamespace() {
+		return PresRulesAppUsage.DEFAULT_DOC_NAMESPACE;
+	}
+
+}
+
+]]>
+        	</programlisting>
+			<para>Multiple XML schema files may be combined, starting point is the namespace returned by <literal>getSchemaRootNamepsace()</literal>, which not always is the same as the app usage's default doc namespace.</para>
+			<para>The deployer is actually a JBoss Microcontainer Bean, and a <filename>jboss-beans.xml</filename> file is needed in the META-INF directory of the app usage jar:</para>
+			<programlisting language="XML" role="XML"><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+
+<deployment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="urn:jboss:bean-deployer:2.0">
+		
+	<!-- Registers the APP USAGE DEPLOYER AS JBOSS MICROCONTAINER BEAN -->
+	
+	<bean name="Mobicents.XDMS.AppUsage.Deployer.PresRules" class="org.mobicents.xcap.server.slee.appusage.presrules.PresRulesAppUsageDeployer">           
+      <!-- this app usage depends on app usage management only -->
+      <depends>Mobicents.XDMS.AppUsageManagement</depends>      
+   </bean>
+   
+</deployment>
+			]]>
+        	</programlisting>
+			<para>A unique bean “name” is need, and of course the “class” name of the Deployer, nothing else needs to be changed.</para>
+		</section>
+		
+		<section id="xdm-developing_xcap_app_usages-packaging_and_deploy">
+			<title>Packaging and Deploying the XCAP Application Usage</title>
+			<para>The Application Usage classes and metadata should be packed in a jar, with a structure similar to:</para>
+			<programlisting language="XML" role="XML"><![CDATA[	
+   example-appusage.jar
+   |-META-INF
+   |---jboss-beans.xml (jboss mc bean descriptor)
+   |-org
+   |---mobicents
+   |------xdm
+   |---------server 
+   |------------appusage
+   |---------------example
+   |------------------ExampleAppUsage (app usage class)
+   |------------------ExampleAppUsageFactory (factory class)
+   |------------------ExampleAppUsageDeployer (deployer class)
+   |------------------ExampleAuthorizationPolicy (optional auth policy class)   
+]]>
+        	</programlisting>
+			<para>To deploy simply drop the jar in <filename>$JBOSS_HOME/server/default/deploy/mobicents-xdms(or mobicents-sip-presence)/3.beans/appusages</filename>. To undeploy simply delete the jar.</para>
+			<para>What about the XSD file(s)? Simply copy to the <filename>xsd</filename> directory inside the <filename>appusages</filename> directory, a few limitations on multiple XSD files combination:</para>
+ 			<variablelist>
+				<varlistentry>
+					<term></term>
+					<listitem>
+						<para>References between namespaces on different files must be done through <literal>import</literal> element.</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term></term>
+					<listitem>
+						<para>A namespace can only be defined within a single xsd file.</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+ 		</section>
+
+		<section id="xdm-developing_xcap_app_usages-contributing">
+			<title>Submiting XCAP Application Usages to &PLATFORM_NAME;</title>
+			<para>Contribution of additional App Usages are welcome, but a few rules apply:</para>
+ 			<variablelist>
+				<varlistentry>
+					<term></term>
+					<listitem>
+						<para>Implements a standard app usage, defined by IETF, OMA or other standard organization.</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term></term>
+					<listitem>
+						<para>A document is provided defining the app usage. This document may be the one defined by the standard organization.</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term></term>
+					<listitem>
+						<para>The app usage jar and XSDs are ready to deploy, i.e., if the app usage was already tested and works.</para>
+					</listitem>
+				</varlistentry>
+				<varlistentry>
+					<term></term>
+					<listitem>
+						<para>Includes JUnit basic tests to validate put/get and delete of a document, similar to the ones included in RLS Services app usage source code, see the ones in the SVN, at <filename>trunk/servers/sip-presence/xdm/server/appusages/rls-services/tests</filename>. If the app usage defines data constraints or resource interdependencies then these should be validated by tests too.</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+ 		</section>
+				
+	</section>
+</section>

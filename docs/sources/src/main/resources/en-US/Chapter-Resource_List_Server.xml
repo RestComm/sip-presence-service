@@ -1,14 +1,21 @@
 <?xml version='1.0'?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY PLATFORM_NAME "${platform.name}">
-]><!-- chapter id nickname: rls -->
+<!ENTITY % BOOK_ENTITIES SYSTEM "SIP_Presence_Service_User_Guide.ent">
+%BOOK_ENTITIES;
+]>
 <chapter
 	id="rls-Resource_List_Server">
 	<title>&PLATFORM_NAME; Resource List Server</title>
-	<para>&nbsp;</para>
-	<note>
-		<title>Resource List Server</title>
-		<para>The <application>&PLATFORM_NAME; Resource List Server</application> is currently tightly integrated with the <application>&PLATFORM_NAME; SIP Presence Server</application>, supporting <acronym>RFC</acronym> 5367 and <acronym>OMA</acronym> service uri template.</para>
-	</note>
+	<para>The <application>&PLATFORM_NAME; Resource List Server</application>, or simply <literal>RLS</literal>, is the functional element which handles subscriptions to resources lists. A resource list is defined as a list of any kind of SIP presence entities, be it single presentities or other resource lists.</para>
+	<para>The RLS is specified by IETF RFC 5367. It is a XDM Client, which watches all RLS Services documents (each define a list of presence entities) stored in the related XDM Server, and processes SIP presence subscriptions to each RLS Service state, that is, the state for all presence entities deferred by from the service. When handling a subscription to a RLS Service, the RLS creates and manages (possibly virtual) subscriptions to each presence entity on the Presence Server, and notifies the subscriber for entity state change.</para>
+	<para>RLS Services are typically used to store the list of entities which the subscriber watch, and the list of entities which are allowed to subscribe its state.</para>
+	<para>&PLATFORM_NAME; Resource List Server extends the Presence Server, it introduces an additional functional element, the RLS Services Cache. This element is responsible for managing the flat list of entities pointed by each RLS Service, and for that it subscribes changes in referred docs (RLS Services and related Resource Lists). Each time an RLS Service changes the cache notifies the related subscriptions, to ensure the subscriber is always subscribing the correct list of presence entities.</para>
+	<important>
+		<para>The &PLATFORM_NAME; RLS is currently limited to RLS Services stored in the integrated XDM Server, and such services should not refer other XDM Servers, otherwise the RLS will set the state for the related service as Bad Gateway.</para>
+	</important>
+	<section id="rls-Disabling_the_RLS">
+		<title>Disabling the Resource List Server</title>
+		<para>It is possible to disable the RLS function from the integrated server, that is achieved by configuring the Presence Server's Subscription Interface. See <xref linkend="sps-Configuring_the_Abstract_SIP_Event_Subscription_Interface"/> for additional information.</para>
+	</section>
 </chapter>
 

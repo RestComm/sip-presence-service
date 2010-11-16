@@ -5,7 +5,7 @@ package org.mobicents.slee.sipevent.server.publication;
 
 /**
  * @author martins
- *
+ * 
  */
 public interface PublicationClientControl {
 
@@ -20,11 +20,11 @@ public interface PublicationClientControl {
 	 * @param expires
 	 *            the time in seconds, which the publication is valid
 	 * @param callback
-	 * @return             
+	 * @return
 	 */
-	public Result newPublication(String entity,
-			String eventPackage, String document, String contentType,
-			String contentSubType, int expires);
+	public Result newPublication(String entity, String eventPackage,
+			String document, String contentType, String contentSubType,
+			int expires);
 
 	/**
 	 * Refreshes the publication identified by the specified Entity, SIP Event
@@ -38,13 +38,13 @@ public interface PublicationClientControl {
 	 * @param callback
 	 * @return
 	 */
-	public Result refreshPublication(String entity,
-			String eventPackage, String eTag, int expires);
+	public Result refreshPublication(String entity, String eventPackage,
+			String eTag, int expires);
 
 	/**
 	 * Modifies the publication identified by the specified Entity, SIP Event
 	 * Package and ETag.
-	 *
+	 * 
 	 * @param entity
 	 * @param eventPackage
 	 * @param eTag
@@ -56,9 +56,9 @@ public interface PublicationClientControl {
 	 * @param callback
 	 * @return
 	 */
-	public Result modifyPublication(String entity,
-			String eventPackage, String eTag, String document,
-			String contentType, String contentSubType, int expires);
+	public Result modifyPublication(String entity, String eventPackage,
+			String eTag, String document, String contentType,
+			String contentSubType, int expires);
 
 	/**
 	 * Removes the publication identified by the specified Entity, SIP Event
@@ -70,7 +70,6 @@ public interface PublicationClientControl {
 	 * @param callback
 	 * @return status code for the response
 	 */
-	public int removePublication(String entity,
-			String eventPackage, String eTag);
+	public int removePublication(String entity, String eventPackage, String eTag);
 
 }

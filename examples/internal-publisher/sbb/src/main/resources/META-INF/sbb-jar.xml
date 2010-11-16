@@ -18,10 +18,7 @@
        
         <sbb-classes>
             <sbb-abstract-class reentrant="True">
-                <sbb-abstract-class-name>org.mobicents.slee.sipevent.examples.InternalPublisherExampleSbb</sbb-abstract-class-name>
-                <cmp-field>
-                	<cmp-field-name>publicationControlChildSbbCMP</cmp-field-name>
-                </cmp-field>    
+                <sbb-abstract-class-name>org.mobicents.slee.sipevent.examples.InternalPublisherExampleSbb</sbb-abstract-class-name>    
                 <cmp-field>
                 	<cmp-field-name>eTag</cmp-field-name>
                 </cmp-field>

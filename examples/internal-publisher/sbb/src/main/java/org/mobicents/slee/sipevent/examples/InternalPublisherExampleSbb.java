@@ -1,6 +1,5 @@
 package org.mobicents.slee.sipevent.examples;
 
-import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.slee.ActivityContextInterface;
 import javax.slee.ActivityEndEvent;
@@ -52,21 +51,16 @@ public abstract class InternalPublisherExampleSbb implements javax.slee.Sbb,
 
 	public abstract ChildRelation getPublicationControlChildRelation();
 
-	public abstract PublicationClientControlSbbLocalObject getPublicationControlChildSbbCMP();
-
-	public abstract void setPublicationControlChildSbbCMP(
-			PublicationClientControlSbbLocalObject value);
-
 	private PublicationClientControlSbbLocalObject getPublicationControlChildSbb()
 			throws TransactionRequiredLocalException, SLEEException,
 			CreateException {
-		PublicationClientControlSbbLocalObject childSbb = getPublicationControlChildSbbCMP();
-		if (childSbb == null) {
-			childSbb = (PublicationClientControlSbbLocalObject) getPublicationControlChildRelation()
-					.create();
-			setPublicationControlChildSbbCMP(childSbb);
+		final ChildRelation childRelation = getPublicationControlChildRelation();
+		if (childRelation.isEmpty()) {
+			return (PublicationClientControlSbbLocalObject) childRelation.create();
 		}
-		return childSbb;
+		else {
+			return (PublicationClientControlSbbLocalObject) childRelation.iterator().next();
+		}
 	}
 
 	// --- ETAG CMP
@@ -81,28 +75,26 @@ public abstract class InternalPublisherExampleSbb implements javax.slee.Sbb,
 	public void onServiceStartedEvent(
 			javax.slee.serviceactivity.ServiceStartedEvent event,
 			ActivityContextInterface aci) {
-
-		// check if it's my service that is starting
 		
 		tracer.info("Service activated, publishing state...");
-			try {
-				final Result result = getPublicationControlChildSbb().newPublication(
-						entity, eventPackage, document,
-						contentType, contentSubType, expires);
-				if (result.getStatusCode() == 200) {
-					tracer.info("publication ok: eTag=" + result.getETag());
-					// save etag in cmp
-					setETag(result.getETag());
-					// set refresh timer
-					timerFacility.setTimer(aci, null, System.currentTimeMillis() + expires
-							* 1000, expires * 1000, 0, new TimerOptions());
-				}
-				else {
-					tracer.info("error on mew publication: error=" + result.getStatusCode());
-				}
-			} catch (Exception e) {
-				tracer.severe("failed to create publication",e);
-			}		
+		try {
+			final Result result = getPublicationControlChildSbb().newPublication(
+					entity, eventPackage, document,
+					contentType, contentSubType, expires);
+			if (result.getStatusCode() == 200) {
+				tracer.info("publication ok: eTag=" + result.getETag());
+				// save etag in cmp
+				setETag(result.getETag());
+				// set refresh timer
+				timerFacility.setTimer(aci, null, System.currentTimeMillis() + expires
+						* 1000, expires * 1000, 0, new TimerOptions());
+			}
+			else {
+				tracer.info("error on mew publication: error=" + result.getStatusCode());
+			}
+		} catch (Exception e) {
+			tracer.severe("failed to create publication",e);
+		}		
 	}
 
 	public void onTimerEvent(TimerEvent event, ActivityContextInterface aci) {
@@ -145,32 +137,21 @@ public abstract class InternalPublisherExampleSbb implements javax.slee.Sbb,
 
 	// --- SBB OBJECT LIFECYCLE
 
-	private SbbContext sbbContext = null; // This SBB's context
-
 	private TimerFacility timerFacility = null;
 
 	/**
 	 * Called when an sbb object is instantied and enters the pooled state.
 	 */
 	public void setSbbContext(SbbContext sbbContext) {
-
-		this.sbbContext = sbbContext;
-		tracer = sbbContext.getTracer("InternalPublisherExampleSbb");
-
+		tracer = sbbContext.getTracer(getClass().getSimpleName());
 		try {
-			Context context = (Context) new InitialContext()
-					.lookup("java:comp/env");
-			timerFacility = (TimerFacility) context
-					.lookup("slee/facilities/timer");
-	
+			timerFacility = (TimerFacility) new InitialContext().lookup(TimerFacility.JNDI_NAME);
 		} catch (Exception e) {
-			tracer.severe("Unable to retrieve factories, facilities & providers",
-					e);
+			tracer.severe("Unable to timer facility",e);
 		}
 	}
 
 	public void unsetSbbContext() {
-		this.sbbContext = null;
 	}
 
 	public void sbbCreate() throws javax.slee.CreateException {

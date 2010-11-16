@@ -7,7 +7,7 @@ import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 
 /**
  * @author martins
- *
+ * 
  */
 public interface PresenceClientControlParent {
 
@@ -170,7 +170,8 @@ public interface PresenceClientControlParent {
 	 * @param status
 	 *            the subscription status
 	 * @param terminationReason
-	 *            if the subscription was unexpectedly terminated the event that caused it will be provided 
+	 *            if the subscription was unexpectedly terminated the event that
+	 *            caused it will be provided
 	 * @param document
 	 * @param contentType
 	 * @param contentSubtype
@@ -179,5 +180,5 @@ public interface PresenceClientControlParent {
 			String eventPackage, String subscriptionId,
 			Subscription.Event terminationReason, Subscription.Status status,
 			String content, String contentType, String contentSubtype);
-	
+
 }

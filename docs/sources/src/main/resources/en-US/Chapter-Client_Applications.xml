@@ -1,0 +1,63 @@
+<?xml version='1.0'?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "SIP_Presence_Service_User_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<chapter
+	id="msps-Client_Applications">
+	
+	<title>Client JAIN SLEE Applications</title>
+	
+	<para>The <application>&PLATFORM_NAME; SIP Presence Service</application> is built on top of <application>&PLATFORM_NAME; JAIN SLEE</application>, which means JAIN SLEE applications can be deployed and run in same JVM as the servers. Better yet, there are XDM and SIP Presence client enablers which can be integrated in such JAIN SLEE applications, allowing an easy interaction with the platform servers.</para>
+	
+	<section
+		id="msps-XDM_Client_Enabler">
+	
+		<title>XDM Client JAIN SLEE Enabler</title>
+	
+		<para>The <application>&PLATFORM_NAME; SIP Presence</application> exposes a JAIN SLEE enabler for applications which want to interact as clients of the XDM Server. The enabler is an extension of the XDM Client Enabler which exists in &PLATFORM_NAME; JAIN SLEE, the only difference is that upon requests targeting the local and integrated XDM Server, the enabler does not uses XCAP or SIP network protocols, thus providing better performance and less overhead to network communications.</para>
+
+		<para>Please refer to the bundled JAIN SLEE documentation for complete details about how to integrate the enabler, the only difference to note in this document, is the configuration of the client JAIN SLEE application SBB's XML Descriptor. The extended XDM Client Enabler SBB has the following ID:</para>
+	
+		<programlisting language="XML" role="XML"><![CDATA[
+	<sbb-name>InternalXDMClientControlSbb</sbb-name>
+	<sbb-vendor>org.mobicents</sbb-vendor>
+	<sbb-version>1.0</sbb-version>		
+		]]>
+		</programlisting>
+		
+		<para>In concrete this means that when integrating the enabler, the Parent's (the client application) Sbb XML Descriptor will refer the ID above instead of:</para>
+		
+		<programlisting language="XML" role="XML"><![CDATA[
+	<sbb-name>XDMClientChildSbb</sbb-name>
+	<sbb-vendor>org.mobicents</sbb-vendor>
+	<sbb-version>1.0</sbb-version>		
+		]]>
+		</programlisting>
+		
+	</section>
+	
+	<xi:include
+		xmlns:xi="http://www.w3.org/2001/XInclude"
+		href="Section-SIP_Event_Publication_Client_Enabler.xml" />
+	
+	<xi:include
+		xmlns:xi="http://www.w3.org/2001/XInclude"
+		href="Section-SIP_Event_Subscription_Client_Enabler.xml" />
+			
+	<xi:include
+		xmlns:xi="http://www.w3.org/2001/XInclude"
+		href="Section-Presence_Client_Enabler.xml" />	
+	
+	<section
+		id="msps-Client_Application_Examples">
+	
+		<title>Client Application Examples</title>
+	
+		<para>TODO</para>
+
+		
+	</section>
+	
+	
+</chapter>

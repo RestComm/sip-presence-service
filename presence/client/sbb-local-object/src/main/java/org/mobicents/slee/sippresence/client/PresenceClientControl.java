@@ -5,7 +5,7 @@ package org.mobicents.slee.sippresence.client;
 
 /**
  * @author martins
- *
+ * 
  */
 public interface PresenceClientControl {
 
@@ -20,13 +20,14 @@ public interface PresenceClientControl {
 	 * PresenceClientControlSbbLocalObject childSbb =
 	 * (PresenceClientControlSbbLocalObject) childRelation.create();
 	 * childSbb.setParentSbb(
-	 * (PresenceClientControlParentSbbLocalObject)this.getSbbContext().getSbbLocalObject());
+	 * (PresenceClientControlParentSbbLocalObject)this.getSbbContext
+	 * ().getSbbLocalObject());
 	 * 
 	 * 
 	 * @param parent
 	 */
 	public void setParentSbb(PresenceClientControlParentSbbLocalObject parentSbb);
-	
+
 	/**
 	 * Creates a new publication for the specified Entity.
 	 * 
@@ -40,8 +41,9 @@ public interface PresenceClientControl {
 	 * @param expires
 	 *            the time in seconds, which the publication is valid
 	 */
-	public void newPublication(Object requestId, String entity, String document, String contentType,
-			String contentSubType, int expires);
+	public void newPublication(Object requestId, String entity,
+			String document, String contentType, String contentSubType,
+			int expires);
 
 	/**
 	 * Refreshes the publication identified by the specified Entity and ETag.
@@ -54,7 +56,8 @@ public interface PresenceClientControl {
 	 * @param expires
 	 *            the time in seconds, which the publication is valid
 	 */
-	public void refreshPublication(Object requestId, String entity, String eTag, int expires);
+	public void refreshPublication(Object requestId, String entity,
+			String eTag, int expires);
 
 	/**
 	 * Modifies the publication identified by the specified Entity and ETag.
@@ -70,8 +73,9 @@ public interface PresenceClientControl {
 	 * @param expires
 	 *            the time in seconds, which the publication is valid
 	 */
-	public void modifyPublication(Object requestId, String entity, String eTag, String document,
-			String contentType, String contentSubType, int expires);
+	public void modifyPublication(Object requestId, String entity, String eTag,
+			String document, String contentType, String contentSubType,
+			int expires);
 
 	/**
 	 * Removes the publication identified by the specified Entity and ETag.
@@ -84,7 +88,7 @@ public interface PresenceClientControl {
 	 * @param eTag
 	 */
 	public void removePublication(Object requestId, String entity, String eTag);
-	
+
 	/**
 	 * Creates a subscription
 	 * 
@@ -96,9 +100,9 @@ public interface PresenceClientControl {
 	 * @param subscriptionId
 	 * @param expires
 	 */
-	public void newSubscription(String subscriber, String subscriberdisplayName,
-			String notifier, String eventPackage, String subscriptionId,
-			int expires);
+	public void newSubscription(String subscriber,
+			String subscriberdisplayName, String notifier, String eventPackage,
+			String subscriptionId, int expires);
 
 	/**
 	 * Refreshes a subscription
@@ -126,5 +130,5 @@ public interface PresenceClientControl {
 	 */
 	public void removeSubscription(String subscriber, String notifier,
 			String eventPackage, String subscriptionId);
-	
+
 }

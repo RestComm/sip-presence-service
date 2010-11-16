@@ -16,7 +16,6 @@
 		<release.integrated.filename>mobicents-sip-presence-integrated-${version}.zip</release.integrated.filename>
 		<release.xdms.filename>mobicents-sip-presence-xdms-${version}.zip</release.xdms.filename>
 		<release.source.filename>mobicents-sip-presence-${version}-src.zip</release.source.filename>
-		<author.email.ivelin>ivelin.atanasoff.ivanov (at) gmail.com</author.email.ivelin>
 		<author.email.eduardo>emmartins (at) gmail.com</author.email.eduardo>
 	</properties>
 	

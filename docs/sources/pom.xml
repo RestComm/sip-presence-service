@@ -9,14 +9,7 @@
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	
-	<artifactId>sip-presence-docs-sources</artifactId>
-			
-	<properties>
-		<product.name>SIP Presence Service</product.name>
-		<year>2009</year>
-		<bookid>SIP_Presence_Service_User_Guide</bookid>
-		<release.size>90MB</release.size>
-	</properties>	
+	<artifactId>sip-presence-docs-sources</artifactId>	
 	
 	<build>
 		<resources>

@@ -19,6 +19,8 @@ public class ServerConfiguration implements ServerConfigurationMBean {
 	
 	private boolean localXcapAuthentication;
 	
+	private boolean allowAssertedUserIDs;
+	
 	private static final ServerConfiguration INSTANCE = new ServerConfiguration();
 	
 	public static ServerConfiguration getInstance() {
@@ -121,6 +123,23 @@ public class ServerConfiguration implements ServerConfigurationMBean {
 	 */
 	@Override
 	public void setLocalXcapAuthentication(boolean value) {
-		this.localXcapAuthentication = true;
+		this.localXcapAuthentication = value;
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.ServerConfigurationMBean#getAllowAssertedUserIDs()
+	 */
+	public boolean getAllowAssertedUserIDs() {
+		return allowAssertedUserIDs;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.slee.xdm.server.ServerConfigurationMBean#setAllowAssertedUserIDs(boolean)
+	 */
+	public void setAllowAssertedUserIDs(boolean allowAssertedUserIDs) {
+		this.allowAssertedUserIDs = allowAssertedUserIDs;
+	}
+	
 }

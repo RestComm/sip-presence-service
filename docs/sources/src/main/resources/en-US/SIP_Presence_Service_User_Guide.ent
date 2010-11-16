@@ -1,0 +1,17 @@
+<!-- NOTES ON CHANGING ENTITY FILES
+Important: take care when changing entities for directories
+* Linux path separators must be: "/"
+* Windows path separators must be: "\"
+* Entities which represent directories MUST HAVE a final path separator:
+	my/path/  <- (final separator)
+If this final separator is missing, then the documentation will be wrong. -->
+
+<!-- Common entities: same across all books except for BOOKID -->
+<!ENTITY HOLDER "Red Hat Inc">
+<!ENTITY AUTHOR.EMAIL.EDUARDO "${author.email.eduardo}">
+<!ENTITY PLATFORM_NAME "${platform.name}">
+<!ENTITY RELEASE_INTEGRATED_FILENAME "${release.integrated.filename}">
+<!ENTITY RELEASE_XDMS_FILENAME "${release.xdms.filename}">
+<!ENTITY VERSION "${version}">
+<!ENTITY YEAR "2010">
+<!ENTITY BOOK_ID "MSPS_User_Guide">

@@ -106,34 +106,48 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 				if (logger.isInfoEnabled()) {
 					logger.info("Skipping authentication for local request.");
 				}
-				// use asserted id header if present
-				user = request.getHeader(HEADER_X_3GPP_Asserted_Identity);
-				if (user == null) {
-					user = request.getHeader(HEADER_X_XCAP_Asserted_Identity);					
-				}		
-				if (logger.isInfoEnabled()) {
-					logger.info("Asserted user: "+user);
+				if (CONFIGURATION.getAllowAssertedUserIDs()) {
+					// use asserted id header if present
+					user = request.getHeader(HEADER_X_3GPP_Asserted_Identity);
+					if (user == null) {
+						user = request.getHeader(HEADER_X_XCAP_Asserted_Identity);					
+					}		
+					if (logger.isInfoEnabled()) {
+						logger.info("Asserted user: "+user);
+					}
 				}
 			}
 			else {
-				// use http digest authentication
-				if (logger.isInfoEnabled()) {
-					logger.info("Remote request, using http digest authentication");
+				if (CONFIGURATION.getAllowAssertedUserIDs()) {
+					// use asserted id header if present
+					user = request.getHeader(HEADER_X_3GPP_Asserted_Identity);
+					if (user == null) {
+						user = request.getHeader(HEADER_X_XCAP_Asserted_Identity);					
+					}		
+					if (logger.isInfoEnabled()) {
+						logger.info("Asserted user: "+user);
+					}
 				}
-				if (request.getHeader(HttpConstant.HEADER_AUTHORIZATION) == null) {
-					challengeRequest(request, response);
-				} else {
-					user = checkAuthenticatedCredentials(request, response); 
-					if (user != null) {
-						if (logger.isFineEnabled()) {
-							logger.fine("Authentication suceed");
-						}
+				if (user == null) {
+					// use http digest authentication
+					if (logger.isInfoEnabled()) {
+						logger.info("Remote request without asserted user, using http digest authentication");
+					}
+					if (request.getHeader(HttpConstant.HEADER_AUTHORIZATION) == null) {
+						challengeRequest(request, response);
 					} else {
-						if (logger.isFineEnabled()) {
-							logger.fine("Authentication failed");
+						user = checkAuthenticatedCredentials(request, response); 
+						if (user != null) {
+							if (logger.isFineEnabled()) {
+								logger.fine("Authentication suceed");
+							}
+						} else {
+							if (logger.isFineEnabled()) {
+								logger.fine("Authentication failed");
+							}
+							response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+							response.getWriter().close();
 						}
-						response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-						response.getWriter().close();
 					}
 				}
 			}

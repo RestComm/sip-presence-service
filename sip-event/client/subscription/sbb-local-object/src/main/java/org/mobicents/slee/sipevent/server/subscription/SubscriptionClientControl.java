@@ -5,7 +5,7 @@ package org.mobicents.slee.sipevent.server.subscription;
 
 /**
  * @author martins
- *
+ * 
  */
 public interface SubscriptionClientControl {
 
@@ -20,7 +20,8 @@ public interface SubscriptionClientControl {
 	 * SubscriptionClientControlSbbLocalObject childSbb =
 	 * (SubscriptionClientControlSbbLocalObject) childRelation.create();
 	 * childSbb.setParentSbb(
-	 * (SubscriptionClientControlParentSbbLocalObject)this.getSbbContext().getSbbLocalObject());
+	 * (SubscriptionClientControlParentSbbLocalObject)this
+	 * .getSbbContext().getSbbLocalObject());
 	 * 
 	 * 
 	 * @param parent
@@ -67,5 +68,5 @@ public interface SubscriptionClientControl {
 	 */
 	public void unsubscribe(String subscriber, String notifier,
 			String eventPackage, String subscriptionId);
-	
+
 }

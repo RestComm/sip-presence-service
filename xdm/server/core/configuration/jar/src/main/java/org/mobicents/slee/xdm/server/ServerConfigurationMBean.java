@@ -32,5 +32,9 @@ public interface ServerConfigurationMBean {
 	public boolean getLocalXcapAuthentication();
 	
 	public void setLocalXcapAuthentication(boolean value);
-		
+	
+	public boolean getAllowAssertedUserIDs();
+	
+	public void setAllowAssertedUserIDs(boolean allowAssertedUserIDs);
+	
 }

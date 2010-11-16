@@ -1,0 +1,98 @@
+<?xml version='1.0'?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [<!ENTITY % BOOK_ENTITIES SYSTEM "SIP_Presence_Service_User_Guide.ent">
+%BOOK_ENTITIES;]>
+
+<section id="msps-sip_event_publication_client_enabler--using">
+
+	<title>Using the &PLATFORM_NAME; SIP Event Publication Client Enabler</title>
+	
+	<para>In the last section we integrated the Enabler in the JAIN SLEE Service's Sbb, the Parent Sbb, in this section it is explained how to use the Enabler's Sbb, the Child Sbb.</para>
+	
+	<section id="msps-sip_event_publication_client_enabler-the_child_sbblocalobject_interface">
+		
+		<title>The Child's SbbLocalObject Interface</title>
+		
+		<para>The &PLATFORM_NAME; SIP Event Publication Client Enabler Sbb, the Child Sbb, implements the <literal>org.mobicents.slee.sipevent.server.publication.PublicationClientControlSbbLocalObject</literal>, which extends the <literal>javax.slee.SbbLocalObject</literal> and <literal>org.mobicents.slee.sipevent.server.publication.PublicationClientControl</literal> interfaces, the latter declares the methods which can be used to interact with the PS and/or RLS:</para>
+		
+		<programlisting language="Java" role="JAVA"><![CDATA[
+package org.mobicents.slee.sipevent.server.publication;
+
+public interface PublicationClientControl {
+
+	public Result newPublication(String entity, String eventPackage,
+			String document, String contentType, String contentSubType,
+			int expires);
+
+	public Result refreshPublication(String entity, String eventPackage,
+			String eTag, int expires);
+
+	public Result modifyPublication(String entity, String eventPackage,
+			String eTag, String document, String contentType,
+			String contentSubType, int expires);
+
+	public int removePublication(String entity, String eventPackage, String eTag);
+
+}
+		]]>
+		</programlisting>
+		
+		<variablelist>
+			
+			<varlistentry>
+				<term>The <literal>newPublication(String, String, String, String, String, int)</literal> method:</term>
+				<listitem>
+					<para>Requests a new publication, for the specified Entity and SIP Event Package.</para>
+				</listitem>
+			</varlistentry>
+
+			<varlistentry>
+				<term>The <literal>refreshPublication(String, String, String, int)</literal> method:</term>
+				<listitem>
+					<para>Requests a publication refresh, for the specified Entity, SIP Event Package and ETag.</para>
+				</listitem>
+			</varlistentry>
+
+			<varlistentry>
+				<term>The <literal>modifyPublication(String, String, String, String, String, String, int)</literal> method:</term>
+				<listitem>
+					<para>Requests a publication modification, for the specified Entity, SIP Event Package and ETag.</para>
+				</listitem>
+			</varlistentry>
+
+			<varlistentry>
+				<term>The <literal>removePublicationOk(String, String, String)</literal> method:</term>
+				<listitem>
+					<para>Requests a publication removal, for the specified Entity, SIP Event Package and ETag.</para>
+				</listitem>
+			</varlistentry>
+			
+		</variablelist>
+		
+	</section>
+	
+	<section id="msps-sip_event_publication_client_enabler-creating_and_retrieving_the_child_sbb">
+		<title>Creating And Retrieving The Child Sbb</title>
+		<para>The Child Relation in the Parent Sbb Abstract Class is used to create and retrieve the Child Sbb, it is important to not forget to pass the Parent's SbbLocalObject to the Child after creation:</para>
+		<programlisting language="Java" role="JAVA"><![CDATA[
+	public PublicationClientControl getPresenceClientChildSbb() {
+		final ChildRelation childRelation = getSIPEventPublicationClientChildRelation();
+		if (childRelation.isEmpty()) {
+			try {
+				// creates new instance
+				return (PublicationClientControl) childRelation.create();
+			} catch (Exception e) {
+				tracer.severe("Failed to create child sbb", e);
+				return null;
+			}
+		}
+		else {
+			// reuse the existent one
+			return (PublicationClientControl) childRelation.iterator().next();
+		}
+	}
+		]]>
+		</programlisting>
+	</section>		 
+		
+</section>
+

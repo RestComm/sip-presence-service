@@ -16,7 +16,6 @@
 		<release.integrated.filename>jbcp-sip-presence-integrated-${version}.zip</release.integrated.filename>
 		<release.xdms.filename>jbcp-sip-presence-xdms-${version}.zip</release.xdms.filename>
 		<release.source.filename>jbcp-sip-presence-${version}-src.zip</release.source.filename>
-		<author.email.ivelin>iivanov@redhat.com</author.email.ivelin>
 		<author.email.eduardo>emartins@redhat.com</author.email.eduardo>
 	</properties>
 	

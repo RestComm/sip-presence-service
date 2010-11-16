@@ -145,7 +145,7 @@ public class SubscribeDocumentTest extends AbstractXDMJunitTest implements SipLi
 		
 		// check put response
 		assertTrue("Put response must exists",putResponse != null);
-		assertTrue("Put response code should be 201",putResponse.getCode() == 201);
+		assertTrue("Put response code should be 200 or 201",putResponse.getCode() == 201 || putResponse.getCode() == 200);
 		
 		// set initial etag
 		newEtag = putResponse.getETag();
@@ -452,7 +452,9 @@ public class SubscribeDocumentTest extends AbstractXDMJunitTest implements SipLi
 	
 	@Before
 	public void runBefore() throws IOException, InterruptedException, MalformedObjectNameException, InstanceNotFoundException, NullPointerException, MBeanException, ReflectionException, NamingException {
-			
+		
+		super.user = subscriberSipUri;	
+		
 		super.runBefore();
 		
 		try {

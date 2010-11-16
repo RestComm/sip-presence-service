@@ -1,0 +1,102 @@
+<?xml version='1.0'?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [<!ENTITY % BOOK_ENTITIES SYSTEM "SIP_Presence_Service_User_Guide.ent">
+%BOOK_ENTITIES;]>
+
+<section id="msps-sip_event_subscription_client_enabler-using">
+
+	<title>Using the &PLATFORM_NAME; SIP Event Subscription Client Enabler</title>
+	
+	<para>In the last section we integrated the Enabler in the JAIN SLEE Service's Sbb, the Parent Sbb, in this section it is explained how to use the Enabler's Sbb, the Child Sbb.</para>
+	
+	<section id="msps-sip_event_subscription_client_enabler-the_child_sbblocalobject_interface">
+		
+		<title>The Child's SbbLocalObject Interface</title>
+		
+		<para>The &PLATFORM_NAME; SIP Event Subscription Client Enabler Sbb, the Child Sbb, implements the <literal>org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlSbbLocalObject</literal>, which extends the <literal>javax.slee.SbbLocalObject</literal> and <literal>org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlSbbLocalObject</literal> interfaces, the latter declares the methods which can be used to interact with the SIP Event Subscription Server:</para>
+		
+		<programlisting language="Java" role="JAVA"><![CDATA[
+package org.mobicents.slee.sipevent.server.subscription;
+
+public interface SubscriptionClientControl {
+
+	public void setParentSbb(
+			SubscriptionClientControlParentSbbLocalObject sbbLocalObject);
+
+	public void subscribe(String subscriber, String subscriberdisplayName,
+			String notifier, String eventPackage, String subscriptionId,
+			int expires, String content, String contentType,
+			String contentSubtype);
+
+	public void resubscribe(String subscriber, String notifier,
+			String eventPackage, String subscriptionId, int expires);
+
+	public void unsubscribe(String subscriber, String notifier,
+			String eventPackage, String subscriptionId);
+
+}
+		]]>
+		</programlisting>
+		
+		<variablelist>
+		
+			<varlistentry>
+				<term>The <literal>setParentSbb(SubscriptionClientControlParentSbbLocalObject)</literal> method:</term>
+				<listitem>
+					<para>Passes the Parent's SbbLocalObject, which will be used by the Child Sbb to provide async results. If not invoked after the child creation the Enabler won't be able to callback the Parent Sbb.</para>
+				</listitem>
+			</varlistentry>
+						
+			<varlistentry>
+				<term>The <literal>subscribe(String, String, String, String, String, int, String, String, String)</literal> method:</term>
+				<listitem>
+					<para>Requests a new subscription.</para>
+				</listitem>
+			</varlistentry>
+
+			<varlistentry>
+				<term>The <literal>resubscribe(String, String, String, String, int)</literal> method:</term>
+				<listitem>
+					<para>Requests a subscription refresh.</para>
+				</listitem>
+			</varlistentry>
+
+			<varlistentry>
+				<term>The <literal>unsubscribe(String, String, String, String)</literal> method:</term>
+				<listitem>
+					<para>Requests a subscription removal.</para>
+				</listitem>
+			</varlistentry>
+			
+		</variablelist>
+		
+	</section>
+	
+	<section id="msps-sip_event_subscription_client_enabler-creating_and_retrieving_the_child_sbb">
+		<title>Creating And Retrieving The Child Sbb</title>
+		<para>The Child Relation in the Parent Sbb Abstract Class is used to create and retrieve the Child Sbb, it is important to not forget to pass the Parent's SbbLocalObject to the Child after creation:</para>
+		<programlisting language="Java" role="JAVA"><![CDATA[
+	public SubscriptionClientControl getSIPEventSubscriptionClientChildSbb() {
+		final ChildRelation childRelation = getSIPEventSubscriptionClientChildRelation();
+		if (childRelation.isEmpty()) {
+			try {
+				// creates new instance
+				SubscriptionClientControl sbb = (SubscriptionClientControl) childRelation.create();
+				// passes the parent sbb local object to the child
+				sbb.setParentSbb((SubscriptionClientControlParentSbbLocalObject) sbbContext.getSbbLocalObject());
+				return sbb;
+			} catch (Exception e) {
+				tracer.severe("Failed to create child sbb", e);
+				return null;
+			}
+		}
+		else {
+			// reuse the existent one
+			return (SubscriptionClientControl) childRelation.iterator().next();
+		}
+	}
+		]]>
+		</programlisting>
+	</section>		 
+		
+</section>
+
