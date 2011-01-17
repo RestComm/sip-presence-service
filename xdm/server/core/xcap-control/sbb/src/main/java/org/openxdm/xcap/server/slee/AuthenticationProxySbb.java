@@ -184,7 +184,7 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 		final String challengeParams = "Digest nonce=\"" + challengeParamGenerator.getNonce(opaque)
 				+ "\", realm=\"" + getRealm()
 				+ "\", opaque=\"" + opaque
-				+ "\", qop=auth";
+				+ "\", qop=\"auth\"";
 
 		response.setHeader(HttpConstant.HEADER_WWW_AUTHENTICATE,
 				challengeParams);
