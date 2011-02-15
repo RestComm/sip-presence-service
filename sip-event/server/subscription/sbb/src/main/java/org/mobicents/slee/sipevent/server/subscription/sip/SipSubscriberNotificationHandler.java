@@ -77,9 +77,7 @@ public class SipSubscriberNotificationHandler {
 
 		if (!subscription.getResourceList() && !subscription.getKey().isWInfoSubscription()) {
 			// filter content per subscriber (notifier rules)
-			Object filteredContent = childSbb.filterContentPerSubscriber(
-					subscription.getSubscriber(), subscription.getNotifier(),
-					subscription.getKey().getEventPackage(), content);
+			Object filteredContent = childSbb.filterContentPerSubscriber(subscription,content);
 			// filter content per notifier (subscriber rules)
 			// TODO
 			// marshall content to string
@@ -89,7 +87,7 @@ public class SipSubscriberNotificationHandler {
 			stringWriter.close();
 		}
 		else {
-			// resource list or winfo subscription, no filtering
+			// resource list or winfo subscription, no filtering, it's done at each backend subscription
 			if (content instanceof JAXBElement<?>) {
 				// marshall content to string
 				StringWriter stringWriter = new StringWriter();

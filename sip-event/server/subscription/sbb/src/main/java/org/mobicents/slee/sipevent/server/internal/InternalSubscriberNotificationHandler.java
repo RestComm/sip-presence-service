@@ -116,9 +116,7 @@ public class InternalSubscriberNotificationHandler {
 			throws JAXBException, ParseException, IOException {
 
 		// filter content per subscriber (notifier rules)
-		Object filteredContent = childSbb.filterContentPerSubscriber(
-				subscription.getSubscriber(), subscription.getNotifier(),
-				subscription.getKey().getEventPackage(), content);
+		Object filteredContent = childSbb.filterContentPerSubscriber(subscription, content);
 		// filter content per notifier (subscriber rules)
 		// TODO
 		// marshall content to string

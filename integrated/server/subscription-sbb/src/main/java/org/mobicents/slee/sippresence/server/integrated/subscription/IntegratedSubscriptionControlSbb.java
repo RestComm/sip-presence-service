@@ -203,18 +203,17 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 		}
 	}
 
-	public Object filterContentPerSubscriber(String subscriber,
-			Notifier notifier, String eventPackage, Object unmarshalledContent) {
+	@Override
+	public Object filterContentPerSubscriber(Subscription subscription,
+			Object unmarshalledContent) {
 		if (contains(PresenceSubscriptionControl.getEventPackages(),
-				eventPackage)) {
+				subscription.getKey().getEventPackage())) {
 			return PRESENCE_SUBSCRIPTION_CONTROL
-					.filterContentPerSubscriber(subscriber, notifier,
-							eventPackage, unmarshalledContent);
+					.filterContentPerSubscriber(subscription, unmarshalledContent,this);
 		} else if (contains(XcapDiffSubscriptionControl.getEventPackages(),
-				eventPackage)) {
+				subscription.getKey().getEventPackage())) {
 			return XCAP_DIFF_SUBSCRIPTION_CONTROL
-					.filterContentPerSubscriber(subscriber, notifier,
-							eventPackage, unmarshalledContent);
+					.filterContentPerSubscriber(subscription, unmarshalledContent,this);
 		} else {
 			tracer
 					.warning("filterContentPerSubscriber() invoked with unknown event package");

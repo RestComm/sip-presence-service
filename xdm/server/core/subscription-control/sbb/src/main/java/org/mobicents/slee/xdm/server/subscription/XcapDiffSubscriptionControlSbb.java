@@ -127,12 +127,13 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 				.getNotifyContent(subscription, this);
 	}
 
-	public Object filterContentPerSubscriber(String subscriber,
-			Notifier notifier, String eventPackage, Object unmarshalledContent) {
+	@Override
+	public Object filterContentPerSubscriber(Subscription subscription,
+			Object unmarshalledContent) {
 		// delegate to XcapDiffSubscriptionControl
 		return XCAP_DIFF_SUBSCRIPTION_CONTROL
-				.filterContentPerSubscriber(subscriber, notifier, eventPackage,
-						unmarshalledContent);
+				.filterContentPerSubscriber(subscription,
+						unmarshalledContent,this);
 	}
 
 	public Marshaller getMarshaller() {

@@ -132,11 +132,11 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 				.getNotifyContent(subscription,this);
 	}
 
-	public Object filterContentPerSubscriber(String subscriber,
-			Notifier notifier, String eventPackage, Object unmarshalledContent) {
+	@Override
+	public Object filterContentPerSubscriber(Subscription subscription,
+			Object unmarshalledContent) {
 		return presenceSubscriptionControl
-				.filterContentPerSubscriber(subscriber, notifier, eventPackage,
-						unmarshalledContent);
+					.filterContentPerSubscriber(subscription,unmarshalledContent,this);		
 	}
 
 	public void onRulesetUpdatedEvent(RulesetUpdatedEvent event, ActivityContextInterface aci) {

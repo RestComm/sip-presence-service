@@ -354,8 +354,7 @@ public class XcapDiffSubscriptionControl {
 		}
 	}
 
-	public Object filterContentPerSubscriber(String subscriber,
-			Notifier notifier, String eventPackage, Object unmarshalledContent) {
+	public Object filterContentPerSubscriber(Subscription subscription, Object unmarshalledContent, XcapDiffSubscriptionControlSbbInterface sbb) {
 		return unmarshalledContent;
 	}
 	

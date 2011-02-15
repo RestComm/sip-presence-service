@@ -43,7 +43,7 @@ public class LoadTestUserProvisioningTest {
 	private RMIAdaptor rmiAdaptor;
 	
 	
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void initRmiAdaptor() throws NamingException, MalformedObjectNameException, NullPointerException {
 		// Set Some JNDI Properties
 		Hashtable env = new Hashtable();
@@ -95,14 +95,14 @@ public class LoadTestUserProvisioningTest {
 			"\n<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\">" +
 				"\n\t<list name=\"Default\">";
 		int users_size = Integer.valueOf(properties.getProperty("USERS_SIZE"));
-		int users_size_length = properties.getProperty("USERS_SIZE").length(); 
+		//int users_size_length = properties.getProperty("USERS_SIZE").length(); 
 		for (int i=1;i<Integer.valueOf(properties.getProperty("USERS_RESOURCE_LIST_SIZE"));i++) {
 			int entryUserNumber = (userNumber+i)%users_size;
 			String entryUserNumberString = Integer.toString(entryUserNumber);
-			while(entryUserNumberString.length() < users_size_length) {
+			//while(entryUserNumberString.length() < users_size_length) {
 				// sipp adds 0s to usernames to make them of same length
-				entryUserNumberString = "0"+entryUserNumberString;				
-			}
+				//entryUserNumberString = "0"+entryUserNumberString;				
+			//}
 			String entryUser = "sip:"+properties.getProperty("USERS_NAME_PREFIX")+entryUserNumberString+"@"+properties.getProperty("SERVER_HOST");
 			resourceList += "\n\t\t<entry uri=\""+entryUser+"\"><display-name>"+entryUser+"</display-name></entry>";
 		}
@@ -173,13 +173,13 @@ public class LoadTestUserProvisioningTest {
 		client = new XcapClientImpl();
 		initRmiAdaptor();		
 		
-		int users_size_length = properties.getProperty("USERS_SIZE").length(); 
+		//int users_size_length = properties.getProperty("USERS_SIZE").length(); 
 		for (int i=1;i<=Integer.valueOf(properties.getProperty("USERS_SIZE"));i++) {
 			String userNumber = Integer.toString(i);
-			while(userNumber.length() < users_size_length) {
+			//while(userNumber.length() < users_size_length) {
 				// sipp adds 0s to usernames to make them of same length
-				userNumber = "0"+userNumber;				
-			}
+				//userNumber = "0"+userNumber;				
+			//}
 			provisionUser("sip:"+properties.getProperty("USERS_NAME_PREFIX")+userNumber+"@"+properties.getProperty("SERVER_HOST"),i);
 		}
 		

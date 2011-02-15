@@ -68,8 +68,7 @@ public interface ImplementedSubscriptionControl {
 	 * 
 	 * @return content filtered
 	 */
-	public Object filterContentPerSubscriber(String subscriber,
-			Notifier notifier, String eventPackage, Object unmarshalledContent);
+	public Object filterContentPerSubscriber(Subscription subscription, Object unmarshalledContent);
 
 	/**
 	 * Retrieves a JAXB Marshaller to convert a JAXBElement to a String.

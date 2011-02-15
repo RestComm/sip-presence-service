@@ -1,6 +1,5 @@
 package org.mobicents.slee.sippresence.server.subscription;
 
-import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -9,8 +8,6 @@ import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
 import javax.slee.resource.StartActivityException;
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.publication.data.ComposedPublication;
@@ -193,6 +190,7 @@ public class PresenceSubscriptionControl {
 							subscriptionKey.getEventId(),
 							newCombinedRule.getSubHandling().getResponseCode());
 				}
+				// TODO check if transformations changed need any further action
 			}
 		}				
 	}
@@ -271,24 +269,27 @@ public class PresenceSubscriptionControl {
 		return null;
 	}
 
-	public Object filterContentPerSubscriber(String subscriber,
-			Notifier notifier, String eventPackage, Object unmarshalledContent) {
+	public Object filterContentPerSubscriber(Subscription subscription, Object unmarshalledContent, PresenceSubscriptionControlSbbInterface sbb) {
 		
-		// get ridden of notifier uri params, if any
-		//String notifier = subscription.getNotifier().split(";")[0];
+		// get rules for subscriptions on this sbb entity (sip dialog)
+		HashMap<PresRuleCMPKey,OMAPresRule> combinedRules = sbb.getCombinedRules();
+		if (combinedRules == null) {
+			// no rules, return full content
+			return unmarshalledContent;
+		}
+		// get rule for this specific subscription
+		final OMAPresRule rule = combinedRules.get(new PresRuleCMPKey(subscription.getSubscriber(),subscription.getNotifier(), subscription.getKey()));
+		if (rule == null) {
+			// no rule for the subscription, return full content
+			return unmarshalledContent;
+		}
 		
+		final JAXBElement<Presence> jaxbElement = (JAXBElement<Presence>) unmarshalledContent;
+		final Presence presence = jaxbElement.getValue();
 		// TODO apply transformations, including polite-block (see pres-rules
 		// specs)
+		
 		return unmarshalledContent;
-	}
-
-	private Ruleset unmarshallRuleset(String documentAsString, Unmarshaller unmarshaller) {
-		try {
-			return (Ruleset) unmarshaller.unmarshal(new StringReader(documentAsString));
-		} catch (JAXBException e) {
-			logger.error("unmarshalling of ruleset failed", e);
-			return null;
-		}		
 	}
 
 	// --------- AUX
@@ -304,17 +305,5 @@ public class PresenceSubscriptionControl {
 		return new DocumentSelector(presRulesAUID, "users/" + user,
 				presRulesDocumentName);
 	}
-
-	/**
-	 * from a document selector point to a pres-rules doc return the user
-	 * @param documentSelector
-	 * @return
-	 */
-	private String getUser(DocumentSelector documentSelector) {
-		return documentSelector.getDocumentParent()
-				.substring("users/".length());
-	}
-
-	
 
 }
