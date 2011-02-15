@@ -28,7 +28,13 @@
 	  	org.mobicents.slee.sippresence.pojo.rpid:
 	  	org.mobicents.slee.sippresence.pojo.datamodel:
 	  	org.mobicents.slee.sippresence.pojo.commonschema:
-	  	org.mobicents.slee.sippresence.pojo.pidf.oma	  	
+	  	org.mobicents.slee.sippresence.pojo.pidf.oma:
+	  	org.mobicents.slee.sippresence.pojo.pidf.oma.pde:
+	  	org.mobicents.slee.sippresence.pojo.pidf.oma.pde11:
+	  	org.mobicents.slee.sippresence.pojo.pidf.geopriv10:
+	  	org.mobicents.slee.sippresence.pojo.pidf.geopriv10.basicPolicy:
+	  	org.mobicents.slee.sippresence.pojo.pidf.geopriv10.civicAddr:
+	  	org.mobicents.slee.sippresence.pojo.pidf.uacaps  	
 	  </property>	            	      
    </bean>
    

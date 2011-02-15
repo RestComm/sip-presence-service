@@ -5,8 +5,8 @@ import gov.nist.javax.sip.header.HeaderFactoryExt;
 import gov.nist.javax.sip.header.HeaderFactoryImpl;
 import gov.nist.javax.sip.header.ims.PChargingVectorHeader;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.text.ParseException;
 
 import javax.sip.Dialog;
@@ -80,20 +80,18 @@ public class SipSubscriberNotificationHandler {
 			Object filteredContent = childSbb.filterContentPerSubscriber(subscription,content);
 			// filter content per notifier (subscriber rules)
 			// TODO
-			// marshall content to string
-			StringWriter stringWriter = new StringWriter();
-			childSbb.getMarshaller().marshal(filteredContent, stringWriter);
-			notify.setContent(stringWriter.toString(), contentTypeHeader);
-			stringWriter.close();
+			// marshall content and add to sip message
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			childSbb.getMarshaller().marshal(filteredContent, baos);
+			notify.setContent(baos.toByteArray(), contentTypeHeader);
 		}
 		else {
 			// resource list or winfo subscription, no filtering, it's done at each backend subscription
 			if (content instanceof JAXBElement<?>) {
-				// marshall content to string
-				StringWriter stringWriter = new StringWriter();
-				childSbb.getMarshaller().marshal(content, stringWriter);
-				notify.setContent(stringWriter.toString(), contentTypeHeader);
-				stringWriter.close();
+				// marshall content and add to sip message
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				childSbb.getMarshaller().marshal(content, baos);
+				notify.setContent(baos.toByteArray(), contentTypeHeader);
 			}
 			else {
 				notify.setContent(content, contentTypeHeader);

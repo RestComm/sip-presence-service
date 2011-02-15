@@ -30,6 +30,7 @@ import org.mobicents.slee.sippresence.pojo.pidf.Basic;
 import org.mobicents.slee.sippresence.pojo.pidf.Presence;
 import org.mobicents.slee.sippresence.pojo.pidf.Status;
 import org.mobicents.slee.sippresence.pojo.pidf.Tuple;
+import org.mobicents.slee.sippresence.server.jmx.SipPresenceServerManagement;
 
 /**
  * Publication control implementation child sbb that transforms the sip event
@@ -163,18 +164,14 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 	/*
 	 * JAXB context is thread safe
 	 */
-	private static final JAXBContext jaxbContext = initJAXBContext();
+	private static JAXBContext jaxbContext = null;
 
 	private static JAXBContext initJAXBContext() {
 		try {
 			return JAXBContext
-					.newInstance("org.mobicents.slee.sippresence.pojo.pidf"
-							+ ":org.mobicents.slee.sippresence.pojo.pidf.oma"
-							+ ":org.mobicents.slee.sippresence.pojo.rpid"
-							+ ":org.mobicents.slee.sippresence.pojo.datamodel"
-							+ ":org.mobicents.slee.sippresence.pojo.commonschema");
+					.newInstance(SipPresenceServerManagement.getInstance().getJaxbPackageNames());
 		} catch (JAXBException e) {
-			logger.error("failed to create jaxb context");
+			logger.error("failed to create jaxb context",e);
 			return null;
 		}
 	}
@@ -184,6 +181,9 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 	 */
 	@Override
 	public JAXBContext getJaxbContext() {
+		if (jaxbContext == null) {
+			jaxbContext = initJAXBContext();
+		}
 		return jaxbContext;
 	}
 

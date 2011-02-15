@@ -7,7 +7,7 @@
 	id="sps-SIP_Presence_Server">
 	<title>&PLATFORM_NAME; SIP Presence Server</title>
 	<para>The <application>&PLATFORM_NAME; SIP Presence Server</application> is a free and open source implementation of a SIP Presence Server, as defined by the Internet Engineering Task Force (IETF), the Open Mobile Alliance (OMA), the 3rd Generation Partnership Project (3GPP) and the European Telecommunications Standards Institute (ETSI).</para>
-	<para>The <application>SIP Presence Server</application> is an entity that accepts, stores and distributes SIP presence information.</para>
+	<para>The <application>SIP Presence Server</application> is an entity that accepts, stores and distributes SIP presence information, fully supporting OMA Presence SIMPLE Data Extensions V1.2.</para>
 	<section
 		id="sps-Functional_Architecture_of_the_SIP_Presence_Server">
 		<title>Functional Architecture of the SIP Presence Server</title>
