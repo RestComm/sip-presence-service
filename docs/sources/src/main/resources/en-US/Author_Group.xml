@@ -13,7 +13,7 @@
 	<author>
 		<firstname>Eduardo</firstname>
 		<surname>Martins</surname>
-		<email>&AUTHOR_EMAIL_EDUARDO;</email>
+		<email>&AUTHOR.EMAIL.EDUARDO;</email>
 	</author>
 	<author>
         <firstname>Jared</firstname>

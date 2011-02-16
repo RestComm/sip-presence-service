@@ -4,8 +4,8 @@
 %BOOK_ENTITIES;
 ]>
 <bookinfo
-	id="&BOOK_ID;">
-	<title>&PLATFORM_NAME; SIP Presence Service User Guide</title>
+	id="SIP_Presence_Service_User_Guide">
+	<title>SIP Presence Service User Guide</title>
 	<subtitle>The user guide for the &PLATFORM_NAME; SIP Presence Service</subtitle>
 	<productname>&PLATFORM_NAME; SIP Presence Service</productname>
 	<productnumber>&VERSION;</productnumber>
