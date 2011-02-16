@@ -6,7 +6,7 @@
 <bookinfo
 	id="&BOOK_ID;">
 	<title>&PLATFORM_NAME; SIP Presence Service User Guide</title>
-	<subtitle></subtitle>
+	<subtitle>The user guide for the &PLATFORM_NAME; SIP Presence Service</subtitle>
 	<productname>&PLATFORM_NAME; SIP Presence Service</productname>
 	<productnumber>&VERSION;</productnumber>
 	<edition>3.0</edition>

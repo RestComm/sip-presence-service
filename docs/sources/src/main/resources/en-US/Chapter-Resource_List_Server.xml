@@ -6,16 +6,16 @@
 <chapter
 	id="rls-Resource_List_Server">
 	<title>&PLATFORM_NAME; Resource List Server</title>
-	<para>The <application>&PLATFORM_NAME; Resource List Server</application>, or simply <literal>RLS</literal>, is the functional element which handles subscriptions to resources lists. A resource list is defined as a list of any kind of SIP presence entities, be it single presentities or other resource lists.</para>
-	<para>The RLS is specified by IETF RFC 5367. It is a XDM Client, which watches all RLS Services documents (each define a list of presence entities) stored in the related XDM Server, and processes SIP presence subscriptions to each RLS Service state, that is, the state for all presence entities deferred by from the service. When handling a subscription to a RLS Service, the RLS creates and manages (possibly virtual) subscriptions to each presence entity on the Presence Server, and notifies the subscriber for entity state change.</para>
-	<para>RLS Services are typically used to store the list of entities which the subscriber watch, and the list of entities which are allowed to subscribe its state.</para>
-	<para>&PLATFORM_NAME; Resource List Server extends the Presence Server, it introduces an additional functional element, the RLS Services Cache. This element is responsible for managing the flat list of entities pointed by each RLS Service, and for that it subscribes changes in referred docs (RLS Services and related Resource Lists). Each time an RLS Service changes the cache notifies the related subscriptions, to ensure the subscriber is always subscribing the correct list of presence entities.</para>
+	<para>The <application>Resource List Server</application> (RLS), is the functional element that handles subscriptions to resource lists. A resource list is defined as a list of any kind of SIP presence entities, be it single presentities or other resource lists.</para>
+	<para>The RLS is specified by IETF RFC 5367. It is an XDM Client, that watches all RLS Services documents (each define a list of presence entities) stored in the related XDM Server, and processes SIP presence subscriptions to each RLS Service state (the state for all presence entities deferred by from the service). When handling a subscription to an RLS Service, the RLS creates and manages (possibly virtual) subscriptions to each presence entity on the Presence Server, and notifies the subscriber for entity state change.</para>
+	<para>RLS Services are typically used to store the list of entities which the subscriber watches, and the list of entities that are allowed to subscribe its state.</para>
+	<para>The &PLATFORM_NAME; Resource List Server extends the Presence Server and introduces an additional functional element, the RLS Services Cache. This element is responsible for managing the flat list of entities pointed by each RLS Service, and subscribes changes in referred docs (RLS Services and related Resource Lists). Each time an RLS Service changes the cache notifies the related subscriptions, to ensure the subscriber is always subscribing to the correct list of presence entities.</para>
 	<important>
-		<para>The &PLATFORM_NAME; RLS is currently limited to RLS Services stored in the integrated XDM Server, and such services should not refer other XDM Servers, otherwise the RLS will set the state for the related service as Bad Gateway.</para>
+		<para>The &PLATFORM_NAME; RLS is currently limited to RLS Services stored in the integrated XDM Server. These services should not refer other XDM Servers, otherwise the RLS will set the state for the related service as Bad Gateway.</para>
 	</important>
 	<section id="rls-Disabling_the_RLS">
 		<title>Disabling the Resource List Server</title>
-		<para>It is possible to disable the RLS function from the integrated server, that is achieved by configuring the Presence Server's Subscription Interface. See <xref linkend="sps-Configuring_the_Abstract_SIP_Event_Subscription_Interface"/> for additional information.</para>
+		<para>It is possible to disable the RLS function from the integrated server. This is achieved by configuring the Presence Server's Subscription Interface. See <xref linkend="sps-Configuring_the_Abstract_SIP_Event_Subscription_Interface"/> for additional information.</para>
 	</section>
 </chapter>
 

@@ -17,16 +17,16 @@
 			<varlistentry>
 				<term>Presence Publication Control</term>
 				<listitem>
-					<para>This functional element manages the publication of presence events, which includes not only the handling of new publications, but also the refreshing, modification or removal of, already-published information.</para>
-					<para>Because the presence resource, which is also called a <emphasis>presentity</emphasis>, can have multiple publications simultaneously, such as some state published by a user agent or device, and some location data published by a Presence Network Agent (on behalf of the presentity), this element is also responsible for composing all of the different publications for the same resource.</para>
-					<para>In some presence networks, it may be of interest to allow resources to have a static presence state which is stored in the XDM Server. In cases like these, Presence Publication Control may need to interface with the <application>XDM Server</application> to retrieve and subscribe to (learn about changes to) that information, and use it when composing the final presence information document.</para>
+					<para>This functional element manages the publication of presence events, which includes the handling of new publications and the refreshing, modification or removal of already-published information.</para>
+					<para>This element is also responsible for composing all of the different publications for the same resource. This is because the presence resource, which is also called a <emphasis>presentity</emphasis>, can have multiple publications simultaneously, such as some states published by a user agent or device, and some location data published by a Presence Network Agent (on behalf of the presentity).</para>
+					<para>In some presence networks, it may be of interest to allow resources to have a static presence state stored in the XDM Server. In cases like these, Presence Publication Control may need to interface with the <application>XDM Server</application> to retrieve and subscribe to (learn about changes to) that information, and use it when composing the final presence information document.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
 				<term>Presence Subscription Control</term>
 				<listitem>
-					<para>This functional element handles subscriptions to presence events or to the list of subscribers (watchers), for any specific resource. It is, of course, responsible for emitting notifications related to those subscriptions.</para>
-					<para>Presence authorization rules, which define if a subscription is allowed or rejected and, if allowed, define which transformations to the original presence events are needed, are stored on the <application>XDM Server</application> by the user. Thus, Presence Subscription Control needs to retrieve and subscribe to that information.</para>
+					<para>This functional element handles subscriptions to presence events or to the list of subscribers (watchers) for any specific resource. It is responsible for emitting notifications related to those subscriptions.</para>
+					<para>Presence authorization rules, which define if a subscription is allowed or rejected and, if allowed, define which transformations to the original presence events are needed, are stored on the <application>XDM Server</application> by the user. Presence Subscription Control needs to retrieve and subscribe to that information.</para>
 				</listitem>
 			</varlistentry>
 			<varlistentry>
@@ -52,21 +52,21 @@
 	<section
 	id="sps-Configuring_The_Sip_Presence_Server">
 		<title>Configuring The SIP Presence Server</title>
-		<para>Several features of the SIP Presence Server are configurable, through XML files or JMX.:</para>			
+		<para>Several features of the SIP Presence Server are configurable, through XML files or JMX:</para>			
 		<section id="sps-Configuring_the_Abstract_SIP_Event_Publication_Interface">
 			<title>Configuring the Abstract SIP Event Publication Interface</title>
 			<para>Edit the properties in file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-sip-presence/3-beans/configuration/sip-event/publication/META-INF/jboss-beans.xml</filename>.</para>
-			<para>This configuration part can also be done through JMX, using the MBean named <emphasis>org.mobicents.slee:sippresence=SipEventPublicationControl</emphasis>. The configuratian changes through JMX are not persistent.</para>
+			<para>This configuration part can also be done through JMX, using the <emphasis>org.mobicents.slee:sippresence=SipEventPublicationControl</emphasis> MBean. The configuration changes through JMX are not persistent.</para>
 		</section>
 		<section id="sps-Configuring_the_Abstract_SIP_Event_Subscription_Interface">
 			<title>Configuring the Abstract SIP Event Subscription Interface</title>
 			<para>Edit the properties in file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-sip-presence/3-beans/configuration/sip-event/subscription/META-INF/jboss-beans.xml</filename>.</para>
-			<para>This configuration part can also be done through JMX, using the MBean named <emphasis>org.mobicents.slee:sippresence=SipEventSubscriptionControl</emphasis>. The configuratian changes through JMX are not persistent.</para>
+			<para>This configuration part can also be done through JMX, using the <emphasis>org.mobicents.slee:sippresence=SipEventSubscriptionControl</emphasis> MBean. The configuration changes through JMX are not persistent.</para>
 		</section>
 		<section id="sps-Configuring_the_Concrete_SIP_Event_Interfaces">
 			<title>Configuring the Concrete SIP Event Interfaces</title>
 			<para>Edit the properties in file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-sip-presence/3-beans/configuration/sip-presence/META-INF/jboss-beans.xml</filename>.</para>
-			<para>This configuration part can also be done through JMX, using the MBean named <emphasis>org.mobicents.slee:sippresence=SipPresenceServerManagement</emphasis>. The configuratian changes through JMX are not persistent.</para>
+			<para>This configuration part can also be done through JMX, using the <emphasis>org.mobicents.slee:sippresence=SipPresenceServerManagement</emphasis> MBean. The configuration changes through JMX are not persistent.</para>
 		</section>		
 	</section>
 </chapter>

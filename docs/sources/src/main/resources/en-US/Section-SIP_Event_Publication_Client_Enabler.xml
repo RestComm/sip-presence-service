@@ -7,9 +7,9 @@
 
 	<title>The &PLATFORM_NAME; SIP Event Publication Client Enabler</title>
 
-	<para>The <application>&PLATFORM_NAME; SIP Event Publication</application> exposes a JAIN SLEE enabler for applications which want to interact as clients of a SIP Event Publication Server. The enabler does not uses SIP network protocols, thus providing better performance and less overhead to network communications.</para>
+	<para>The <application>&PLATFORM_NAME; SIP Event Publication</application> exposes a JAIN SLEE enabler for applications that want to interact as clients of a SIP Event Publication Server. The enabler does not use SIP network protocols, thus providing better performance and less overhead to network communications.</para>
 
-	<para>The Enabler consists in an SBB which can be used in child relations, with a simple synchronous interface.</para>
+	<para>The Enabler is an SBB that can be used in child relations, with a simple synchronous interface.</para>
 	
 	<xi:include
 		xmlns:xi="http://www.w3.org/2001/XInclude"

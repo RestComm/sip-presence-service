@@ -7,12 +7,12 @@
 
 	<title>The &PLATFORM_NAME; Presence Client Enabler</title>
 
-	<para>The <application>&PLATFORM_NAME; SIP Presence</application> exposes a JAIN SLEE enabler for applications which want to interact as clients of the Presence (PS) or Resource List Server (RLS). The enabler does not uses SIP network protocols, thus providing better performance and less overhead to network communications.</para>
+	<para>The <application>&PLATFORM_NAME; SIP Presence</application> exposes a JAIN SLEE enabler for applications that want to interact as clients of the Presence (PS) or Resource List Server (RLS). The enabler does not use SIP network protocols, thus providing better performance and less overhead to network communications.</para>
 
-	<para>The Enabler consists in an SBB which can be used in child relations, with a simple asynchronous interface.</para>
+	<para>The Enabler is an SBB that can be used in child relations, with a simple asynchronous interface.</para>
 	
 	<important>
-		<para>The Presence Client Enabler reuses the SIP Event Subscription and Publication Client Enablers, and for the best performance it is best to use these instead. This is due to less internal state needed.</para>
+		<para>The Presence Client Enabler reuses the SIP Event Subscription and Publication Client Enablers. For the best performance, it is best to use these instead. This is due to less internal state is needed.</para>
 	</important>
 	
 	<xi:include

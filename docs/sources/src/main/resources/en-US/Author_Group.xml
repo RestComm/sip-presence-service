@@ -20,4 +20,9 @@
         <surname>Morgan</surname>
         <email>jmorgan@redhat.com</email>
     </author>
+    <author>
+    	<firstname>Tom</firstname>
+    	<surname>Wells</surname>
+    	<email>twells@redhat.com</email>
+	</author>
 </authorgroup>

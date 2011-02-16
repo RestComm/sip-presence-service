@@ -8,9 +8,9 @@
 	
 	<para>This chapter explains how to setup a JAIN SLEE Service Sbb to use the Enabler.</para>
 
-	<para>In short terms, a Service's Sbb will define the Enabler's Sbb as a child, and to achieve that it will need to setup the XML Descriptor, Abstract Class and SbbLocalObject interface.</para>
+	<para>A Service's Sbb will define the Enabler's Sbb as a child. To achieve that it will need to setup the XML Descriptor, Abstract Class and SbbLocalObject interface.</para>
 	
-	<important><para>The Service's Sbb will be referred as the Parent Sbb in the following sections.</para></important>
+	<important><para>The Service's Sbb will be referred to as the Parent Sbb in the following sections.</para></important>
 	
 	<section id="msps-sip_event_publication_client_enabler-parent_sbb_local_object_interface">
 		

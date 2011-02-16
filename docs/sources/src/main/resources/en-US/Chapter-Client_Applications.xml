@@ -8,16 +8,16 @@
 	
 	<title>Client JAIN SLEE Applications</title>
 	
-	<para>The <application>&PLATFORM_NAME; SIP Presence Service</application> is built on top of <application>&PLATFORM_NAME; JAIN SLEE</application>, which means JAIN SLEE applications can be deployed and run in same JVM as the servers. Better yet, there are XDM and SIP Presence client enablers which can be integrated in such JAIN SLEE applications, allowing an easy interaction with the platform servers.</para>
+	<para>The <application>&PLATFORM_NAME; SIP Presence Service</application> is built on top of <application>&PLATFORM_NAME; JAIN SLEE</application>. JAIN SLEE applications can be deployed and run in the same JVM as the servers. There are also XDM and SIP Presence client enablers that can be integrated into these JAIN SLEE applications, allowing for easy interaction with the platform servers.</para>
 	
 	<section
 		id="msps-XDM_Client_Enabler">
 	
 		<title>XDM Client JAIN SLEE Enabler</title>
 	
-		<para>The <application>&PLATFORM_NAME; SIP Presence</application> exposes a JAIN SLEE enabler for applications which want to interact as clients of the XDM Server. The enabler is an extension of the XDM Client Enabler which exists in &PLATFORM_NAME; JAIN SLEE, the only difference is that upon requests targeting the local and integrated XDM Server, the enabler does not uses XCAP or SIP network protocols, thus providing better performance and less overhead to network communications.</para>
+		<para>The <application>&PLATFORM_NAME; SIP Presence</application> exposes a JAIN SLEE enabler for applications that can interact as clients of the XDM Server. The enabler is an extension of the XDM Client Enabler which exists in &PLATFORM_NAME; JAIN SLEE. The only difference is that upon requests targeting the local and integrated XDM Server, the enabler does not uses XCAP or SIP network protocols, thus providing better performance and less overhead to network communications.</para>
 
-		<para>Please refer to the bundled JAIN SLEE documentation for complete details about how to integrate the enabler, the only difference to note in this document, is the configuration of the client JAIN SLEE application SBB's XML Descriptor. The extended XDM Client Enabler SBB has the following ID:</para>
+		<para>Please refer to the bundled JAIN SLEE documentation for complete details about how to integrate the enabler. The only difference to note in this document is the configuration of the client JAIN SLEE application SBB's XML Descriptor. The extended XDM Client Enabler SBB has the following ID:</para>
 	
 		<programlisting language="XML" role="XML"><![CDATA[
 	<sbb-name>InternalXDMClientControlSbb</sbb-name>
@@ -26,7 +26,7 @@
 		]]>
 		</programlisting>
 		
-		<para>In concrete this means that when integrating the enabler, the Parent's (the client application) Sbb XML Descriptor will refer the ID above instead of:</para>
+		<para>This means that when integrating the enabler, the Parent's (the client application) Sbb XML Descriptor will refer to the ID above, instead of:</para>
 		
 		<programlisting language="XML" role="XML"><![CDATA[
 	<sbb-name>XDMClientChildSbb</sbb-name>

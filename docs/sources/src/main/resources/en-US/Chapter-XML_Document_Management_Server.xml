@@ -6,15 +6,15 @@
 <chapter
 	id="xdms-XML_Document_Management_Server">
 	<title>&PLATFORM_NAME; XML Document Management Server</title>
-	<para>The <application>&PLATFORM_NAME; XML Document Management Server</application> (<application>XDM Server</application>) is part of the <application>&PLATFORM_NAME; SIP Presence Service</application>; it is the first free and open source implementation of an <application>XML Document Management Server</application> as defined in the <ulink
-			url="Open Mobile Alliance (OMA) XML Document Management v1.1 specification"/>. This functional element of next-generation IP communication networks is responsible for handling the management of user XML documents stored on the network side, such as presence authorization rules, contact and group lists (also known as resource lists), static presence information, and much more.</para>
+	<para>The <application>&PLATFORM_NAME; XML Document Management Server</application> (XDMS) is part of the <application>&PLATFORM_NAME; SIP Presence Service</application>. It is the first free and open source implementation of an <application>XML Document Management Server</application> as defined in the Open Mobile Alliance (OMA) XML Document Management v1.1 specification. This functional element of next-generation IP communication networks is responsible for handling the management of user XML documents stored on the network side, such as presence authorization rules, contact and group lists (also known as resource lists), static presence information, and much more.</para>
+
 	<important>
 	<para>The SIP interface partially implements the XCAP Diff Event IETF
 		draft, version 3. Subscriptions to a single document or usage by an
 		entire application are supported. However, these differing usages do
 		not extend to the single-XML element or attribute value level.
-		Regarding the notifications, the diff-processing subscription
-		parameter, if present, is ignored, and patching of content is not
+		If the diff-processing subscription parameter is present for notifications,
+		it is currently ignored. Patching of content is not
 		available at the moment, which means that only the document etags, new
 		and/or old, will be provided.
 	</para>
@@ -26,14 +26,14 @@
 		<varlistentry>
 			<term>Data Source</term>
 			<listitem>
-				<para>The <application>XDM Server</application> data source is where all user XML documents are stored. Information related to the server itself is also stored in this element along with the user's provisioned data</para>
+				<para>The XDM Server data source is where all user XML documents are stored. Information related to the server itself is also stored in this element along with the user's provisioned data.</para>
 				<para>The data source also handles subscriptions to updates on specific documents, or complete XCAP application usages.</para>
 			</listitem>
 		</varlistentry>
 		<varlistentry>
 			<term>Aggregation Proxy</term>
 			<listitem>
-				<para>The aggregation proxy is responsible for handling an XDM client's XCAP requests</para>
+				<para>The aggregation proxy is responsible for handling an XDM client's XCAP requests.</para>
 			</listitem>
 		</varlistentry>
 		<varlistentry>
@@ -100,28 +100,28 @@
 		
 		<section id="xdms-Configuring_the_XDM_Server_Users">
 			<title>XDM Server User Profile Provisioning</title>
-				<para>XCAP interface is public, used by users to manage their information such as buddy list, presence authorization rules, etc. thus it needs to enforce user authentication. To do the user authentication, the server relies on the User Profile Enabler managed data, such as the users passwords, and this information must be provisioned, this can be done in two ways, both requiring the server to be running:</para>
+				<para>The XCAP interface is public, used by users to manage their information such as buddy lists, presence authorization rules, etc, and needs to enforce user authentication. To do this, the server relies on the User Profile Enabler managed data, such as the users passwords, and this information must be provisioned. This can be done in two ways, both requiring the server to be running:</para>
 				<variablelist>
 				<varlistentry>
 					<term>User Provisioning through an JMX Client</term>
 					<listitem>
-						<para>Users can be added/removed through the MBean named <emphasis>org.mobicents.slee:userprofile=UserProfileControl</emphasis></para>
+						<para>Users can be added/removed through the <emphasis>org.mobicents.slee:userprofile=UserProfileControl</emphasis> MBean. </para>
 					</listitem>
 				</varlistentry>
 				<varlistentry>
 					<term>User Provisioning through the <application>JBoss AS</application> default datasource.</term>
 					<listitem>
-						<para>Users can be added/removed through adding/removing rows of the table named <emphasis>MOBICENTS_SLEE_ENABLER_USERPROFILES</emphasis>.</para>
+						<para>Users can be added/removed through adding/removing rows to the <emphasis>MOBICENTS_SLEE_ENABLER_USERPROFILES</emphasis> table.</para>
 					</listitem>
 				</varlistentry>
 			</variablelist>
 			<section id="xdms-Asserted_User_IDs" >
 				<title>User Asserted IDs</title>
-				<para>The XDM Server allows the usage of asserted user IDs, though the usage of <literal>X-3GPP-Asserted-Identity</literal> or <literal>X-XCAP-Asserted-Identity</literal> header in the XCAP request. If the XDM Server is directly exposed to public this feature should be disabled, through the configuration of the XCAP Interface.</para>
+				<para>The XDM Server allows the usage of asserted user IDs, through the <literal>X-3GPP-Asserted-Identity</literal> or <literal>X-XCAP-Asserted-Identity</literal> header in the XCAP request. If the XDM Server is directly exposed to the public, this feature should be disabled, through the configuration of the XCAP Interface.</para>
 			</section>			
 			<section id="xdms-Local_XCAP_Requests" >
 				<title>Local XCAP Requests</title>
-				<para>By default local (same host) XCAP requests will go around user authentication, this can also be disabled through configuration of the XCAP interface.</para>
+				<para>By default, the local (same host) XCAP requests will go around user authentication. This can also be disabled through configuration of the XCAP interface.</para>
 			</section>
 		</section>
 		
