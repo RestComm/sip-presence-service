@@ -9,7 +9,7 @@ import org.openxdm.xcap.common.xml.NamespaceContext;
  * 
  * A resource selector is the lowest level selector that points to a resource on
  * a XCAP server. It's built from a document selector string, relative to the
- * XCAP root on the server, an optional node selector string, and an opcional
+ * XCAP root on the server, an optional node selector string, and an optional
  * map of namespace bindings.
  * 
  * Usage Examples:
