@@ -17,7 +17,6 @@ import javax.sip.message.MessageFactory;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
-import javax.slee.ActivityEndEvent;
 import javax.slee.ChildRelation;
 import javax.slee.CreateException;
 import javax.slee.InitialEventSelector;
@@ -25,8 +24,6 @@ import javax.slee.RolledBackContext;
 import javax.slee.Sbb;
 import javax.slee.SbbContext;
 import javax.slee.SbbLocalObject;
-import javax.slee.serviceactivity.ServiceActivity;
-import javax.slee.serviceactivity.ServiceStartedEvent;
 
 import net.java.slee.resource.sip.SleeSipProvider;
 
@@ -376,28 +373,6 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 			logger.error("Can't send response!",e);
 		} 
 		
-	}
-	
-	public void onServiceStartedEvent(ServiceStartedEvent event, ActivityContextInterface aci) {
-		// init the child sbb 
-		getPublicationControlChildSbb().init();		
-	}
-	
-	public void onActivityEndEvent(ActivityEndEvent event, ActivityContextInterface aci) {
-		// shutdown internal interface
-		if (aci.getActivity() instanceof ServiceActivity) {
-			try {
-				PublicationControlSbbLocalObject childSbb = getPublicationControlChildSbb();
-				if (childSbb != null) {
-					childSbb.shutdown();
-				}
-			} catch (Exception e) {
-				logger.error("Faield to shutdown publication control",e);
-			}
-		}
-		else {
-			logger.error("Hmm why am I attached to "+aci.getActivity());
-		}
 	}
 	
 	// ----------- AUX METHODS

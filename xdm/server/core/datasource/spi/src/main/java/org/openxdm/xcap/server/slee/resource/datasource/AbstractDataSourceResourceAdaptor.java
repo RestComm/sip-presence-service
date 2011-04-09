@@ -21,7 +21,7 @@ public abstract class AbstractDataSourceResourceAdaptor implements DataSourceRes
     private ConcurrentHashMap<ActivityHandle,ActivityObject> activities = new ConcurrentHashMap<ActivityHandle,ActivityObject>();    
     private SleeEndpoint sleeEndpoint;
     private ResourceAdaptorContext context;
-    private DataSourceSbbInterface sbbInterface;
+    private DataSourceSbbInterface sbbInterface = new DataSourceSbbInterface(this);
         
     private FireableEventType documentUpdatedEventId;
     private FireableEventType elementUpdatedEventId;
@@ -126,8 +126,6 @@ public abstract class AbstractDataSourceResourceAdaptor implements DataSourceRes
 	 */
 	@Override
 	public void raActive() {
-		// init sbb interface interceptor
-		sbbInterface = new DataSourceSbbInterface(this);
 	}
 	
 	/* (non-Javadoc)
@@ -156,7 +154,6 @@ public abstract class AbstractDataSourceResourceAdaptor implements DataSourceRes
 		if (logger.isFineEnabled()) {
 			logger.fine("ra object for entity "+context.getEntityName()+" is inactive");
 		}			
-		sbbInterface = null;
 	}
 	
 	/* (non-Javadoc)

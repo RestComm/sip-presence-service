@@ -15,7 +15,6 @@
 			
 	<modules>
 		<module>sbb</module>
-		<module>du</module>
 	</modules>
 	
 </project>

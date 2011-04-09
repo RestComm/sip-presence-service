@@ -6,23 +6,23 @@
 	<property name="release.dir" location="${ant.file.mobicents.release}/../target" />
 	<property name="release.type" value="mobicents" /> <!-- mobicents or jbcp -->
     <property name="docs.dir" location="${ant.file.mobicents.release}/../../docs"/>
-	<property name="mobicents.jainslee.version" value="2.3.0.FINAL" />
+	<property name="mobicents.jainslee.version" value="2.4.0-SNAPSHOT" />
 	<property name="jboss.version" value="5.1.0.GA" />
 	<property name="release.version" value="1.0.0-SNAPSHOT" />
 	<property name="mobicents.distro.zip.path" value="mobicents-jainslee-${mobicents.jainslee.version}.zip" />
 	<property name="jboss.home" location="${release.dir}/jboss-${jboss.version}/" />
 	<property name="jboss.config" value="default" />
 	
-	<!-- official slee release -->
+	<!-- official slee release 
 	<property name="mobicents.jainslee.download.url" value="http://downloads.sourceforge.net/project/mobicents/Mobicents%20JAIN%20SLEE%20Server/${mobicents.jainslee.version}/mobicents-jainslee-${mobicents.jainslee.version}-jboss-${jboss.version}.zip" />
-	
-	<!-- commmunity hudson snapshot 
-	<property name="mobicents.jainslee.download.url" value="http://hudson.jboss.org/hudson/view/Mobicents/job/MobicentsSleeRelease/lastSuccessfulBuild/artifact/mobicents-jainslee-${mobicents.jainslee.version}-jboss-${jboss.version}.zip" />
 	-->
+	<!-- commmunity hudson snapshot -->
+	<property name="mobicents.jainslee.download.url" value="http://hudson.jboss.org/hudson/view/Mobicents/job/Mobicents-Slee-2.x-Release/lastSuccessfulBuild/artifact/mobicents-jainslee-${mobicents.jainslee.version}-jboss-${jboss.version}.zip" />
+
+	<!-- internal redhat hudson snapshot 	
 	
-	<!-- internal redhat hudson snapshot 
-	<property name="mobicents.jainslee.download.url" value="http://hudson.qa.jboss.com/hudson/job/MobicentsSleeRelease/lastSuccessfulBuild/artifact/mobicents-jainslee-${mobicents.jainslee.version}-jboss-${jboss.version}.zip" />
-	-->
+	<property name="mobicents.jainslee.download.url" value="http://hudson.qa.jboss.com/hudson/job/Mobicents-Slee-2.x-Release/lastSuccessfulBuild/artifact/mobicents-jainslee-${mobicents.jainslee.version}-jboss-${jboss.version}.zip" />
+-->
 	<tstamp>
 		<format property="time.stamp" pattern="yyyyMMdd-HHmm" />
 	</tstamp>
@@ -43,13 +43,6 @@
 		</classpath>
 	</taskdef>
 
-	<!--
-	<target name="build-xcap-client" description="">
-		<exec executable="${mvn.executable}" dir="${ant.file.mobicents.release}/../../xcap-client">
-			<arg line="clean install -P set-svn-revision,maven-release -Djboss.home=${jboss.home}" />
-		</exec>
-	</target>
--->
 	<target name="build-core" description="">
 		<exec executable="${mvn.executable}" dir="${ant.file.mobicents.release}/../..">
 			<arg line="clean install -P maven-release,set-svn-revision" />
@@ -306,35 +299,15 @@
 
 	<target name="build-mobicents-jain-slee" depends="get-mobicents-jain-slee,unzip-mobicents-jainslee">
 		<delete dir="${release.dir}/jboss-5.1.0.GA/server/all" failonerror="true" />
-		<move todir="${jboss.home}/docs/mobicents-jain-slee/container">
+		<move todir="${jboss.home}/docs/mobicents-jain-slee">
 			<fileset dir="${release.dir}/docs">
 				<include name="**"/>
 			</fileset>
 		</move>
 		<copy toFile="${jboss.home}/mobicents-jainslee-src.zip" file="${jboss.home}/../sources.zip" />
-		<ant antfile="${jboss.home}/../resources/sip11/build.xml" target="deploy" inheritall="true" />
-		<move todir="${jboss.home}/docs/mobicents-jain-slee/sip11-ra">
-			<fileset dir="${release.dir}/resources/sip11/docs">
-				<include name="**"/>
-			</fileset>
-		</move>
 		<ant antfile="${jboss.home}/../resources/http-servlet/build.xml" target="deploy" inheritall="true" />
-		<move todir="${jboss.home}/docs/mobicents-jain-slee/http-servlet-ra">
-			<fileset dir="${release.dir}/resources/http-servlet/docs">
-				<include name="**"/>
-			</fileset>
-		</move>
+		<!-- this deploys also sip ra and sip subscription client enabler -->
 		<ant antfile="${jboss.home}/../enablers/xdm-client/build.xml" target="deploy-all" inheritall="true" />
-		<move todir="${jboss.home}/docs/mobicents-jain-slee/xcap-client-ra">
-			<fileset dir="${release.dir}/resources/xcap-client/docs">
-				<include name="**"/>
-			</fileset>
-		</move>
-		<move todir="${jboss.home}/docs/mobicents-jain-slee/xdm-client-enabler">
-			<fileset dir="${release.dir}/enablers/xdm-client/docs">
-				<include name="**"/>
-			</fileset>
-		</move>
 	</target>
 
 	<available file="${ant.file.mobicents.release}/../${mobicents.distro.zip.path}" property="got.mobicents-jain-slee" />

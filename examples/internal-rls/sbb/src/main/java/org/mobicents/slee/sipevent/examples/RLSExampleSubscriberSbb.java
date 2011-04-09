@@ -24,6 +24,7 @@ import javax.xml.bind.JAXBContext;
 import org.mobicents.slee.enabler.userprofile.jpa.jmx.UserProfileControlManagement;
 import org.mobicents.slee.enabler.xdmc.XDMClientChildSbbLocalObject;
 import org.mobicents.slee.enabler.xdmc.XDMClientParentSbbLocalObject;
+import org.mobicents.slee.enabler.xdmc.jaxb.xcapdiff.XcapDiff;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Event;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
@@ -253,7 +254,13 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 		tracer.info(notification);
 		if (status == Subscription.Status.terminated && terminationReason != null && terminationReason == Subscription.Event.deactivated) {
 			tracer.info("The subscription was deactivated, re-subscribing");
-			// re-subscribe
+			// re-subscribe after a sec (just to let container release any possible state related with old subscription
+			try {
+				Thread.sleep(1000);
+			}
+			catch (Exception e) {
+				// ignore
+			}
 			getPresenceClientControlSbb().newSubscription(subscriber, "...", notifier, eventPackage, getSubscriptionId(), expires);
 		}
 	}
@@ -296,12 +303,66 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 		getParentSbbCMP().subscriberStopped();
 	}
 	
+	// UNUSED XDM CLIENT ENABLER METHODS
+	
 	/*
 	 * (non-Javadoc)
 	 * @see org.mobicents.slee.enabler.xdmc.XDMClientParent#getResponse(java.net.URI, int, java.lang.String, java.lang.String, java.lang.String)
 	 */
 	@Override
-	public void getResponse(URI uri, int responseCode, String mimetype, String content, String eTag) {};
+	public void getResponse(URI uri, int responseCode, String mimetype, String content, String eTag) {
+		
+	}
+	
+	@Override
+	public void resubscribeFailed(int arg0, XDMClientChildSbbLocalObject arg1,
+			URI arg2) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public void subscribeFailed(int arg0, XDMClientChildSbbLocalObject arg1,
+			URI arg2) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public void subscribeSucceed(int arg0, XDMClientChildSbbLocalObject arg1,
+			URI arg2) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public void subscriptionNotification(XcapDiff arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public void subscriptionTerminated(XDMClientChildSbbLocalObject arg0,
+			URI arg1) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public void unsubscribeFailed(int arg0, XDMClientChildSbbLocalObject arg1,
+			URI arg2) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
+	public void unsubscribeSucceed(int arg0, XDMClientChildSbbLocalObject arg1,
+			URI arg2) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	// UNUSED PRESENCE CLIENT ENABLER METHODS
 	
 	/* (non-Javadoc)
 	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#modifyPublicationError(java.lang.Object, int)

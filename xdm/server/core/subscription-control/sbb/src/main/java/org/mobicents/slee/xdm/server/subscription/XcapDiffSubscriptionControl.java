@@ -122,6 +122,7 @@ public class XcapDiffSubscriptionControl {
 									}
 									// FIXME authorize and allow it in case authorization succeeds, right now forbidden this kind of subscription
 									sbb.getParentSbbCMP().newSubscriptionAuthorization(subscriber, subscriberDisplayName, notifier, key, expires, Response.FORBIDDEN, eventList, serverTransaction);
+									return;
 									//appUsagesToSubscribe.add(auid);
 								} else {
 									// trying to subscribe a document or part of
@@ -132,11 +133,13 @@ public class XcapDiffSubscriptionControl {
 									if (!documentSelector.isUserDocument()) {
 										// right now we don't support an external PS or RLS so it is secure to forbidden subscription to all global docs
 										sbb.getParentSbbCMP().newSubscriptionAuthorization(subscriber, subscriberDisplayName, notifier, key, expires, Response.FORBIDDEN, eventList, serverTransaction);
+										return;
 									}
 									else {
 										if (!documentSelector.getDocumentParent().substring("users/".length()).startsWith(subscriber)) {
 											// right now, due to security, do not allow any subscription where the subscriber is different than the XUI
 											sbb.getParentSbbCMP().newSubscriptionAuthorization(subscriber, subscriberDisplayName, notifier, key, expires, Response.FORBIDDEN, eventList, serverTransaction);
+											return;
 										}
 									}
 									/* TODO support subscription to element or attribute

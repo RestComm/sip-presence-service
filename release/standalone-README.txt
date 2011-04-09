@@ -9,9 +9,8 @@ This module is a full SIP Presence Service, including servers:
 
 The Mobicents SIP Presence Service works on top of Mobicents JAIN SLEE 2.x
 
-The XDMS and PS depends on the Mobicents JAIN SLEE 2.x Http-Servlet
-and SIP 11 RAs.
-You need to deploy those RAs prior to the installation of  
+The XDMS and PS depends on the Mobicents Http-Servlet and SIP 11 RAs, and SIP subscription Client and XDM Client Enablers.
+You need to deploy those JAIN SLEE components prior to the installation of  
 the servers. 
 
 Make sure that JBOSS_HOME environment variable is set and pointing
@@ -45,5 +44,3 @@ Inside examples directory you can find JAIN SLEE applications,
 which take advantage of the integrated Mobicents SIP Presence
 Service. For more information on each example look at the
 readme.txt file inside the specific example's directory.
- 
-Author: Eduardo Martins, JBoss R&D

@@ -16,7 +16,6 @@
 		<module>pu</module>
 		<module>jmx</module>
 		<module>sbb</module>
-		<module>du</module>
 	</modules>
 	
 </project>

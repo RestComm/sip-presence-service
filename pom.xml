@@ -13,7 +13,7 @@
 	<parent>
 		<artifactId>mobicents-parent</artifactId>
 		<groupId>org.mobicents</groupId>
-		<version>2.15</version>
+		<version>2.17</version>
 	</parent>
 		
 	<artifactId>sip-presence-parent</artifactId>
@@ -51,9 +51,10 @@
 		<module>xdm/server/core/xcap-control/sbb</module>
 		<module>xdm/server/appusages</module>
 		<module>xdm/server/core/xcap-control/library</module>
-		<module>xdm/server/core/xcap-control/du</module>
 		<module>xdm/server/core/internal-client</module>
 		<module>xdm/server/core/subscription-control</module>
+		<module>xdm/server/slee-resources-du</module>
+		<module>xdm/server/slee-services-du</module>
 				
 		<module>presence/client</module>
 		<module>presence/server/jaxb-pojos</module>
@@ -66,8 +67,10 @@
 
 		<module>integrated/server/subscription-library</module>
 		<module>integrated/server/subscription-sbb</module>
-		<module>integrated/server/deployable-unit</module>
-		 
+		
+		<module>integrated/server/slee-resources-du</module>
+		<module>integrated/server/slee-services-du</module>
+		
 	</modules>
 	
 	<properties>
@@ -97,47 +100,47 @@
 			<dependency>
 				<groupId>org.mobicents.servers.jainslee.core</groupId>
 				<artifactId>spi</artifactId>
-				<version>2.2.1.FINAL</version>
+				<version>2.4.0.CR1</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mobicents.servers.jainslee.core</groupId>
 				<artifactId>fault-tolerant-ra-api</artifactId>
-				<version>2.2.1.FINAL</version>
+				<version>2.4.0.CR1</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mobicents.resources</groupId>
 				<artifactId>http-servlet-ratype</artifactId>
-				<version>2.2.0.FINAL</version>
+				<version>2.4.0.CR1</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mobicents.resources</groupId>
 				<artifactId>http-servlet-events</artifactId>
-				<version>2.2.0.FINAL</version>
+				<version>2.4.0.CR1</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mobicents.resources</groupId>
 				<artifactId>sip11-ratype</artifactId>
-				<version>2.2.0.FINAL</version>
+				<version>2.4.0.CR1</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mobicents.resources</groupId>
 				<artifactId>sip11-library</artifactId>
-				<version>2.2.0.FINAL</version>
+				<version>2.4.0.CR1</version>
 			</dependency>
 			<dependency>
 				<artifactId>xcap-client-api</artifactId>
 				<groupId>org.mobicents</groupId>
-				<version>2.2.2.FINAL</version>
+				<version>2.4.0.CR1</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mobicents.resources</groupId>
 				<artifactId>mobicents-slee-ra-xcap-client-ratype</artifactId>
-				<version>2.2.2.FINAL</version>
+				<version>2.4.0.CR1</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mobicents.servers.jainslee.enablers</groupId>
 				<artifactId>xdm-client-sbb</artifactId>
-				<version>1.0.0.BETA1</version>
+				<version>1.0.0.BETA2</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

@@ -31,6 +31,10 @@ public class PresRulesCacheResourceAdaptor implements ResourceAdaptor,
 	private PresRulesCacheDataSource dataSource;
 	private Tracer tracer;
 
+	// flags used to control when it's time to init the service which is responsible for providing pres rules
+	private boolean serviceActive = false;
+	private boolean raActive = false;
+	
 	private FireableEventType rulesetUpdatedEventType;
 	private FireableEventType getAndSubscribePresRulesAppUsageEventType;
 	private FireableEventType unsubscribePresRulesAppUsageEventType;
@@ -148,6 +152,11 @@ public class PresRulesCacheResourceAdaptor implements ResourceAdaptor,
 	public void raActive() {
 		dataSource = new PresRulesCacheDataSource();
 		executorService = Executors.newSingleThreadExecutor();
+		raActive = true;
+		if (serviceActive) {
+			// only init service if service is already activated
+			initService();			
+		}
 	}
 
 	@Override
@@ -169,7 +178,10 @@ public class PresRulesCacheResourceAdaptor implements ResourceAdaptor,
 
 	@Override
 	public void raStopping() {
-		// not used
+		raActive = false;
+		if (serviceActive) {
+			stopService();
+		}
 	}
 
 	@Override
@@ -186,33 +198,40 @@ public class PresRulesCacheResourceAdaptor implements ResourceAdaptor,
 	@Override
 	public void serviceActive(ReceivableService serviceInfo) {
 		if (serviceInfo.getService().equals(serviceID)) {
-			Runnable runnable = new Runnable() {
+			serviceActive = true;
+			if (raActive) {
+				// only init service if ra already active
+				initService();			
+			}
+		}		
+	}
 
-				@Override
-				public void run() {
-					// fire event to init service
-					try {
-						sleeEndpoint.startActivity(
-								presRulesAppUsageActivityHandle,
-								presRulesAppUsageActivity);
-						dataSource.putActivity(presRulesAppUsageActivityHandle,
-								presRulesAppUsageActivity);
-						sleeEndpoint.fireEvent(presRulesAppUsageActivityHandle,
-								getAndSubscribePresRulesAppUsageEventType,
-								new GetAndSubscribePresRulesAppUsageEvent(),
-								null, null);
-					} catch (Throwable e) {
-						tracer
-								.severe(
-										"failed to signal service to watch pres rules app usage in the xdm",
-										e);
-						throw new RuntimeException(e);
-					}
-				}
-			};
-			new Thread(runnable).start();
-
-		}
+	private void initService() {
+		// init the service
+		Runnable runnable = new Runnable() {			
+			@Override
+			public void run() {
+				// fire event to init service
+				try {
+					sleeEndpoint.startActivity(
+							presRulesAppUsageActivityHandle,
+							presRulesAppUsageActivity);
+					dataSource.putActivity(presRulesAppUsageActivityHandle,
+							presRulesAppUsageActivity);
+					sleeEndpoint.fireEvent(presRulesAppUsageActivityHandle,
+							getAndSubscribePresRulesAppUsageEventType,
+							new GetAndSubscribePresRulesAppUsageEvent(),
+							null, null);
+				} catch (Throwable e) {
+					tracer
+							.severe(
+									"failed to signal service to watch pres rules app usage in the xdm",
+									e);
+					throw new RuntimeException(e);
+				}					
+			}
+		};
+		new Thread(runnable).start();			
 	}
 
 	@Override
@@ -223,29 +242,34 @@ public class PresRulesCacheResourceAdaptor implements ResourceAdaptor,
 	@Override
 	public void serviceStopping(ReceivableService serviceInfo) {
 		if (serviceInfo.getService().equals(serviceID)) {
-			Runnable runnable = new Runnable() {
-
-				@Override
-				public void run() {
-					// fire event to stop watching pres rules
-					try {
-						sleeEndpoint.fireEvent(presRulesAppUsageActivityHandle,
-								unsubscribePresRulesAppUsageEventType,
-								new UnsubscribePresRulesAppUsageEvent(), null,
-								null);
-						sleeEndpoint
-								.endActivity(presRulesAppUsageActivityHandle);
-					} catch (Throwable e) {
-						tracer
-								.severe(
-										"failed to signal service to stop watching pres rules app usage in the xdm",
-										e);
-					}
-				}
-			};
-			new Thread(runnable).start();
-
+			serviceActive = false;
+			if (raActive) {
+				stopService();
+			}
 		}
+	}
+
+	private void stopService() {
+		Runnable runnable = new Runnable() {
+			@Override
+			public void run() {
+				// fire event to stop watching pres rules
+				try {
+					sleeEndpoint.fireEvent(presRulesAppUsageActivityHandle,
+							unsubscribePresRulesAppUsageEventType,
+							new UnsubscribePresRulesAppUsageEvent(), null,
+							null);
+					sleeEndpoint
+							.endActivity(presRulesAppUsageActivityHandle);
+				} catch (Throwable e) {
+					tracer
+							.severe(
+									"failed to signal service to stop watching pres rules app usage in the xdm",
+									e);
+				}
+			}
+		};
+		new Thread(runnable).start();
 	}
 
 	@Override

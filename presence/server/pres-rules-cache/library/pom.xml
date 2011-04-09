@@ -25,13 +25,12 @@
 				<artifactId>maven-library-plugin</artifactId>
 				<executions>
 					<execution>
-						<phase>generate-resources</phase>
 						<goals>
-							<goal>create</goal>
+							<goal>copy-dependencies</goal>
+							<goal>generate-descriptor</goal>
 						</goals>
 					</execution>
 				</executions>
-				<extensions>true</extensions>
 				<configuration>
 					<library-name>sip-presence-server-pres-rules-cache-library</library-name>
 					<library-vendor>org.mobicents.servers.sippresence</library-vendor>

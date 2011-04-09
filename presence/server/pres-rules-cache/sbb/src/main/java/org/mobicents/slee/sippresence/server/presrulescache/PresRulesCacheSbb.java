@@ -24,8 +24,6 @@ import org.openxdm.xcap.server.slee.resource.datasource.ElementUpdatedEvent;
 
 public abstract class PresRulesCacheSbb implements Sbb {
 
-	private static final SipPresenceServerManagement configuration = SipPresenceServerManagement.getInstance();
-
 	@Override
 	public void sbbActivate() {
 		// TODO Auto-generated method stub
@@ -125,7 +123,7 @@ public abstract class PresRulesCacheSbb implements Sbb {
 	public void onGetAndSubscribePresRulesAppUsageEvent(GetAndSubscribePresRulesAppUsageEvent event, ActivityContextInterface aci) {
 		long start = System.currentTimeMillis();
 
-		String presRulesAUID = configuration.getPresRulesAUID();
+		String presRulesAUID = SipPresenceServerManagement.getInstance().getPresRulesAUID();
 		// lets attach to the app usage activity, to receive events related with updates on its docs
 		AppUsageActivity appUsageActivity = dataSourceSbbInterface.createAppUsageActivity(presRulesAUID);
 		ActivityContextInterface appUsageActivityContextInterface = dataSourceActivityContextInterfaceFactory.getActivityContextInterface(appUsageActivity);
@@ -145,7 +143,7 @@ public abstract class PresRulesCacheSbb implements Sbb {
 		} catch (InternalServerErrorException e) {
 			tracer.severe("unable to fetch current pres rules docs",e);
 		}
-		tracer.info("Total time to update pres rules cache with initial rls-services docs: "+(System.currentTimeMillis()-start)+"ms");
+		tracer.info("Total time to init pres rules cache: "+(System.currentTimeMillis()-start)+"ms");
 	}
 	
 	public void onUnsubscribePresRulesAppUsageEvent(UnsubscribePresRulesAppUsageEvent event, ActivityContextInterface aci) {

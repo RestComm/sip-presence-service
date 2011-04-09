@@ -25,13 +25,12 @@
 				<artifactId>maven-library-plugin</artifactId>
 				<executions>
 					<execution>
-						<phase>generate-resources</phase>
 						<goals>
-							<goal>create</goal>
+							<goal>copy-dependencies</goal>
+							<goal>generate-descriptor</goal>
 						</goals>
 					</execution>
 				</executions>
-				<extensions>true</extensions>
 				<configuration>
 					<library-name>client-publication-library</library-name>
 					<library-vendor>org.mobicents.servers.sipevent</library-vendor>

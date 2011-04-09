@@ -8,7 +8,7 @@
 	
 	<bean name="Mobicents.SipPresence.PS.ServerConfiguration" class="org.mobicents.slee.sippresence.server.jmx.SipPresenceServerManagement">
       
-      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="org.mobicents.slee:sippresence=SipPresenceServerManagement",exposedInterface=org.mobicents.slee.sippresence.server.jmx.SipPresenceServerManagementMBean.class,registerDirectly=true)</annotation>
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="org.mobicents.sippresence:name=SipPresenceServerManagement",exposedInterface=org.mobicents.slee.sippresence.server.jmx.SipPresenceServerManagementMBean.class,registerDirectly=true)</annotation>
       
       <constructor factoryMethod="getInstance"/>
       

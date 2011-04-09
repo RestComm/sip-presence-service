@@ -16,11 +16,6 @@ import org.mobicents.slee.sipevent.server.publication.data.ComposedPublication;
 public interface PublicationControl extends PublicationClientControl {
 
 	/**
-	 * Initiates the publication control interface.
-	 */
-	public void init();
-	
-	/**
 	 * Retrieves the composed publication for the specified entity and event
 	 * package.
 	 * 
@@ -62,10 +57,5 @@ public interface PublicationControl extends PublicationClientControl {
 	 * 
 	 */
 	public boolean isResponsibleForResource(URI uri);
-	
-	/**
-	 * Shutdown the interface to the sip event server
-	 */
-	public void shutdown();
 	
 }

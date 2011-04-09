@@ -17,18 +17,7 @@
 			<artifactId>sip-event-subscription-control-sbb-local-object</artifactId>
 			<groupId>${pom.groupId}</groupId>
 			<version>${pom.version}</version>
-		</dependency>
-		<dependency>
-			<artifactId>sip11-library</artifactId>
-			<groupId>org.mobicents.resources</groupId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<artifactId>sip-event-client-subscription-library</artifactId>
-			<groupId>${pom.groupId}</groupId>
-			<version>${pom.version}</version>
-			<scope>runtime</scope>
-		</dependency>	
+		</dependency>		
 		<dependency>
 			<artifactId>sip-event-subscription-control-jaxb-pojos</artifactId>
 			<groupId>${pom.groupId}</groupId>
@@ -43,17 +32,26 @@
 				<artifactId>maven-library-plugin</artifactId>
 				<executions>
 					<execution>
-						<phase>generate-resources</phase>
 						<goals>
-							<goal>create</goal>
+							<goal>copy-dependencies</goal>
+							<goal>generate-descriptor</goal>
 						</goals>
 					</execution>
 				</executions>
-				<extensions>true</extensions>
 				<configuration>
 					<library-name>sip-event-server-subscription-library</library-name>
 					<library-vendor>org.mobicents.servers.sipevent</library-vendor>
 					<library-version>1.0</library-version>
+					<library-ref>
+						<library-name>jain-sip</library-name>
+						<library-vendor>javax.sip</library-vendor>
+						<library-version>1.2</library-version>
+					</library-ref>
+					<library-ref>
+						<library-name>client-subscription-library</library-name>
+						<library-vendor>org.mobicents.servers.sipevent</library-vendor>
+						<library-version>1.0</library-version>
+					</library-ref>
 				</configuration>
 			</plugin>
 		</plugins>

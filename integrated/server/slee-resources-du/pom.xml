@@ -1,0 +1,101 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">	
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<artifactId>sip-presence-parent</artifactId>
+		<groupId>org.mobicents.servers.sippresence</groupId>
+		<version>1.0.0-SNAPSHOT</version>
+		<relativePath>../../..</relativePath>
+	</parent>
+	
+	<artifactId>integrated-server-slee-resources-du</artifactId>
+					
+	<dependencies>
+		
+		<!-- sip event -->
+		<dependency>
+			<groupId>org.mobicents.servers.sipevent</groupId>
+			<artifactId>sip-event-subscription-control-rls-cache-library</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents.servers.sipevent</groupId>
+			<artifactId>sip-event-subscription-control-rls-cache-events</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents.servers.sipevent</groupId>
+			<artifactId>sip-event-subscription-control-rls-cache-ratype</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents.servers.sipevent</groupId>
+			<artifactId>sip-event-subscription-control-rls-cache-ra</artifactId>
+			<version>${pom.version}</version>
+		</dependency>		
+		
+		<!-- xdms -->
+		<dependency>
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<artifactId>xdms-core-datasource-library</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<artifactId>xdms-core-datasource-events</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<artifactId>xdms-core-datasource-ratype</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<artifactId>xdms-core-datasource-ra</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+		
+		<!-- ps -->
+		<dependency>
+			<groupId>${pom.groupId}</groupId>
+			<artifactId>sip-presence-server-pres-rules-cache-library</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${pom.groupId}</groupId>
+			<artifactId>sip-presence-server-pres-rules-cache-events</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${pom.groupId}</groupId>
+			<artifactId>sip-presence-server-pres-rules-cache-ratype</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${pom.groupId}</groupId>
+			<artifactId>sip-presence-server-pres-rules-cache-ra</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+		
+	</dependencies>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.mobicents.tools</groupId>
+				<artifactId>maven-du-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>copy-dependencies</goal>
+							<goal>generate-descriptor</goal>
+							<goal>generate-ant-management-script</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>			
+		</plugins>
+	</build>
+	
+</project>

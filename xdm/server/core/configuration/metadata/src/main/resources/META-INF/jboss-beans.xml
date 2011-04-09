@@ -8,7 +8,7 @@
 	
 	<bean name="Mobicents.SipPresence.XDMS.ServerConfiguration" class="org.mobicents.slee.xdm.server.ServerConfiguration">
       
-      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="org.mobicents.slee:sippresence=XDMServerConfiguration",exposedInterface=org.mobicents.slee.xdm.server.ServerConfigurationMBean.class,registerDirectly=true)</annotation>
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="org.mobicents.sippresence:name=XDMServerConfiguration",exposedInterface=org.mobicents.slee.xdm.server.ServerConfigurationMBean.class,registerDirectly=true)</annotation>
       
       <constructor factoryMethod="getInstance"/>
       

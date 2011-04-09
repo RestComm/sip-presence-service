@@ -147,8 +147,10 @@ public class EventListSubscriptionHandler {
 
 		RLSServicesCacheSbbInterface rlsServicesCacheSbbInterface = sbb.getRlsServicesCacheRASbbInterface();
 		RLSServiceActivity activity = null;
+		ActivityContextInterface aci = null;
 		try {
 			activity = rlsServicesCacheSbbInterface.getRLSServiceActivity(subscription.getNotifier().getUriWithParam());
+			aci = sbb.getRlsServicesCacheACIF().getActivityContextInterface(activity);
 		}
 		catch (Throwable e) {
 			logger.error("failed to get rls service activity "+subscription.getNotifier().getUriWithParam(),e);
@@ -162,13 +164,11 @@ public class EventListSubscriptionHandler {
 		}
 		// now create a event list subscriber child sbb
 		EventListSubscriberSbbLocalObject subscriptionChildSbb = null;
-		ActivityContextInterface aci = null;
 		try {
 			subscriptionChildSbb = (EventListSubscriberSbbLocalObject) sbb.getEventListSubscriberChildRelation()
 					.create();
 			subscriptionChildSbb
 					.setParentSbb((EventListSubscriberParentSbbLocalObject) sbb.getSbbContext().getSbbLocalObject());
-			aci = sbb.getRlsServicesCacheACIF().getActivityContextInterface(activity);
 			aci.attach(subscriptionChildSbb);
 		} catch (Exception e) {
 			logger.error("Failed to create child sbb", e);

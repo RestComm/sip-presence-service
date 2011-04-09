@@ -37,23 +37,25 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 
 	protected abstract ImplementedPublicationControl getImplementedPublicationControl();
 
-	private static JAXBContentHandler jaxbContentHandler;
-	private static StateComposer stateComposer;
+	private static JAXBContentHandler _jaxbContentHandler;
+	private static StateComposer _stateComposer;
 
 	private static final PublicationControlManagement management = PublicationControlManagement
 			.getInstance();
 	private static final PublicationControlDataSource dataSource = management.getDataSource();
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.mobicents.slee.sipevent.server.publication.PublicationControl#init()
-	 */
-	public void init() {
-		ImplementedPublicationControl impl = getImplementedPublicationControl();
-		jaxbContentHandler = new JAXBContentHandler(impl.getJaxbContext());
-		stateComposer = impl.getStateComposer();
+	private JAXBContentHandler getJAXBContentHandler() {
+		if (_jaxbContentHandler == null) {
+			_jaxbContentHandler = new JAXBContentHandler(getImplementedPublicationControl().getJaxbContext());
+		}
+		return _jaxbContentHandler;
+	}
+	
+	private StateComposer getStateComposer() {
+		if (_stateComposer == null) {
+			_stateComposer = getImplementedPublicationControl().getStateComposer();
+		}
+		return _stateComposer;
 	}
 
 	/*
@@ -80,7 +82,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 		try {
 
 			// unmarshall document
-			final JAXBElement<?> unmarshalledContent = jaxbContentHandler
+			final JAXBElement<?> unmarshalledContent = getJAXBContentHandler()
 					.unmarshallFromString(document);
 			if (unmarshalledContent == null) {
 				// If the content type of the request does
@@ -116,7 +118,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 				final PublicationKey publicationKey = new PublicationKey(eTag,
 						entity, eventPackage);
 				publication = new Publication(publicationKey, document,
-						contentType, contentSubType, jaxbContentHandler);
+						contentType, contentSubType, getJAXBContentHandler());
 				publication.setUnmarshalledContent(unmarshalledContent);
 				// set timer
 				setTimer(publication, expires);
@@ -206,7 +208,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 				final Publication newPublication = new Publication(
 						newPublicationKey, publication.getDocument(),
 						publication.getContentType(), publication
-								.getContentSubType(), jaxbContentHandler);
+								.getContentSubType(), getJAXBContentHandler());
 				// reset timer
 				resetTimer(publication, newPublication, expires);
 				// replace publication
@@ -372,7 +374,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 				result = CONDITIONAL_REQUEST_FAILED;
 			} else {
 				// unmarshall document
-				final JAXBElement<?> unmarshalledContent = jaxbContentHandler
+				final JAXBElement<?> unmarshalledContent = getJAXBContentHandler()
 						.unmarshallFromString(document);
 				if (unmarshalledContent == null) {
 					// If the content type of the request does
@@ -407,7 +409,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 							eTag, entity, eventPackage);
 					final Publication newPublication = new Publication(
 							newPublicationKey, document, contentType,
-							contentSubType, jaxbContentHandler);
+							contentSubType, getJAXBContentHandler());
 					newPublication.setUnmarshalledContent(unmarshalledContent);
 					// get composed publication and rebuild it
 					final ComposedPublication composedPublication = updateComposedPublication(
@@ -451,7 +453,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 			if (exceptETag == null
 					|| !otherPublication.getPublicationKey().getETag().equals(
 							exceptETag)) {
-				composedPublicationUnmarshalledContentValue = stateComposer
+				composedPublicationUnmarshalledContentValue = getStateComposer()
 						.compose(composedPublicationUnmarshalledContentValue,
 								otherPublication.getUnmarshalledContent()
 										.getValue());
@@ -544,7 +546,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 		final ComposedPublication cp = dataSource
 				.get(new ComposedPublicationKey(entity, eventPackage));
 		if (cp != null) {
-			cp.setJaxbContentHandler(jaxbContentHandler);
+			cp.setJaxbContentHandler(getJAXBContentHandler());
 		}
 		return cp;
 	}
@@ -614,7 +616,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 			if (!publicationIsInPublications
 					|| !otherPublication.getPublicationKey().getETag().equals(
 							publication.getPublicationKey().getETag())) {
-				composedPublicationUnmarshalledContentValue = stateComposer
+				composedPublicationUnmarshalledContentValue = getStateComposer()
 						.compose(composedPublicationUnmarshalledContentValue,
 								otherPublication.getUnmarshalledContent()
 										.getValue());
@@ -627,7 +629,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 		} else {
 			JAXBElement unmarshalledContent = publication
 					.getUnmarshalledContent();
-			composedPublication.setJaxbContentHandler(jaxbContentHandler);
+			composedPublication.setJaxbContentHandler(getJAXBContentHandler());
 			composedPublication.setUnmarshalledContent(new JAXBElement(
 					unmarshalledContent.getName(), unmarshalledContent
 							.getDeclaredType(), unmarshalledContent.getScope(),
@@ -647,7 +649,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 		final Publication p = dataSource.get(new PublicationKey(eTag, entity,
 				eventPackage));
 		if (p != null) {
-			p.setJaxbContentHandler(jaxbContentHandler);
+			p.setJaxbContentHandler(getJAXBContentHandler());
 		}
 		return p;
 	}
@@ -672,7 +674,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 					.toArray(new Publication[resultList.size()]);
 			// need to set the jaxb handler
 			for (Publication p : resultArray) {
-				p.setJaxbContentHandler(jaxbContentHandler);
+				p.setJaxbContentHandler(getJAXBContentHandler());
 			}
 			return resultArray;
 		}

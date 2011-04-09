@@ -262,69 +262,22 @@
 											<outputDirectory>${deploy.dir}/${beans.dir.name}/appusages</outputDirectory>
 										</artifactItem>
 											
+										
 										<artifactItem>
-											<groupId>org.mobicents.servers.xdm</groupId>
-											<artifactId>xdms-core-datasource-DU</artifactId>
-											<version>${pom.version}</version>
-											<overWrite>true</overWrite>
-											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
-										</artifactItem>
-										<artifactItem>
-											<groupId>org.mobicents.servers.xdm</groupId>
-											<artifactId>xdms-core-internal-client-DU</artifactId>
-											<version>${pom.version}</version>
-											<overWrite>true</overWrite>
-											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
-										</artifactItem>
-										<artifactItem>
-											<groupId>org.mobicents.servers.xdm</groupId>
-											<artifactId>xdms-core-xcap-control-DU</artifactId>
-											<version>${pom.version}</version>
-											<overWrite>true</overWrite>
-											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
-										</artifactItem>
-										<artifactItem>
-											<groupId>org.mobicents.slee.enabler.userprofile</groupId>
-											<artifactId>user-profile-DU</artifactId>
+											<groupId>org.mobicents.servers.sippresence</groupId>
+											<artifactId>integrated-server-slee-resources-du</artifactId>
 											<version>${pom.version}</version>
 											<overWrite>true</overWrite>
 											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
 										</artifactItem>
 										<artifactItem>
 											<groupId>org.mobicents.servers.sippresence</groupId>
-											<artifactId>integrated-server-subscription-DU</artifactId>
+											<artifactId>integrated-server-slee-services-du</artifactId>
 											<version>${pom.version}</version>
 											<overWrite>true</overWrite>
 											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
 										</artifactItem>
-										<artifactItem>
-											<groupId>org.mobicents.servers.sippresence</groupId>
-											<artifactId>sip-presence-server-pres-rules-cache-ra-DU</artifactId>
-											<version>${pom.version}</version>
-											<overWrite>true</overWrite>
-											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
-										</artifactItem>
-										<artifactItem>
-											<groupId>org.mobicents.servers.sippresence</groupId>
-											<artifactId>sip-presence-server-pres-rules-cache-service-DU</artifactId>
-											<version>${pom.version}</version>
-											<overWrite>true</overWrite>
-											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
-										</artifactItem>
-										<artifactItem>
-											<artifactId>sip-event-subscription-control-rls-cache-ra-DU</artifactId>
-											<groupId>org.mobicents.servers.sipevent</groupId>
-											<version>${pom.version}</version>
-											<overWrite>true</overWrite>
-											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
-										</artifactItem>
-										<artifactItem>
-											<artifactId>sip-event-subscription-control-rls-cache-service-DU</artifactId>
-											<groupId>org.mobicents.servers.sipevent</groupId>
-											<version>${pom.version}</version>
-											<overWrite>true</overWrite>
-											<outputDirectory>${deploy.dir}/${slee.dir.name}</outputDirectory>
-										</artifactItem> 
+										 
 									</artifactItems>
 								</configuration>
 							</execution>							
@@ -342,6 +295,7 @@
 								</goals>
 								<configuration>
 									<tasks>
+										<copy overwrite="true" file="../../../shared/server/resources/slee-jboss-beans.xml/patched/jboss-beans.xml" todir="${deploy.dir.parent}/mobicents-slee/META-INF" />
 										<copy overwrite="true" todir="${deploy.dir}/${beans.dir.name}/appusages/xsd">
 											<fileset dir="../../../xdm/server/appusages/xsd" />
 										</copy>
@@ -356,6 +310,7 @@
 								</goals>
 								<configuration>
 									<tasks>
+										<copy overwrite="true" file="../../../shared/server/resources/slee-jboss-beans.xml/original/jboss-beans.xml" todir="${deploy.dir.parent}/mobicents-slee/META-INF" />									
 										<delete failonerror="false" includeemptydirs="true">
 											<fileset dir="${deploy.dir}" />
 										</delete>

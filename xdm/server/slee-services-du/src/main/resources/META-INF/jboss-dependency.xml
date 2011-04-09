@@ -1,0 +1,5 @@
+<dependency xmlns="urn:jboss:dependency:1.0">
+	<item whenRequired="Real" dependentState="Installed">Mobicents.JAINSLEE.Enabler.UserProfileControlManagement</item>
+	<item whenRequired="Real" dependentState="Installed">Mobicents.SipPresence.SipEvent.SubscriptionControlManagement</item>
+	<item whenRequired="Real" dependentState="Installed">Mobicents.SipPresence.XDMS.ServerConfiguration</item>	 	
+</dependency>

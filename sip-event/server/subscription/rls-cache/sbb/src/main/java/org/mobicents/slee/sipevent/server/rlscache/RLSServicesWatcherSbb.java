@@ -140,7 +140,7 @@ public abstract class RLSServicesWatcherSbb implements Sbb {
 		} catch (InternalServerErrorException e) {
 			tracer.severe("unable to fetch current rls services docs",e);
 		}
-		tracer.info("Total time to update rls cache with initial rls-services docs: "+(System.currentTimeMillis()-start)+"ms");
+		tracer.info("Total time to init rls cache: "+(System.currentTimeMillis()-start)+"ms");
 	}
 	
 	public void onActivityEndEvent(ActivityEndEvent event, ActivityContextInterface aci) {

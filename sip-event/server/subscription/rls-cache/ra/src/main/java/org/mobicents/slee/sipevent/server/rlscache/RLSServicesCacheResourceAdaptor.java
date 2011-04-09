@@ -12,6 +12,7 @@ import javax.slee.ServiceID;
 import javax.slee.facilities.Tracer;
 import javax.slee.resource.ActivityFlags;
 import javax.slee.resource.ActivityHandle;
+import javax.slee.resource.ActivityIsEndingException;
 import javax.slee.resource.ConfigProperties;
 import javax.slee.resource.FailureReason;
 import javax.slee.resource.FireableEventType;
@@ -61,6 +62,10 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 	private final RLSServiceActivityHandle dummyRLSServicesDocActivityHandle = new RLSServiceActivityHandle(dummyRLSServicesDocActivity.getServiceURI());
 	private final DocumentSelector globalRLSServicesDocumentSelector = new DocumentSelector("rls-services", "global", "index");
 	private LinkedList<ElementSelectorStep> rlsServicesBaseElementSelectorSteps = initRlsServicesBaseElementSelectorSteps(); 
+	
+	// flags used to control when it's time to init the service which is responsible for providing rls services and resource lists
+	private boolean serviceActive = false;
+	private boolean raActive = false;
 	
 	private ListReferenceEndpointAddressParser addressParser;
 	
@@ -176,6 +181,11 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 	public void raActive() {
 		dataSource = new RLSServicesCacheDataSource();		
 		executorService = Executors.newSingleThreadExecutor();
+		raActive = true;
+		if (SubscriptionControlManagement.getInstance().getEventListSupportOn() && serviceActive) {
+			// only init service if service is already activated
+			initService();			
+		}
 	}
 
 	@Override
@@ -197,7 +207,10 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 
 	@Override
 	public void raStopping() {
-		// not used
+		raActive = false;
+		if(serviceActive) {
+			endAllActivities();
+		}
 	}
 
 	@Override
@@ -213,29 +226,35 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 
 	@Override
 	public void serviceActive(ReceivableService serviceInfo) {
-		if (SubscriptionControlManagement.getInstance().getEventListSupportOn() && serviceInfo.getService().equals(serviceID)) {
-			// init the service
-			Runnable runnable = new Runnable() {
-				
-				@Override
-				public void run() {
-					// create dummy activity and fire event to init service
-					try {
-						sleeEndpoint.startActivity(dummyRLSServicesDocActivityHandle, dummyRLSServicesDocActivity);
-						dataSource.putIfAbsentRLSServiceActivity(dummyRLSServicesDocActivityHandle, dummyRLSServicesDocActivity);
-						sleeEndpoint.fireEvent(dummyRLSServicesDocActivityHandle, watchRLSServicesEvent, new WatchRLSServicesEvent(), null, null);
-					}
-					catch (Throwable e) {
-						tracer.severe("failed to signal service to watch global rls services doc in the xdm",e);
-						throw new RuntimeException(e);
-					}					
-				}
-			};
-			new Thread(runnable).start();
-				
-		}
+		if (serviceInfo.getService().equals(serviceID)) {
+			serviceActive = true;
+			if (SubscriptionControlManagement.getInstance().getEventListSupportOn() && raActive) {
+				// only init service if ra already active
+				initService();			
+			}
+		}		
 	}
 
+	private void initService() {
+		// init the service
+		Runnable runnable = new Runnable() {			
+			@Override
+			public void run() {
+				// create dummy activity and fire event to init service
+				try {
+					sleeEndpoint.startActivity(dummyRLSServicesDocActivityHandle, dummyRLSServicesDocActivity);
+					dataSource.putIfAbsentRLSServiceActivity(dummyRLSServicesDocActivityHandle, dummyRLSServicesDocActivity);
+					sleeEndpoint.fireEvent(dummyRLSServicesDocActivityHandle, watchRLSServicesEvent, new WatchRLSServicesEvent(), null, null);
+				}
+				catch (Throwable e) {
+					tracer.severe("failed to signal service to watch global rls services doc in the xdm",e);
+					throw new RuntimeException(e);
+				}					
+			}
+		};
+		new Thread(runnable).start();			
+	}
+	
 	@Override
 	public void serviceInactive(ReceivableService serviceInfo) {
 		// not used	
@@ -243,7 +262,16 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 
 	@Override
 	public void serviceStopping(ReceivableService serviceInfo) {
-		if (SubscriptionControlManagement.getInstance().getEventListSupportOn() && serviceInfo.getService().equals(serviceID)) {
+		if (serviceInfo.getService().equals(serviceID)) {
+			serviceActive = false;
+			if (raActive) {
+				endAllActivities();
+			}
+		}			
+	}
+
+	private void endAllActivities() {
+		if (SubscriptionControlManagement.getInstance().getEventListSupportOn()) {
 			final Set<ActivityHandle> handles = dataSource.getAllHandles();	
 			Runnable runnable = new Runnable() {				
 				@Override
@@ -258,9 +286,8 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 					}
 				}
 			};
-			new Thread(runnable).start();
-			
-		}		
+			new Thread(runnable).start();				
+		}	
 	}
 
 	@Override
@@ -532,11 +559,14 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 			try {
 				sleeEndpoint.fireEvent(handle, rLSServicesRemovedEvent, event, null, null);
 			}
-			catch (Throwable e) {
-				// ignore if handle was concurrently removed 
-				if (dataSource.getRLSServiceActivity(handle) != null) {
-					tracer.severe("failed to fire rls services removed event", e);
+			catch (ActivityIsEndingException e) {
+				// ignore, handle was concurrently removed 
+				if (tracer.isFineEnabled()) {
+					tracer.fine("failed to fire event",e);
 				}
+			}
+			catch (Throwable e) {
+				tracer.severe("failed to fire event", e);				
 			}			
 		}
 	}
@@ -555,12 +585,15 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 			try {
 				sleeEndpoint.fireEvent(handle, rLSServicesUpdatedEvent, event, null, null);
 			}
-			catch (Throwable e) {
-				// ignore if handle was concurrently removed 
-				if (dataSource.getRLSServiceActivity(handle) != null) {
-					tracer.severe("failed to fire rls services updated event", e);
+			catch (ActivityIsEndingException e) {
+				// ignore, handle was concurrently removed 
+				if (tracer.isFineEnabled()) {
+					tracer.fine("failed to fire event",e);
 				}
 			}
+			catch (Throwable e) {
+				tracer.severe("failed to fire event", e);				
+			}		
 		}		
 	}
 	

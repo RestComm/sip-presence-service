@@ -7,13 +7,13 @@ This module is a full SIP Presence Service, including servers:
 
 ----> REQUIREMENTS:
 
-The XDMS and PS depends on the Mobicents Http-Servlet and SIP11 RAs.
-You need to deploy those RAs prior to the installation of  
+The XDMS and PS depends on the Mobicents Http-Servlet and SIP 11 RAs, and SIP subscription Client and XDM Client Enablers.
+You need to deploy those prior to the installation of  
 the servers. 
 File dependencies.xml can deploy/undeploy those components, use:
 
-* "ant -f dependencies.xml deploy" to deploy SIP11 and HTTP-SERVLET RAs to Mobicents AS
-* "ant -f dependencies.xml undeploy" to undeploy SIP11 and HTTP-SERVLET RAs from Mobicents AS
+* "ant -f dependencies.xml deploy" to deploy all dependencies to Mobicents AS
+* "ant -f dependencies.xml undeploy" to undeploy all dependencies from Mobicents AS
 
 ----> DEPLOY:
 
@@ -43,5 +43,3 @@ Inside "examples" directory you can find JAIN SLEE applications,
 which take advantage of the integrated Mobicents SIP Presence
 Service. For more information on each example look at the
 readme.txt file inside the specific example's directory.
- 
-Author: Eduardo Martins, JBoss R&D
