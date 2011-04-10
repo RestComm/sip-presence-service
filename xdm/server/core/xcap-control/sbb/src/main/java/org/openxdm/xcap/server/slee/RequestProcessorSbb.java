@@ -197,7 +197,7 @@ javax.slee.Sbb {
 					&& !appUsage.getAuthorizationPolicy().isAuthorized(
 							authenticatedUser,
 							AuthorizationPolicy.Operation.DELETE,
-							documentSelector)) {
+							documentSelector,appUsageDataSource)) {
 				throw new NotAuthorizedRequestException();
 			}
 
@@ -683,7 +683,7 @@ javax.slee.Sbb {
 					&& !appUsage.getAuthorizationPolicy()
 					.isAuthorized(authenticatedUser,
 							AuthorizationPolicy.Operation.GET,
-							documentSelector)) {
+							documentSelector,appUsageDataSource)) {
 				throw new NotAuthorizedRequestException();
 			}
 			// get document
@@ -888,7 +888,7 @@ javax.slee.Sbb {
 					&& !appUsage.getAuthorizationPolicy()
 					.isAuthorized(authenticatedUser,
 							AuthorizationPolicy.Operation.PUT,
-							documentSelector)) {
+							documentSelector,appUsageDataSource)) {
 				throw new NotAuthorizedRequestException();
 			}
 

@@ -17,7 +17,7 @@ import org.openxdm.xcap.common.uri.DocumentSelector;
  * @author Eduardo Martins
  *
  */
-public class DefaultAuthorizationPolicy extends AuthorizationPolicy {
+public class DefaultAuthorizationPolicy implements AuthorizationPolicy {
 
 	private final String authorizedUserDocumentName;
 	
@@ -25,7 +25,11 @@ public class DefaultAuthorizationPolicy extends AuthorizationPolicy {
 		this.authorizedUserDocumentName = authorizedUserDocumentName;
 	}
 	
-	public boolean isAuthorized(String user, AuthorizationPolicy.Operation operation, DocumentSelector documentSelector) throws NullPointerException {
+	/*
+	 * (non-Javadoc)
+	 * @see org.mobicents.xdm.server.appusage.AuthorizationPolicy#isAuthorized(java.lang.String, org.mobicents.xdm.server.appusage.AuthorizationPolicy.Operation, org.openxdm.xcap.common.uri.DocumentSelector, org.mobicents.xdm.server.appusage.AppUsageDataSource)
+	 */
+	public boolean isAuthorized(String user, AuthorizationPolicy.Operation operation, DocumentSelector documentSelector, AppUsageDataSource dataSource) throws NullPointerException {
 		
 		// check args
 		if (user == null) {

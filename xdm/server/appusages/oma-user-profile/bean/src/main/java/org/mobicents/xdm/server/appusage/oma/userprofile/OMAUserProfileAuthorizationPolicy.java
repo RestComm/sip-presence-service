@@ -1,19 +1,20 @@
 package org.mobicents.xdm.server.appusage.oma.userprofile;
 
+import org.mobicents.xdm.server.appusage.AppUsageDataSource;
 import org.mobicents.xdm.server.appusage.AuthorizationPolicy;
 import org.openxdm.xcap.common.uri.DocumentSelector;
 
-public class OMAUserProfileAuthorizationPolicy extends AuthorizationPolicy {
+public class OMAUserProfileAuthorizationPolicy implements AuthorizationPolicy {
 
 	private final static String ALLOWED_DOC_NAME = "user-profile";
 	
 	/*
 	 * (non-Javadoc)
-	 * @see org.mobicents.xdm.server.appusage.AuthorizationPolicy#isAuthorized(java.lang.String, org.mobicents.xdm.server.appusage.AuthorizationPolicy.Operation, org.openxdm.xcap.common.uri.DocumentSelector)
+	 * @see org.mobicents.xdm.server.appusage.AuthorizationPolicy#isAuthorized(java.lang.String, org.mobicents.xdm.server.appusage.AuthorizationPolicy.Operation, org.openxdm.xcap.common.uri.DocumentSelector, org.mobicents.xdm.server.appusage.AppUsageDataSource)
 	 */
 	@Override
 	public boolean isAuthorized(String user, Operation operation,
-			DocumentSelector documentSelector) throws NullPointerException {
+			DocumentSelector documentSelector, AppUsageDataSource dataSource) throws NullPointerException {
 		if (!documentSelector.isUserDocument()) {
 			// no global docs
 			return false;

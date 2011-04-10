@@ -315,6 +315,10 @@ public class PresRulesCacheResourceAdaptor implements ResourceAdaptor,
 	public void rulesetUpdated(final DocumentSelector documentSelector,
 			final String oldETag, final String newETag, final String rulesetString) {
 
+		if(tracer.isInfoEnabled()) {
+			tracer.info("Ruleset for "+documentSelector+" updated ");
+		}
+		
 		Runnable r = new Runnable() {
 			
 			@Override

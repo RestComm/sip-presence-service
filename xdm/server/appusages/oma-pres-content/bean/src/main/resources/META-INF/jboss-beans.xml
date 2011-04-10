@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="urn:jboss:bean-deployer:2.0">
+
+	<!-- Registers the APP USAGE DEPLOYER AS JBOSS MICROCONTAINER BEAN -->
+
+	<bean name="Mobicents.XDMS.AppUsage.Deployer.OMAPresContent"
+		class="org.mobicents.xdm.server.appusage.oma.prescontent.OMAPresContentAppUsageDeployer">
+
+		<!-- the id of the XCAP App Usage to be used to retrieve notifier's pres-rules 
+			docs, from the XDMS -->
+		<property name="presRulesAUID">${presence.server.notifier.presrules.auid}</property>
+
+		<!-- the name of the document to be used to retrieve the notifier's pres 
+			rules doc, from the XDMS -->
+		<property name="presRulesDocumentName">${presence.server.notifier.presrules.documentName}</property>
+
+		<!-- what value may be in <mimetype/> element, if commented it is not validated -->
+		<!-- 
+		<property name="mimetypesAllowed">
+			<set elementClass="java.lang.String">
+				<value>image/gif</value>
+				<value>image/jpeg</value>
+				<value>image/png</value>
+			</set>
+		</property>
+		 -->
+
+		<!-- what value may be in <encoding/> element, if commented it is not validated -->
+		<!-- 
+		<property name="encodingsAllowed">
+			<set elementClass="java.lang.String">
+				<value>base64</value>
+			</set>
+		</property>
+		 -->
+
+		<!-- the max size for the value of <data/>, if commented or 0 it is not validated -->
+		<!-- 
+		<property name="maxDataSize">0</property>
+ 		-->
+		<depends>Mobicents.XDMS.AppUsageManagement</depends>
+
+	</bean>
+
+</deployment>

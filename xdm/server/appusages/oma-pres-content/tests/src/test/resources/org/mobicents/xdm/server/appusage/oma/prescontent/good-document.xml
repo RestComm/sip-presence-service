@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<content xmlns="urn:oma:xml:prs:pres-content">
+	<mime-type>image/png</mime-type>
+	<encoding>base64</encoding>
+	<description>Attending OMA Meeting</description>
+	<data>a</data>
+</content>

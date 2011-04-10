@@ -1,5 +1,6 @@
 package org.openxdm.xcap.server.slee.appusage.rlsservices;
 
+import org.mobicents.xdm.server.appusage.AppUsageDataSource;
 import org.mobicents.xdm.server.appusage.AuthorizationPolicy;
 import org.openxdm.xcap.common.uri.DocumentSelector;
 
@@ -27,16 +28,16 @@ import org.openxdm.xcap.common.uri.DocumentSelector;
  *
  */
 
-public class RLSServicesAuthorizationPolicy extends AuthorizationPolicy {
+public class RLSServicesAuthorizationPolicy implements AuthorizationPolicy {
 
 	private final static String authorizedUserDocumentName = "index";
 	
 	/*
 	 * (non-Javadoc)
-	 * @see org.mobicents.xdm.server.appusage.AuthorizationPolicy#isAuthorized(java.lang.String, org.mobicents.xdm.server.appusage.AuthorizationPolicy.Operation, org.openxdm.xcap.common.uri.DocumentSelector)
+	 * @see org.mobicents.xdm.server.appusage.AuthorizationPolicy#isAuthorized(java.lang.String, org.mobicents.xdm.server.appusage.AuthorizationPolicy.Operation, org.openxdm.xcap.common.uri.DocumentSelector, org.mobicents.xdm.server.appusage.AppUsageDataSource)
 	 */
 	@Override
-	public boolean isAuthorized(String user, AuthorizationPolicy.Operation operation, DocumentSelector documentSelector) throws NullPointerException {
+	public boolean isAuthorized(String user, AuthorizationPolicy.Operation operation, DocumentSelector documentSelector, AppUsageDataSource dataSource) throws NullPointerException {
 		if (documentSelector.isUserDocument()) {
 			final String[] documentParentParts = documentSelector.getDocumentParent().split("/");
 			if (user.equalsIgnoreCase(documentParentParts[1])) {

@@ -1,13 +1,14 @@
 package org.openxdm.xcap.server.slee.appusage.xcapcaps;
 
+import org.mobicents.xdm.server.appusage.AppUsageDataSource;
 import org.mobicents.xdm.server.appusage.AuthorizationPolicy;
 import org.openxdm.xcap.common.uri.DocumentSelector;
 
-public class XCAPCapsAppUsageAuthorizationPolicy extends AuthorizationPolicy {
+public class XCAPCapsAppUsageAuthorizationPolicy implements AuthorizationPolicy {
 
 	@Override
 	public boolean isAuthorized(String user, Operation operation,
-			DocumentSelector documentSelector) throws NullPointerException {
+			DocumentSelector documentSelector, AppUsageDataSource dataSource) throws NullPointerException {
 		if (documentSelector.isUserDocument()) {
 			// there are no user docs
 			return false;
