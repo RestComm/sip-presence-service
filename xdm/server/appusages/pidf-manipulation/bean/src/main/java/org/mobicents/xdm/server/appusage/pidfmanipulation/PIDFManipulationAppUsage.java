@@ -20,8 +20,8 @@ public class PIDFManipulationAppUsage extends AppUsage {
 	 * 
 	 * @param schemaValidator
 	 */
-	public PIDFManipulationAppUsage(Validator schemaValidator) {
-		super(ID,DEFAULT_DOC_NAMESPACE,MIMETYPE,schemaValidator,"index");
+	public PIDFManipulationAppUsage(Validator schemaValidator,String allowedDocumentName) {
+		super(ID,DEFAULT_DOC_NAMESPACE,MIMETYPE,schemaValidator,allowedDocumentName);
 	}
 
 }

@@ -9,13 +9,15 @@ import org.mobicents.xdm.server.appusage.AppUsageFactory;
 public class PIDFManipulationAppUsageFactory implements AppUsageFactory {
 
 	private final Schema schema;
+	private final String allowedDocumentName;
 	
-	public PIDFManipulationAppUsageFactory(Schema schema) {
+	public PIDFManipulationAppUsageFactory(Schema schema, String allowedDocumentName) {
 		this.schema = schema;
+		this.allowedDocumentName = allowedDocumentName;
 	}
 	
 	public AppUsage getAppUsageInstance() {
-		return new PIDFManipulationAppUsage(schema.newValidator());
+		return new PIDFManipulationAppUsage(schema.newValidator(),allowedDocumentName);
 	}
 	
 	public String getAppUsageId() {

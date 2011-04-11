@@ -41,7 +41,7 @@ public class PutDocumentTest extends AbstractT {
 	
 	private String user = "sip:someone@example.com";
 	private String anotherUser = "sip:carol@example.com";
-	private String documentName = "index";
+	private String documentName = "perm-presence";
 	
 	private Header[] getAssertedUserIdHeaders(HeaderFactory headerFactory, String assertedUserId) {
 		Header[] headers = null;

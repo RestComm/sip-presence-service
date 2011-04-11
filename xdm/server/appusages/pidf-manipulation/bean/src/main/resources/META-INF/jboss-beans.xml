@@ -7,6 +7,12 @@
 	<bean name="Mobicents.XDMS.AppUsage.Deployer.PIDFManipulation"
 		class="org.mobicents.xdm.server.appusage.pidfmanipulation.PIDFManipulationAppUsageDeployer">
 
+		<!-- IETF
+		<property name="allowedDocumentName">index</property>
+		-->
+		<!-- OMA -->
+		<property name="allowedDocumentName">perm-presence</property>
+		 
 		<depends>Mobicents.XDMS.AppUsageManagement</depends>
 
 	</bean>
