@@ -7,10 +7,15 @@ import java.util.List;
 import java.util.Set;
 
 import org.jboss.cache.Cache;
+import org.jboss.cache.CacheStatus;
 import org.jboss.cache.Fqn;
 import org.jboss.cache.Node;
+import org.jboss.cache.notifications.annotation.CacheListener;
+import org.jboss.cache.notifications.annotation.CacheStarted;
+import org.jboss.cache.notifications.event.CacheStartedEvent;
 import org.mobicents.cache.MobicentsCache;
 
+@CacheListener(sync=false)
 public class SubscriptionControlDataSource {
 
 	/*
@@ -37,26 +42,30 @@ public class SubscriptionControlDataSource {
 	private static final String NO_EVENT_ID = "";
 	
 	public SubscriptionControlDataSource(MobicentsCache cache) {
-		jbcache = cache.getJBossCache(); 
+		jbcache = cache.getJBossCache();
+		if (jbcache.getCacheStatus() != CacheStatus.STARTED) {
+			jbcache.addCacheListener(this);
+		}
+		else {
+			initNodes();
+		}
+	}
+	
+	@CacheStarted
+	public void onCacheStartedEvent(CacheStartedEvent event) {
+		initNodes();		
+	}
+	
+	private void initNodes() {
+		Node root = jbcache.getRoot();
+		subRoot = jbcache.getRoot().addChild(Fqn.fromElements("msps-sub"));			
+		notifiersRoot = jbcache.getRoot().addChild(Fqn.fromElements("msps-sub-notifiers"));
+		timersRoot = jbcache.getRoot().addChild(Fqn.fromElements("msps-sub-timers"));
 	}
 	
 	// ----
 	
-	private void initBaseNodesIfNeeded() {
-		if (subRoot == null) {			
-			subRoot = jbcache.getRoot().addChild(Fqn.fromElements("msps-sub"));			
-		}
-		if (notifiersRoot == null) {
-			notifiersRoot = jbcache.getRoot().addChild(Fqn.fromElements("msps-sub-notifiers"));
-		}
-		if (timersRoot == null) {
-			timersRoot = jbcache.getRoot().addChild(Fqn.fromElements("msps-sub-timers"));
-		}
-	}
-	
 	void add(Subscription s) {
-		
-		initBaseNodesIfNeeded();
 		
 		final SubscriptionKey sk = s.getKey();
 		// create dialog id node if does not exists
@@ -103,8 +112,6 @@ public class SubscriptionControlDataSource {
 	
 	public Subscription get(SubscriptionKey sk) {
 		
-		initBaseNodesIfNeeded();
-		
 		final Node subscriptionNode = getSubscriptionNode(sk);
 		if (subscriptionNode == null) {
 			return null;
@@ -116,8 +123,6 @@ public class SubscriptionControlDataSource {
 	
 	public Subscription getFromTimerID(Serializable timerID) {
 		
-		initBaseNodesIfNeeded();
-		
 		Node timerIDNode = timersRoot.getChild(timerID);
 		if (timerIDNode == null) {
 			return null;
@@ -128,8 +133,6 @@ public class SubscriptionControlDataSource {
 	private static final List<Subscription> NO_RESULT = Collections.emptyList();
 	
 	public List<Subscription> getSubscriptionsByNotifierAndEventPackage(String notifier,String eventPackage) {
-		
-		initBaseNodesIfNeeded();
 		
 		List<Subscription> result = null;
 		// get notifier node
@@ -156,14 +159,10 @@ public class SubscriptionControlDataSource {
 	
 	public List<Subscription> getSubscriptionsByNotifier(String notifier) {
 		
-		initBaseNodesIfNeeded();
-		
 		return getSubscriptionsByNotifierAndEventPackage(notifier, null);
 	}
 
 	public List<Subscription> getSubscriptionsByDialog(String dialogId) {
-		
-		initBaseNodesIfNeeded();
 		
 		List<Subscription> result = null;
 		// get dialog id node
@@ -187,8 +186,6 @@ public class SubscriptionControlDataSource {
 	
 	void update(Subscription s) {
 		
-		initBaseNodesIfNeeded();
-		
 		final Node subscriptionNode = getSubscriptionNode(s.getKey());
 		if (subscriptionNode == null) {
 			throw new IllegalStateException("original subscription "+s.getKey()+" not found");
@@ -198,21 +195,15 @@ public class SubscriptionControlDataSource {
 	
 	void addTimerReference(SubscriptionKey sk, Serializable timerId) {
 		
-		initBaseNodesIfNeeded();
-		
 		timersRoot.addChild(Fqn.fromElements(timerId)).put(Boolean.TRUE, sk);		
 	}
 	
 	void removeTimerReference(Serializable timerId) {
 		
-		initBaseNodesIfNeeded();
-		
 		timersRoot.removeChild(timerId);				
 	}
 	
 	void remove(Subscription s) {
-		
-		initBaseNodesIfNeeded();
 		
 		final SubscriptionKey sk = s.getKey();
 		// get dialog id node

@@ -7,10 +7,15 @@ import java.util.List;
 import java.util.Set;
 
 import org.jboss.cache.Cache;
+import org.jboss.cache.CacheStatus;
 import org.jboss.cache.Fqn;
 import org.jboss.cache.Node;
+import org.jboss.cache.notifications.annotation.CacheListener;
+import org.jboss.cache.notifications.annotation.CacheStarted;
+import org.jboss.cache.notifications.event.CacheStartedEvent;
 import org.mobicents.cache.MobicentsCache;
 
+@CacheListener(sync=false)
 public class PublicationControlDataSource {
 
 	/*
@@ -37,18 +42,27 @@ public class PublicationControlDataSource {
 	
 	public PublicationControlDataSource(MobicentsCache cache) {
 		jbcache = cache.getJBossCache(); 
+		if (jbcache.getCacheStatus() != CacheStatus.STARTED) {
+			jbcache.addCacheListener(this);
+		}
+		else {
+			initNodes();
+		}
+	}
+	
+	@CacheStarted
+	public void onCacheStartedEvent(CacheStartedEvent event) {
+		initNodes();		
+	}
+	
+	private void initNodes() {
+		Node root = jbcache.getRoot();
+		pubRoot = root.addChild(Fqn.fromElements("msps-pub"));
+		timersRoot = root.addChild(Fqn.fromElements("msps-pub-timers"));
+		cPubRoot = root.addChild(Fqn.fromElements("msps-cpub"));
 	}
 	
 	// ----
-	
-	private void initBaseNodesIfNeeded() {
-		if (pubRoot == null)
-			pubRoot = jbcache.getRoot().addChild(Fqn.fromElements("msps-pub"));
-		if (timersRoot == null)
-			timersRoot = jbcache.getRoot().addChild(Fqn.fromElements("msps-pub-timers"));
-		if (cPubRoot == null)
-			cPubRoot = jbcache.getRoot().addChild(Fqn.fromElements("msps-cpub"));
-	}
 	
 	private Node getEntityAndPackagePubNode(String eventPackage,String entity) {
 		
@@ -64,8 +78,6 @@ public class PublicationControlDataSource {
 	}
 	
 	public void add(Publication p) {
-		
-		initBaseNodesIfNeeded();
 		
 		final PublicationKey pk = p.getPublicationKey();
 		Node eventPackageNode = pubRoot.getChild(pk.getEventPackage());
@@ -89,8 +101,6 @@ public class PublicationControlDataSource {
 
 	public Publication get(PublicationKey pk) {
 		
-		initBaseNodesIfNeeded();
-		
 		final Node entityAndPackageNode = getEntityAndPackagePubNode(pk.getEventPackage(),pk.getEntity());
 		if (entityAndPackageNode == null) {
 			return null;
@@ -101,8 +111,6 @@ public class PublicationControlDataSource {
 	
 	public Publication getFromTimerID(Serializable timerID) {
 		
-		initBaseNodesIfNeeded();
-		
 		Node timerIDNode = timersRoot.getChild(timerID);
 		if (timerIDNode == null) {
 			return null;
@@ -111,8 +119,6 @@ public class PublicationControlDataSource {
 	}
 	
 	public List<Publication> getPublications(String eventPackage,String entity) {
-		
-		initBaseNodesIfNeeded();
 		
 		final Node entityAndPackageNode = getEntityAndPackagePubNode(eventPackage,entity);
 		if (entityAndPackageNode == null) {
@@ -126,8 +132,6 @@ public class PublicationControlDataSource {
 	}
 	
 	public void replace(Publication p, Publication q) {
-		
-		initBaseNodesIfNeeded();
 		
 		final PublicationKey pk = p.getPublicationKey();
 		final Node entityAndPackageNode = getEntityAndPackagePubNode(pk.getEventPackage(),pk.getEntity());
@@ -151,8 +155,6 @@ public class PublicationControlDataSource {
 	
 	public void delete(Publication p) {
 		
-		initBaseNodesIfNeeded();
-		
 		final PublicationKey pk = p.getPublicationKey();
 		final Node entityAndPackageNode = getEntityAndPackagePubNode(pk.getEventPackage(),pk.getEntity());
 		if (entityAndPackageNode != null && entityAndPackageNode.removeChild(pk.getETag())) {
@@ -170,8 +172,6 @@ public class PublicationControlDataSource {
 	
 	private Node getPackageCPubNode(String eventPackage) {
 		
-		initBaseNodesIfNeeded();
-		
 		Node eventPackageNode = cPubRoot.getChild(eventPackage);
 		if (eventPackageNode == null) {
 			eventPackageNode = cPubRoot.addChild(Fqn.fromElements(eventPackage));
@@ -180,8 +180,6 @@ public class PublicationControlDataSource {
 	}
 	
 	public void add(ComposedPublication p) {
-		
-		initBaseNodesIfNeeded();
 		
 		final ComposedPublicationKey pk = p.getComposedPublicationKey();
 		final Node eventPackageNode = getPackageCPubNode(pk.getEventPackage());
@@ -197,8 +195,6 @@ public class PublicationControlDataSource {
 
 	public void update(ComposedPublication p) {
 		
-		initBaseNodesIfNeeded();
-		
 		final ComposedPublicationKey pk = p.getComposedPublicationKey();
 		final Node eventPackageNode = getPackageCPubNode(pk.getEventPackage());
 		Node entityNode = eventPackageNode.getChild(pk.getEntity());
@@ -210,16 +206,12 @@ public class PublicationControlDataSource {
 	
 	public ComposedPublication get(ComposedPublicationKey pk) {
 		
-		initBaseNodesIfNeeded();
-		
 		final Node eventPackageNode = getPackageCPubNode(pk.getEventPackage());
 		Node node = eventPackageNode.getChild(pk.getEntity());
 		return node == null ? null : (ComposedPublication) node.get(Boolean.TRUE);
 	}
 	
 	public boolean delete(ComposedPublicationKey pk) {
-		
-		initBaseNodesIfNeeded();
 		
 		final Node eventPackageNode = getPackageCPubNode(pk.getEventPackage());
 		return eventPackageNode.removeChild(pk.getEntity());
