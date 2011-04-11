@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presence xmlns="urn:ietf:params:xml:ns:pidf" xmlns:rp="urn:ietf:params:xml:ns:pidf:rpid"
+	xmlns:dm="urn:ietf:params:xml:ns:pidf:data-model" xmlns:ci="urn:ietf:params:xml:ns:pidf:cipid"
+	entity="sip:someone@example.com">
+
+	<tuple id="x8eg92m">
+		<status>
+			<basic>closed</basic>
+		</status>
+		<rp:user-input>idle</rp:user-input>
+		<rp:class>auth-1</rp:class>
+		<contact priority="0.5">sip:user@example.com</contact>
+		<note>I'm available only by e-mail.</note>
+		<timestamp>2004-02-06T16:49:29Z</timestamp>
+	</tuple>
+
+	<tuple id="x8eg92n">
+		<status>
+			<basic>open</basic>
+		</status>
+		<rp:class>auth-1</rp:class>
+		<contact priority="1.0">mailto:someone@example.com</contact>
+		<note>I'm reading mail a couple of times a week</note>
+	</tuple>
+
+	<dm:person id="p1">
+		<rp:class>auth-A</rp:class>
+		<ci:homepage>http://www.example.com/~someone</ci:homepage>
+		<rp:activities>
+			<rp:vacation />
+		</rp:activities>
+	</dm:person>
+
+</presence>

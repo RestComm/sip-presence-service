@@ -1,0 +1,43 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">	
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>org.mobicents.servers.xdm</groupId>
+		<artifactId>xdms-appusages-pidf-manipulation</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+				
+	<artifactId>xdms-appusages-pidf-manipulation-tests</artifactId>
+	
+	<dependencies>
+		<dependency>
+			<groupId>org.mobicents</groupId>
+			<artifactId>xcap-client-api</artifactId>
+		</dependency>
+		<dependency>
+			<artifactId>xdms-appusages-pidf-manipulation-bean</artifactId>
+			<groupId>${pom.groupId}</groupId>
+			<version>${pom.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.client</groupId>
+			<artifactId>jbossall-client</artifactId>
+			<version>5.0.0.GA</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	
+	<profiles>
+		<profile>
+			<id>maven-release</id>
+			<properties>
+				<maven.test.skip>true</maven.test.skip>
+			</properties>
+		</profile>
+	</profiles>
+</project>

@@ -24,6 +24,7 @@
 		<module>oma-user-profile</module>
 		<module>oma-locked-user-profile</module>
 		<module>oma-pres-content</module>
+		<module>pidf-manipulation</module>		
 	</modules>
 	
 </project>
