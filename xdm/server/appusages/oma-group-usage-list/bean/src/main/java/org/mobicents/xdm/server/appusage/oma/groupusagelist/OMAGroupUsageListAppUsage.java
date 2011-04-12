@@ -5,6 +5,7 @@ import javax.xml.validation.Validator;
 import org.mobicents.xdm.server.appusage.AppUsageDataSource;
 import org.openxdm.xcap.common.error.ConstraintFailureConflictException;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
+import org.openxdm.xcap.common.error.NotAuthorizedRequestException;
 import org.openxdm.xcap.common.error.UniquenessFailureConflictException;
 import org.openxdm.xcap.common.uri.DocumentSelector;
 import org.openxdm.xcap.server.slee.appusage.resourcelists.ResourceListsAppUsage;
@@ -40,20 +41,21 @@ public class OMAGroupUsageListAppUsage extends ResourceListsAppUsage {
 	public void checkConstraintsOnPut(Document document, String xcapRoot,
 			DocumentSelector documentSelector, AppUsageDataSource dataSource)
 			throws UniquenessFailureConflictException,
-			InternalServerErrorException, ConstraintFailureConflictException {
+			InternalServerErrorException, ConstraintFailureConflictException,
+			NotAuthorizedRequestException {
 		super.checkConstraintsOnPut(document, xcapRoot, documentSelector, dataSource);
 		
 		/*
 		 * In addition to the XML schema, the additional validation constraints
 		 * on a Group Usage List SHALL conform to those described in [RFC4826]
-		 * Section 3.4.5, with the following clarifications: The ÒnameÓ
+		 * Section 3.4.5, with the following clarifications: The ï¿½nameï¿½
 		 * attribute of the <list> element SHALL be present. If this constraint
-		 * is violated, an HTTP Ò409 ConflictÓ response SHALL be returned with
+		 * is violated, an HTTP ï¿½409 Conflictï¿½ response SHALL be returned with
 		 * the error condition identified by the <constraint-failure> element.
-		 * If included, the ÒphraseÓ attribute of this element SHOULD be set to
-		 * ÒName attribute is required.Ó If the XDMC uses or adds an <entry-ref>
+		 * If included, the ï¿½phraseï¿½ attribute of this element SHOULD be set to
+		 * ï¿½Name attribute is required.ï¿½ If the XDMC uses or adds an <entry-ref>
 		 * or an <external> child element (specified in [RFC4826]) to the <list>
-		 * element, the Shared XDMS SHALL return an error code Ò409 ConflictÓ
+		 * element, the Shared XDMS SHALL return an error code ï¿½409 Conflictï¿½
 		 * response which includes the XCAP error element <constraint- failure>.
 		 * If included, the "phrase" attribute SHOULD be set to "Not allowed".
 		 */

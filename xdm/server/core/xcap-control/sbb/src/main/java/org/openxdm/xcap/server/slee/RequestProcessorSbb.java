@@ -1148,7 +1148,7 @@ javax.slee.Sbb {
 			UniquenessFailureConflictException,
 			ConstraintFailureConflictException, CannotInsertConflictException,
 			NotValidXMLFragmentConflictException, NotUTF8ConflictException,
-			BadRequestException {
+			BadRequestException, NotAuthorizedRequestException {
 
 		if (logger.isFineEnabled())
 			logger.fine("putting element " + elementSelector + " in "
@@ -1549,7 +1549,7 @@ javax.slee.Sbb {
 			UniquenessFailureConflictException,
 			ConstraintFailureConflictException,
 			NotXMLAttributeValueConflictException, BadRequestException,
-			CannotInsertConflictException {
+			CannotInsertConflictException, NotAuthorizedRequestException {
 
 		if (logger.isFineEnabled())
 			logger.fine("putting attribute " + attributeSelector
@@ -1858,7 +1858,7 @@ javax.slee.Sbb {
 			UniquenessFailureConflictException,
 			ConstraintFailureConflictException, CannotInsertConflictException,
 			NotValidXMLFragmentConflictException, NotUTF8ConflictException,
-			BadRequestException {
+			BadRequestException, NotAuthorizedRequestException {
 
 		// get doc
 		org.openxdm.xcap.common.datasource.Document document = dataSourceSbbInterface
@@ -1901,7 +1901,7 @@ javax.slee.Sbb {
 			UniquenessFailureConflictException,
 			ConstraintFailureConflictException,
 			NotXMLAttributeValueConflictException, BadRequestException,
-			CannotInsertConflictException {
+			CannotInsertConflictException, NotAuthorizedRequestException {
 
 		// get doc
 		org.openxdm.xcap.common.datasource.Document document = dataSourceSbbInterface

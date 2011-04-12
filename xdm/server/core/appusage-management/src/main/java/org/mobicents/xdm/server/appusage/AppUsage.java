@@ -7,6 +7,7 @@ import javax.xml.validation.Validator;
 
 import org.openxdm.xcap.common.error.ConstraintFailureConflictException;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
+import org.openxdm.xcap.common.error.NotAuthorizedRequestException;
 import org.openxdm.xcap.common.error.SchemaValidationErrorConflictException;
 import org.openxdm.xcap.common.error.UniquenessFailureConflictException;
 import org.openxdm.xcap.common.uri.AttributeSelector;
@@ -81,12 +82,14 @@ public abstract class AppUsage {
 	private AuthorizationPolicy authorizationPolicy;
 
 	public AppUsage(String auid, String defaultDocumentNamespace,
-			String mimetype, Validator schemaValidator, String authorizedUserDocumentName) {
+			String mimetype, Validator schemaValidator,
+			String authorizedUserDocumentName) {
 		this.auid = auid;
 		this.defaultDocumentNamespace = defaultDocumentNamespace;
 		this.mimetype = mimetype;
 		this.schemaValidator = schemaValidator;
-		authorizationPolicy = new DefaultAuthorizationPolicy(authorizedUserDocumentName);
+		authorizationPolicy = new DefaultAuthorizationPolicy(
+				authorizedUserDocumentName);
 	}
 
 	public AppUsage(String auid, String defaultDocumentNamespace,
@@ -101,13 +104,15 @@ public abstract class AppUsage {
 
 	public AppUsage(String auid, String defaultDocumentNamespace,
 			String mimetype, Validator schemaValidator,
-			Validator uniquenessSchemaValidator, String authorizedUserDocumentName) {
+			Validator uniquenessSchemaValidator,
+			String authorizedUserDocumentName) {
 		this.auid = auid;
 		this.defaultDocumentNamespace = defaultDocumentNamespace;
 		this.mimetype = mimetype;
 		this.schemaValidator = schemaValidator;
 		this.uniquenessSchemaValidator = uniquenessSchemaValidator;
-		authorizationPolicy = new DefaultAuthorizationPolicy(authorizedUserDocumentName);
+		authorizationPolicy = new DefaultAuthorizationPolicy(
+				authorizedUserDocumentName);
 	}
 
 	public AppUsage(String auid, String defaultDocumentNamespace,
@@ -167,6 +172,10 @@ public abstract class AppUsage {
 	 * will return a schema validation error, thus this API supports the usage
 	 * of a additional XML Schema just for uniqueness contraints.
 	 * 
+	 * Note that this method also throws Not Authorized Exception, this is
+	 * required by some XCAP App usages, which are badly design, and "authorize"
+	 * bad content, instead of the standard Constraint Failure.
+	 * 
 	 * @param document
 	 * @param xcapRoot
 	 * @param documentSelector
@@ -174,12 +183,14 @@ public abstract class AppUsage {
 	 * @throws UniquenessFailureConflictException
 	 * @throws InternalServerErrorException
 	 * @throws ConstraintFailureConflictException
+	 * @throws {@link NotAuthorizedRequestException}
 	 */
 	public void checkConstraintsOnPut(Document document, String xcapRoot,
 			DocumentSelector documentSelector, AppUsageDataSource dataSource)
 			throws UniquenessFailureConflictException,
-			InternalServerErrorException, ConstraintFailureConflictException {
-		
+			InternalServerErrorException, ConstraintFailureConflictException,
+			NotAuthorizedRequestException {
+
 		// validate uniqueness schema if exists
 		if (uniquenessSchemaValidator != null) {
 			try {
@@ -210,10 +221,8 @@ public abstract class AppUsage {
 	 * @throws ConstraintFailureConflictException
 	 */
 	public void processResourceInterdependenciesOnPutDocument(
-			Document oldDocument,
-			Document newDocument,
-			DocumentSelector documentSelector,
-			String newETag,
+			Document oldDocument, Document newDocument,
+			DocumentSelector documentSelector, String newETag,
 			AppUsageRequestProcessor requestProcessor,
 			AppUsageDataSource dataSource)
 			throws SchemaValidationErrorConflictException,
@@ -225,8 +234,8 @@ public abstract class AppUsage {
 	/**
 	 * The application usage may specify resource interdependencies, like one
 	 * global document being a composition of all user documents, this method is
-	 * where the application usage defines this dependency logic on PUT
-	 * requests for an element.
+	 * where the application usage defines this dependency logic on PUT requests
+	 * for an element.
 	 * 
 	 * @param oldElement
 	 * @param newElement
@@ -240,13 +249,9 @@ public abstract class AppUsage {
 	 * @throws ConstraintFailureConflictException
 	 */
 	public void processResourceInterdependenciesOnPutElement(
-			Element oldElement,
-			Element newElement,
-			Document document,
-			DocumentSelector documentSelector,
-			String newETag,
-			NodeSelector nodeSelector,
-			ElementSelector elementSelector,
+			Element oldElement, Element newElement, Document document,
+			DocumentSelector documentSelector, String newETag,
+			NodeSelector nodeSelector, ElementSelector elementSelector,
 			NamespaceContext namespaceContext,
 			AppUsageRequestProcessor requestProcessor,
 			AppUsageDataSource dataSource)
@@ -255,12 +260,12 @@ public abstract class AppUsage {
 			ConstraintFailureConflictException {
 		// default is no resource interdependencies
 	}
-	
+
 	/**
 	 * The application usage may specify resource interdependencies, like one
 	 * global document being a composition of all user documents, this method is
-	 * where the application usage defines this dependency logic on PUT
-	 * requests for an attribute.
+	 * where the application usage defines this dependency logic on PUT requests
+	 * for an attribute.
 	 * 
 	 * @param oldAttrValue
 	 * @param newAttrValue
@@ -274,12 +279,9 @@ public abstract class AppUsage {
 	 * @throws ConstraintFailureConflictException
 	 */
 	public void processResourceInterdependenciesOnPutAttribute(
-			String oldAttrValue,
-			String newAttrValue,
-			DocumentSelector documentSelector,
-			String newETag,
-			NodeSelector nodeSelector,
-			ElementSelector elementSelector,
+			String oldAttrValue, String newAttrValue,
+			DocumentSelector documentSelector, String newETag,
+			NodeSelector nodeSelector, ElementSelector elementSelector,
 			AttributeSelector attributeSelector,
 			NamespaceContext namespaceContext,
 			AppUsageRequestProcessor requestProcessor,
@@ -289,7 +291,7 @@ public abstract class AppUsage {
 			ConstraintFailureConflictException {
 		// default is no resource interdependencies
 	}
-	
+
 	/**
 	 * The application usage can specify additional constraints that are not
 	 * possible through XML Schema, e.g. a collection of documents need to have
@@ -330,8 +332,7 @@ public abstract class AppUsage {
 	 * @throws ConstraintFailureConflictException
 	 */
 	public void processResourceInterdependenciesOnDeleteDocument(
-			Document deletedDocument,
-			DocumentSelector documentSelector,
+			Document deletedDocument, DocumentSelector documentSelector,
 			AppUsageRequestProcessor requestProcessor,
 			AppUsageDataSource dataSource)
 			throws SchemaValidationErrorConflictException,
@@ -339,7 +340,7 @@ public abstract class AppUsage {
 			ConstraintFailureConflictException {
 		// default is no resource interdependencies
 	}
-	
+
 	/**
 	 * The application usage may specify resource interdependencies, like one
 	 * global document being a composition of all user documents, this method is
@@ -356,12 +357,9 @@ public abstract class AppUsage {
 	 * @throws ConstraintFailureConflictException
 	 */
 	public void processResourceInterdependenciesOnDeleteElement(
-			Node deletedElement,
-			DocumentSelector documentSelector,
-			String newETag,
-			NodeSelector nodeSelector,
-			ElementSelector elementSelector,
-			NamespaceContext namespaceContext,
+			Node deletedElement, DocumentSelector documentSelector,
+			String newETag, NodeSelector nodeSelector,
+			ElementSelector elementSelector, NamespaceContext namespaceContext,
 			AppUsageRequestProcessor requestProcessor,
 			AppUsageDataSource dataSource)
 			throws SchemaValidationErrorConflictException,
@@ -369,7 +367,7 @@ public abstract class AppUsage {
 			ConstraintFailureConflictException {
 		// default is no resource interdependencies
 	}
-	
+
 	/**
 	 * The application usage may specify resource interdependencies, like one
 	 * global document being a composition of all user documents, this method is
@@ -386,10 +384,8 @@ public abstract class AppUsage {
 	 * @throws ConstraintFailureConflictException
 	 */
 	public void processResourceInterdependenciesOnDeleteAttribute(
-			DocumentSelector documentSelector,
-			String newETag,
-			NodeSelector nodeSelector,
-			ElementSelector elementSelector,
+			DocumentSelector documentSelector, String newETag,
+			NodeSelector nodeSelector, ElementSelector elementSelector,
 			AttributeSelector attributeSelector,
 			NamespaceContext namespaceContext,
 			AppUsageRequestProcessor requestProcessor,
@@ -399,5 +395,5 @@ public abstract class AppUsage {
 			ConstraintFailureConflictException {
 		// default is no resource interdependencies
 	}
-			
+
 }

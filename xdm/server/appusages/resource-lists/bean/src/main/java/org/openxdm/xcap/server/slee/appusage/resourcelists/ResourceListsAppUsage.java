@@ -10,6 +10,7 @@ import org.mobicents.xdm.server.appusage.AppUsage;
 import org.mobicents.xdm.server.appusage.AppUsageDataSource;
 import org.openxdm.xcap.common.error.ConstraintFailureConflictException;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
+import org.openxdm.xcap.common.error.NotAuthorizedRequestException;
 import org.openxdm.xcap.common.error.UniquenessFailureConflictException;
 import org.openxdm.xcap.common.uri.DocumentSelector;
 import org.w3c.dom.Attr;
@@ -185,16 +186,19 @@ public class ResourceListsAppUsage extends AppUsage {
 			}
 		}		
 	}
-	
+
 	@Override
 	public void checkConstraintsOnPut(Document document, String xcapRoot,
 			DocumentSelector documentSelector, AppUsageDataSource dataSource)
 			throws UniquenessFailureConflictException,
-			InternalServerErrorException, ConstraintFailureConflictException {
-	
-		super.checkConstraintsOnPut(document, xcapRoot, documentSelector, dataSource);
+			InternalServerErrorException, ConstraintFailureConflictException,
+			NotAuthorizedRequestException {
+
+		super.checkConstraintsOnPut(document, xcapRoot, documentSelector,
+				dataSource);
 		// check this app usage constraints below the root resource-lists node
-		checkNodeResourceListConstraints(document.getDocumentElement(),omaCompliant);		
+		checkNodeResourceListConstraints(document.getDocumentElement(),
+				omaCompliant);
 	}
-	
+
 }

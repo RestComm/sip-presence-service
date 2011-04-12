@@ -35,32 +35,58 @@ import org.w3c.dom.Element;
 public interface AppUsageRequestProcessor {
 
 	public boolean putDocument(DocumentSelector documentSelector,
-			Document document,AppUsage appUsage) throws InternalServerErrorException,
-			NoParentConflictException, SchemaValidationErrorConflictException, UniquenessFailureConflictException, ConstraintFailureConflictException, ConflictException, MethodNotAllowedException, UnsupportedMediaTypeException, PreconditionFailedException, BadRequestException, NotAuthorizedRequestException;
+			Document document, AppUsage appUsage)
+			throws InternalServerErrorException, NoParentConflictException,
+			SchemaValidationErrorConflictException,
+			UniquenessFailureConflictException,
+			ConstraintFailureConflictException, ConflictException,
+			MethodNotAllowedException, UnsupportedMediaTypeException,
+			PreconditionFailedException, BadRequestException,
+			NotAuthorizedRequestException;
 
 	public boolean putElement(DocumentSelector documentSelector,
 			NodeSelector nodeSelector, ElementSelector elementSelector,
-			NamespaceContext namespaceContext, Element element,AppUsage appUsage)
-			throws InternalServerErrorException, NoParentConflictException, SchemaValidationErrorConflictException, UniquenessFailureConflictException, ConstraintFailureConflictException, CannotInsertConflictException, NotValidXMLFragmentConflictException, NotUTF8ConflictException, BadRequestException;
+			NamespaceContext namespaceContext, Element element,
+			AppUsage appUsage) throws InternalServerErrorException,
+			NoParentConflictException, SchemaValidationErrorConflictException,
+			UniquenessFailureConflictException,
+			ConstraintFailureConflictException, CannotInsertConflictException,
+			NotValidXMLFragmentConflictException, NotUTF8ConflictException,
+			BadRequestException, NotAuthorizedRequestException;
 
 	public boolean putAttribute(DocumentSelector documentSelector,
 			NodeSelector nodeSelector, ElementSelector elementSelector,
 			AttributeSelector attributeSelector,
-			NamespaceContext namespaceContext, String attrValue,AppUsage appUsage)
-			throws InternalServerErrorException, NoParentConflictException, SchemaValidationErrorConflictException, UniquenessFailureConflictException, ConstraintFailureConflictException, NotXMLAttributeValueConflictException, BadRequestException, CannotInsertConflictException;
+			NamespaceContext namespaceContext, String attrValue,
+			AppUsage appUsage) throws InternalServerErrorException,
+			NoParentConflictException, SchemaValidationErrorConflictException,
+			UniquenessFailureConflictException,
+			ConstraintFailureConflictException,
+			NotXMLAttributeValueConflictException, BadRequestException,
+			CannotInsertConflictException, NotAuthorizedRequestException;
 
-	public void deleteDocument(DocumentSelector documentSelector,AppUsage appUsage)
-			throws InternalServerErrorException, NotFoundException, SchemaValidationErrorConflictException, UniquenessFailureConflictException, ConstraintFailureConflictException;
+	public void deleteDocument(DocumentSelector documentSelector,
+			AppUsage appUsage) throws InternalServerErrorException,
+			NotFoundException, SchemaValidationErrorConflictException,
+			UniquenessFailureConflictException,
+			ConstraintFailureConflictException;
 
 	public void deleteElement(DocumentSelector documentSelector,
 			NodeSelector nodeSelector, ElementSelector elementSelector,
-			NamespaceContext namespaceContext,AppUsage appUsage)
-			throws InternalServerErrorException, UniquenessFailureConflictException, ConstraintFailureConflictException, NotFoundException, CannotDeleteConflictException, SchemaValidationErrorConflictException, BadRequestException;
+			NamespaceContext namespaceContext, AppUsage appUsage)
+			throws InternalServerErrorException,
+			UniquenessFailureConflictException,
+			ConstraintFailureConflictException, NotFoundException,
+			CannotDeleteConflictException,
+			SchemaValidationErrorConflictException, BadRequestException;
 
 	public void deleteAttribute(DocumentSelector documentSelector,
 			NodeSelector nodeSelector, ElementSelector elementSelector,
 			AttributeSelector attributeSelector,
-			NamespaceContext namespaceContext,AppUsage appUsage)
-			throws InternalServerErrorException, BadRequestException, NotFoundException, SchemaValidationErrorConflictException, UniquenessFailureConflictException, ConstraintFailureConflictException;
+			NamespaceContext namespaceContext, AppUsage appUsage)
+			throws InternalServerErrorException, BadRequestException,
+			NotFoundException, SchemaValidationErrorConflictException,
+			UniquenessFailureConflictException,
+			ConstraintFailureConflictException;
 
 }

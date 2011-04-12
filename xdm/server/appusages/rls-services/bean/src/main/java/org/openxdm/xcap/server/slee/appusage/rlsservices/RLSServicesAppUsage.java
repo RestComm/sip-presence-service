@@ -102,6 +102,8 @@ public class RLSServicesAppUsage extends AppUsage {
 				throw new InternalServerErrorException("Update of service in rls global doc thrown exception",e);
 			} catch (BadRequestException e) {
 				throw new InternalServerErrorException("Update of service in rls global doc thrown exception",e);
+			} catch (NotAuthorizedRequestException e) {
+				throw new InternalServerErrorException("Update of service in rls global doc thrown exception",e);
 			}
 		}
 	}
@@ -124,6 +126,8 @@ public class RLSServicesAppUsage extends AppUsage {
 		} catch (NotValidXMLFragmentConflictException e) {
 			throw new InternalServerErrorException("Put of service in rls global doc thrown exception",e);
 		} catch (UniquenessFailureConflictException e) {
+			throw new InternalServerErrorException("Put of service in rls global doc thrown exception",e);
+		} catch (NotAuthorizedRequestException e) {
 			throw new InternalServerErrorException("Put of service in rls global doc thrown exception",e);
 		}
 	}
@@ -453,7 +457,8 @@ public class RLSServicesAppUsage extends AppUsage {
 	public void checkConstraintsOnPut(Document document, String xcapRoot,
 			DocumentSelector documentSelector, AppUsageDataSource dataSource)
 			throws UniquenessFailureConflictException,
-			InternalServerErrorException, ConstraintFailureConflictException {
+			InternalServerErrorException, ConstraintFailureConflictException,
+			NotAuthorizedRequestException {
 	
 		if (!documentSelector.isUserDocument()) {
 			return;
