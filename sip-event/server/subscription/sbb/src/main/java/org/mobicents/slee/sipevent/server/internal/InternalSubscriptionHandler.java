@@ -30,7 +30,7 @@ public class InternalSubscriptionHandler {
 	}
 
 	// getters
-
+	
 	public InternalSubscriberNotificationHandler getInternalSubscriberNotificationHandler() {
 		return internalSubscriberNotificationHandler;
 	}

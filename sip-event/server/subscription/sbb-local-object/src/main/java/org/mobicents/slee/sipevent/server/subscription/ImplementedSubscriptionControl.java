@@ -17,25 +17,6 @@ import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 public interface ImplementedSubscriptionControl {
 
 	/**
-	 * Used to set the call back sbb local object in the sbb implementing this
-	 * interface. Must be used whenever a new object of this interface is
-	 * created.
-	 * 
-	 * An example:
-	 * 
-	 * ChildRelation childRelation = getChildRelation();
-	 * ImplementedSubscriptionControlSbbLocalObject childSbb =
-	 * (ImplementedSubscriptionControlSbbLocalObject) childRelation.create();
-	 * childSbb.setParentSbb(
-	 * (ImplementedSubscriptionControlParentSbbLocalObject)this.getSbbContext().getSbbLocalObject());
-	 * 
-	 * 
-	 * @param parent
-	 */
-	public void setParentSbb(
-			ImplementedSubscriptionControlParentSbbLocalObject sbbLocalObject);
-
-	/**
 	 * Asks authorization to concrete implementation for new subscription
 	 * request SUBSCRIBE. This method is invoked from the abstract sip event
 	 * subscription control to authorize a subscriber, the concrete

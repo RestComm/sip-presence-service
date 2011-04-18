@@ -14,8 +14,6 @@ import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
  *
  */
 public interface EventListSubscriber extends SubscriptionClientControlParent {
-
-	public void setParentSbb(EventListSubscriberParentSbbLocalObject parentSbb);
 	
 	public void subscribe(Subscription subscription, RLSService rlsService, ActivityContextInterface rlsServiceAci);
 	

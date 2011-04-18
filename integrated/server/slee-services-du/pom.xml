@@ -90,11 +90,6 @@
 		
 		<!-- presence server -->
 		<dependency>
-			<artifactId>sip-presence-client-library</artifactId>
-			<groupId>org.mobicents.servers.sippresence</groupId>
-			<version>${pom.version}</version>			
-		</dependency>
-		<dependency>
 			<artifactId>sip-presence-server-library</artifactId>
 			<groupId>org.mobicents.servers.sippresence</groupId>
 			<version>${pom.version}</version>			
@@ -105,16 +100,17 @@
 			<version>${pom.version}</version>			
 		</dependency>
 		<dependency>
-			<artifactId>sip-presence-server-internal-client-sbb</artifactId>
-			<groupId>org.mobicents.servers.sippresence</groupId>
-			<version>${pom.version}</version>			
-		</dependency>
-		<dependency>
 			<groupId>${pom.groupId}</groupId>
 			<artifactId>sip-presence-server-pres-rules-cache-sbb</artifactId>
 			<version>${pom.version}</version>
 		</dependency>		
-		
+		<!-- 
+		<dependency>
+			<groupId>${pom.groupId}</groupId>
+			<artifactId>sip-presence-server-pidf-manipulation-sbb</artifactId>
+			<version>${pom.version}</version>
+		</dependency>
+		 -->
 		<!-- integrated server -->		
 		<dependency>
 			<groupId>${pom.groupId}</groupId>

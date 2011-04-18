@@ -44,15 +44,19 @@ public class SubscriptionKey implements Serializable {
 		return eventPackage;
 	}
 
+    private transient int hashCode = 0;
     @Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((dialogId == null) ? 0 : dialogId.hashCode());
-		result = prime * result + ((eventId == null) ? 0 : eventId.hashCode());
-		result = prime * result
-				+ ((eventPackage == null) ? 0 : eventPackage.hashCode());		
-		return result;
+		if (hashCode == 0) {
+			final int prime = 31;
+			int result = dialogId.hashCode();
+			result = prime * result + eventPackage.hashCode();
+			if (eventId != null) {
+				result = prime * result + eventId.hashCode();
+			}
+			hashCode = result;
+		}
+		return hashCode;
 	}
 
 	@Override
@@ -64,28 +68,17 @@ public class SubscriptionKey implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		SubscriptionKey other = (SubscriptionKey) obj;
-		if (dialogId == null) {
-			if (other.dialogId != null)
-				return false;
-		} else if (!dialogId.equals(other.dialogId))
-			return false;
-		if (eventId == null) {
-			if (other.eventId != null)
-				return false;
-		} else if (!eventId.equals(other.eventId))
-			return false;
-		if (eventPackage == null) {
-			if (other.eventPackage != null)
-				return false;
-		} else if (!eventPackage.equals(other.eventPackage))
-			return false;		
-		return true;
+		return toString().equals(other.toString());
 	}
 
 	private transient String toString = null;
     public String toString() {
     	if (toString == null) {
-    		toString = new StringBuilder("SubscriptionKeydialogId=").append(dialogId).append(",eventPackage=").append(eventPackage).append(",eventId=").append(String.valueOf(eventId)).toString();
+    		final StringBuilder sb = new StringBuilder(dialogId).append('@').append(eventPackage);
+    		if(eventId != null) {
+    			sb.append('@').append(eventId);
+    		}
+    		toString = sb.toString();
     	}
         return toString; 
     }

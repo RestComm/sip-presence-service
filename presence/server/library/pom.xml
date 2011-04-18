@@ -51,11 +51,6 @@
 						<library-vendor>org.mobicents.servers.sipevent</library-vendor>
 						<library-version>1.0</library-version>
 					</library-ref>
-					<library-ref>
-						<library-name>sip-presence-client-library</library-name>
-						<library-vendor>org.mobicents.servers.sippresence</library-vendor>
-						<library-version>1.0</library-version>
-					</library-ref>
 				</configuration>
 			</plugin>
 		</plugins>

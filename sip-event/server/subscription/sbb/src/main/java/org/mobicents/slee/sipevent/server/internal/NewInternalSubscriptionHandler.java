@@ -2,9 +2,9 @@ package org.mobicents.slee.sipevent.server.internal;
 
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
+import javax.slee.facilities.Tracer;
 import javax.slee.nullactivity.NullActivity;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
 import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
@@ -20,14 +20,16 @@ import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
  */
 public class NewInternalSubscriptionHandler {
 
-	private static Logger logger = Logger
-			.getLogger(SubscriptionControlSbb.class);
-
+	private static Tracer tracer;
+	
 	private InternalSubscriptionHandler internalSubscriptionHandler;
 
 	public NewInternalSubscriptionHandler(
 			InternalSubscriptionHandler internalSubscriptionHandler) {
 		this.internalSubscriptionHandler = internalSubscriptionHandler;
+		if (tracer == null) {
+			tracer = internalSubscriptionHandler.sbb.getSbbContext().getTracer(getClass().getSimpleName());
+		}
 	}
 
 	public void newInternalSubscription(String subscriber,
@@ -37,8 +39,8 @@ public class NewInternalSubscriptionHandler {
 			SubscriptionControlDataSource dataSource,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("newInternalSubscription()");
+		if (tracer.isFineEnabled()) {
+			tracer.fine("newInternalSubscription()");
 		}
 
 		SubscriptionControlSbb sbb = internalSubscriptionHandler.sbb;
@@ -52,7 +54,7 @@ public class NewInternalSubscriptionHandler {
 		} else {
 			// expires is > 0 but < min expires, respond (Interval
 			// Too Brief) with Min-Expires = MINEXPIRES
-			sbb.getParentSbbCMP().subscribeError(subscriber, notifier.getUri(),
+			sbb.getParentSbb().subscribeError(subscriber, notifier.getUri(),
 					eventPackage, subscriptionId, Response.INTERVAL_TOO_BRIEF);
 			return;
 		}
@@ -66,7 +68,7 @@ public class NewInternalSubscriptionHandler {
 
 		if (subscription != null) {
 			// subscription exists
-			sbb.getParentSbbCMP().subscribeError(subscriber, notifier.getUri(),
+			sbb.getParentSbb().subscribeError(subscriber, notifier.getUri(),
 					eventPackage, subscriptionId,
 					Response.CONDITIONAL_REQUEST_FAILED);
 		} else {
@@ -117,8 +119,8 @@ public class NewInternalSubscriptionHandler {
 			boolean eventList, SubscriptionControlDataSource dataSource,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("newInternalSubscriptionAuthorization()");
+		if (tracer.isFineEnabled()) {
+			tracer.fine("newInternalSubscriptionAuthorization()");
 		}
 
 		SubscriptionControlSbb sbb = internalSubscriptionHandler.sbb;
@@ -135,8 +137,8 @@ public class NewInternalSubscriptionHandler {
 				sbb.getActivityContextNamingfacility().bind(aci,
 						subscriptionKey.toString());
 			} catch (Exception e) {
-				logger.error("Failed to create internal subscription aci", e);
-				sbb.getParentSbbCMP().subscribeError(subscriber, notifier.getUri(),
+				tracer.severe("Failed to create internal subscription aci", e);
+				sbb.getParentSbb().subscribeError(subscriber, notifier.getUri(),
 						subscriptionKey.getEventPackage(),
 						subscriptionKey.getEventId(),
 						Response.SERVER_INTERNAL_ERROR);
@@ -144,15 +146,15 @@ public class NewInternalSubscriptionHandler {
 			}
 			aci.attach(sbb.getSbbContext().getSbbLocalObject());
 			// inform parent
-			sbb.getParentSbbCMP().subscribeOk(subscriber, notifier.getUri(),
+			sbb.getParentSbb().subscribeOk(subscriber, notifier.getUri(),
 					subscriptionKey.getEventPackage(),
 					subscriptionKey.getEventId(), expires, responseCode);
 		} else {
-			sbb.getParentSbbCMP().subscribeError(subscriber, notifier.getUri(),
+			sbb.getParentSbb().subscribeError(subscriber, notifier.getUri(),
 					subscriptionKey.getEventPackage(),
 					subscriptionKey.getEventId(), responseCode);
-			if (logger.isInfoEnabled()) {
-				logger.info("Subscription: subscriber=" + subscriber
+			if (tracer.isInfoEnabled()) {
+				tracer.info("Subscription: subscriber=" + subscriber
 						+ ",notifier=" + notifier + ",eventPackage="
 						+ subscriptionKey.getEventPackage()
 						+ " not authorized (" + responseCode + ")");
@@ -188,8 +190,8 @@ public class NewInternalSubscriptionHandler {
 			}
 		}
 		
-		if (logger.isInfoEnabled()) {
-			logger.info("Created " + subscription);
+		if (tracer.isInfoEnabled()) {
+			tracer.info("Created " + subscription);
 		}
 	}
 }

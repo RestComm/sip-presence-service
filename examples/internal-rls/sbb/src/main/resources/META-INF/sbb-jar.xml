@@ -71,11 +71,11 @@
     	<sbb-version>1.0</sbb-version>
 
     	<sbb-ref>
-    		<sbb-name>InternalPresenceClientControlSbb</sbb-name>
-    		<sbb-vendor>org.mobicents</sbb-vendor>
-    		<sbb-version>1.0</sbb-version>
-    		<sbb-alias>childSbb</sbb-alias>
-    	</sbb-ref>
+       		<sbb-name>PublicationControlSbb</sbb-name>
+        	<sbb-vendor>org.mobicents</sbb-vendor>
+        	<sbb-version>1.0</sbb-version>
+        	<sbb-alias>childSbb</sbb-alias>
+       </sbb-ref>
 
     	<sbb-classes>
     		<sbb-abstract-class reentrant="True">
@@ -83,26 +83,16 @@
     				org.mobicents.slee.sipevent.examples.RLSExamplePublisherSbb
     			</sbb-abstract-class-name>
     			<cmp-field>
-    				<cmp-field-name>parentSbbCMP</cmp-field-name>
-    			</cmp-field>
-    			<cmp-field>
     				<cmp-field-name>eTag</cmp-field-name>
     			</cmp-field>
     			<cmp-field>
     				<cmp-field-name>publisher</cmp-field-name>
     			</cmp-field>
-    			<cmp-field>
-    				<cmp-field-name>
-    					presenceClientControlSbbCMP
-    				</cmp-field-name>
-    			</cmp-field>
-    			<get-child-relation-method>
-    				<sbb-alias-ref>childSbb</sbb-alias-ref>
-    				<get-child-relation-method-name>
-    					getPresenceClientControlSbbChildRelation
-    				</get-child-relation-method-name>
-    				<default-priority>0</default-priority>
-    			</get-child-relation-method>
+    			 <get-child-relation-method>                	
+                	<sbb-alias-ref>childSbb</sbb-alias-ref>
+                	<get-child-relation-method-name>getPublicationControlChildRelation</get-child-relation-method-name>
+                	<default-priority>0</default-priority>
+                </get-child-relation-method>
     		</sbb-abstract-class>
     		<sbb-local-interface>
     			<sbb-local-interface-name>
@@ -132,11 +122,11 @@
     	<sbb-version>1.0</sbb-version>
 
     	<sbb-ref>
-    		<sbb-name>InternalPresenceClientControlSbb</sbb-name>
-    		<sbb-vendor>org.mobicents</sbb-vendor>
-    		<sbb-version>1.0</sbb-version>
-    		<sbb-alias>presenceChildSbb</sbb-alias>
-    	</sbb-ref>
+       		<sbb-name>SubscriptionControlSbb</sbb-name>
+        	<sbb-vendor>org.mobicents</sbb-vendor>
+        	<sbb-version>1.0</sbb-version>
+        	<sbb-alias>subChildSbb</sbb-alias>
+       </sbb-ref>
 
     	<sbb-ref>
     		<sbb-name>InternalXDMClientControlSbb</sbb-name>
@@ -150,16 +140,11 @@
     			<sbb-abstract-class-name>
     				org.mobicents.slee.sipevent.examples.RLSExampleSubscriberSbb
     			</sbb-abstract-class-name>
-    			<cmp-field>
-    				<cmp-field-name>parentSbbCMP</cmp-field-name>
-    			</cmp-field>
-    			<get-child-relation-method>
-    				<sbb-alias-ref>presenceChildSbb</sbb-alias-ref>
-    				<get-child-relation-method-name>
-    					getPresenceClientControlSbbChildRelation
-    				</get-child-relation-method-name>
-    				<default-priority>0</default-priority>
-    			</get-child-relation-method>
+    			<get-child-relation-method>                	
+                	<sbb-alias-ref>subChildSbb</sbb-alias-ref>
+                	<get-child-relation-method-name>getSubscriptionControlChildRelation</get-child-relation-method-name>
+                	<default-priority>0</default-priority>
+                </get-child-relation-method>
     			<get-child-relation-method>
     				<sbb-alias-ref>xdmChildSbb</sbb-alias-ref>
     				<get-child-relation-method-name>

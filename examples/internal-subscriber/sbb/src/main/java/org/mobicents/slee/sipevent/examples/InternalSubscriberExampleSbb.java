@@ -4,7 +4,6 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.slee.ActivityContextInterface;
 import javax.slee.ActivityEndEvent;
-import javax.slee.ChildRelation;
 import javax.slee.CreateException;
 import javax.slee.RolledBackContext;
 import javax.slee.SLEEException;
@@ -18,6 +17,7 @@ import javax.slee.serviceactivity.ServiceActivity;
 import javax.slee.serviceactivity.ServiceActivityContextInterfaceFactory;
 import javax.slee.serviceactivity.ServiceActivityFactory;
 
+import org.mobicents.slee.ChildRelationExt;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlParent;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlSbbLocalObject;
@@ -44,24 +44,15 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 
 	// --- INTERNAL CHILD SBB
 
-	public abstract ChildRelation getSubscriptionControlChildRelation();
-
-	public abstract SubscriptionClientControlSbbLocalObject getSubscriptionControlChildSbbCMP();
-
-	public abstract void setSubscriptionControlChildSbbCMP(
-			SubscriptionClientControlSbbLocalObject value);
+	public abstract ChildRelationExt getSubscriptionControlChildRelation();
 
 	private SubscriptionClientControlSbbLocalObject getSubscriptionControlChildSbb()
 			throws TransactionRequiredLocalException, SLEEException,
 			CreateException {
-		SubscriptionClientControlSbbLocalObject childSbb = getSubscriptionControlChildSbbCMP();
+		SubscriptionClientControlSbbLocalObject childSbb = (SubscriptionClientControlSbbLocalObject) getSubscriptionControlChildRelation().get(ChildRelationExt.DEFAULT_CHILD_NAME);
 		if (childSbb == null) {
 			childSbb = (SubscriptionClientControlSbbLocalObject) getSubscriptionControlChildRelation()
-					.create();
-			setSubscriptionControlChildSbbCMP(childSbb);
-			childSbb
-					.setParentSbb((SubscriptionClientControlParentSbbLocalObject) this.sbbContext
-							.getSbbLocalObject());
+					.create(ChildRelationExt.DEFAULT_CHILD_NAME);			
 		}
 		return childSbb;
 	}
@@ -200,8 +191,6 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 
 	// --- SBB OBJECT
 
-	private SbbContext sbbContext = null; // This SBB's context
-
 	private TimerFacility timerFacility = null;
 	private ServiceActivityFactory serviceActivityFactory = null;
 	private ServiceActivityContextInterfaceFactory serviceActivityContextInterfaceFactory = null;
@@ -211,7 +200,6 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 	 */
 	public void setSbbContext(SbbContext sbbContext) {
 
-		this.sbbContext = sbbContext;
 		this.tracer = sbbContext.getTracer("InternalSubscriberExampleSbb");
 		try {
 			Context context = (Context) new InitialContext()
@@ -229,7 +217,6 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 	}
 
 	public void unsetSbbContext() {
-		this.sbbContext = null;
 	}
 
 	public void sbbCreate() throws javax.slee.CreateException {

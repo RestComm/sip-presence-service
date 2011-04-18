@@ -1,30 +1,30 @@
 package org.mobicents.slee.sipevent.server.subscription.eventlist;
 
-import java.util.Set;
-
 import gov.nist.javax.sip.Utils;
+
+import java.util.Set;
 
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
-import javax.slee.ChildRelation;
 import javax.slee.CreateException;
 import javax.slee.RolledBackContext;
 import javax.slee.Sbb;
 import javax.slee.SbbContext;
+import javax.slee.facilities.Tracer;
 
-import org.apache.log4j.Logger;
+import org.mobicents.slee.ChildRelationExt;
+import org.mobicents.slee.SbbContextExt;
 import org.mobicents.slee.sipevent.server.rlscache.RLSService;
 import org.mobicents.slee.sipevent.server.rlscache.RLSServiceActivity;
 import org.mobicents.slee.sipevent.server.rlscache.events.RLSServicesRemovedEvent;
 import org.mobicents.slee.sipevent.server.rlscache.events.RLSServicesUpdatedEvent;
-import org.mobicents.slee.sipevent.server.subscription.EventListSubscriberParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.EventListSubscriber;
-import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlParentSbbLocalObject;
+import org.mobicents.slee.sipevent.server.subscription.EventListSubscriberParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
-import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Event;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.openxdm.xcap.client.appusage.resourcelists.jaxb.EntryType;
 
 /**
@@ -37,8 +37,7 @@ import org.openxdm.xcap.client.appusage.resourcelists.jaxb.EntryType;
 public abstract class EventListSubscriberSbb implements Sbb,
 		EventListSubscriber {
 
-	private static final Logger logger = Logger
-			.getLogger(EventListSubscriberSbb.class);
+	private static Tracer tracer;
 	
 	// --- CMPs
 	
@@ -54,22 +53,19 @@ public abstract class EventListSubscriberSbb implements Sbb,
 	public abstract void setSubscriber(String subscriber);
 	public abstract String getSubscriber();
 	
-	public abstract void setParentSbbCMP(EventListSubscriberParentSbbLocalObject parentSbb);
-	public abstract EventListSubscriberParentSbbLocalObject getParentSbbCMP();
-	
 	// --- sbb logic
-	
-	public void setParentSbb(EventListSubscriberParentSbbLocalObject parentSbb) {
-		setParentSbbCMP(parentSbb);
-	}
 	
 	private String getVirtualSubscriptionId(SubscriptionKey originalSubscriptionKey,String virtualSubscriptionNotifier) {
 		return new StringBuilder(originalSubscriptionKey.toString()).append(":list:").append(virtualSubscriptionNotifier).toString();
 	}
 	
+	private EventListSubscriberParentSbbLocalObject getParentSbb() {
+		return (EventListSubscriberParentSbbLocalObject) sbbContext.getSbbLocalObject().getParent();
+	}
+	
 	public void subscribe(Subscription subscription, RLSService rlsService, ActivityContextInterface rlsServiceAci) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("creating backend subscriptions for rls subscription "+subscription.getKey());
+		if (tracer.isFineEnabled()) {
+			tracer.fine("creating backend subscriptions for rls subscription "+subscription.getKey());
 		}
 		// store subscription data in cmp
 		setSubscriptionKey(subscription.getKey());
@@ -81,7 +77,15 @@ public abstract class EventListSubscriberSbb implements Sbb,
 		// is notified with the resulting multipart
 		setNotificationData(new NotificationData(subscription.getNotifier().getUriWithParam(),subscription.getVersion(),rlsService,Utils.getInstance().generateTag(),Utils.getInstance().generateTag()));
 		// get subscription client child
-		SubscriptionClientControlSbbLocalObject subscriptionClient = getSubscriptionClientControlSbb();
+		
+		SubscriptionClientControlSbbLocalObject subscriptionClient = null;
+		try {
+			subscriptionClient = (SubscriptionClientControlSbbLocalObject) getSubscriptionClientControlChildRelation().create(ChildRelationExt.DEFAULT_CHILD_NAME);
+		}
+		catch (Exception e) {
+			tracer.severe("failed to create child",e);
+			return;
+		}
 		// create "virtual" subscriptions
 		for (EntryType entryType : rlsService.getEntries()) {
 			subscriptionClient.subscribe(subscription.getSubscriber(), subscription.getSubscriberDisplayName(), entryType.getUri(), subscription.getKey().getEventPackage(), getVirtualSubscriptionId(subscription.getKey(),entryType.getUri()), subscription.getExpires(), null, null, null);
@@ -89,15 +93,15 @@ public abstract class EventListSubscriberSbb implements Sbb,
 	}
 	
 	public void onRLSServicesRemovedEvent(RLSServicesRemovedEvent event, ActivityContextInterface aci) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("rls service removed, terminating subscription "+getSubscriptionKey());
+		if (tracer.isFineEnabled()) {
+			tracer.fine("rls service removed, terminating subscription "+getSubscriptionKey());
 		}
 		// time to remove the subscription
 		unsubscribe(getSubscriber(), getSubscriptionKey(),getRLService());
 	}
 	
 	public void onRLSServicesUpdatedEvent(RLSServicesUpdatedEvent event, ActivityContextInterface aci) {
-		Subscription subscription = getParentSbbCMP().getSubscription(getSubscriptionKey());
+		Subscription subscription = getParentSbb().getSubscription(getSubscriptionKey());
 		if (subscription != null) {
 			resubscribe(subscription,getRLService(),event.getNewEntries(),event.getOldEntries(),event.getRemovedEntries());
 		}
@@ -109,8 +113,8 @@ public abstract class EventListSubscriberSbb implements Sbb,
 	
 	private void resubscribe(Subscription subscription, RLSService rlsService, Set<EntryType> newEntries, Set<EntryType> oldEntries, Set<EntryType> removedEntries) {
 		
-		if (logger.isDebugEnabled()) {
-			logger.debug("refreshing backend subscriptions for rls subscription "+subscription.getKey());
+		if (tracer.isFineEnabled()) {
+			tracer.fine("refreshing backend subscriptions for rls subscription "+subscription.getKey());
 		}
 		// version is incremented
 		subscription.incrementVersion();
@@ -118,7 +122,7 @@ public abstract class EventListSubscriberSbb implements Sbb,
 		// prepare for a full state notification
 		setNotificationData(new NotificationData(subscription.getNotifier().getUriWithParam(),subscription.getVersion(),rlsService,Utils.getInstance().generateTag(),Utils.getInstance().generateTag()));
 		// get subscription client child
-		SubscriptionClientControlSbbLocalObject subscriptionClient = getSubscriptionClientControlSbb();
+		SubscriptionClientControlSbbLocalObject subscriptionClient = (SubscriptionClientControlSbbLocalObject) getSubscriptionClientControlChildRelation().get(ChildRelationExt.DEFAULT_CHILD_NAME);
 		// update "virtual" subscriptions
 		if (removedEntries != null) {
 			for (EntryType entryType : removedEntries) {
@@ -142,8 +146,8 @@ public abstract class EventListSubscriberSbb implements Sbb,
 	}
 	
 	private void unsubscribe(String subscriber, SubscriptionKey key, RLSService rlsService) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("removing backend subscriptions for rls subscription "+key);
+		if (tracer.isFineEnabled()) {
+			tracer.fine("removing backend subscriptions for rls subscription "+key);
 		}
 		for (ActivityContextInterface aci : sbbContext.getActivities()) {
 			aci.detach(sbbContext.getSbbLocalObject());
@@ -153,7 +157,7 @@ public abstract class EventListSubscriberSbb implements Sbb,
 		
 		if(rlsService != null) {
 			// get subscription client child
-			SubscriptionClientControlSbbLocalObject subscriptionClient = getSubscriptionClientControlSbb();
+			SubscriptionClientControlSbbLocalObject subscriptionClient = (SubscriptionClientControlSbbLocalObject) getSubscriptionClientControlChildRelation().get(ChildRelationExt.DEFAULT_CHILD_NAME);
 			// remove "virtual" subscriptions
 			for (EntryType entryType : rlsService.getEntries()) {
 				subscriptionClient.unsubscribe(subscriber, entryType.getUri(), key.getEventPackage(), getVirtualSubscriptionId(key,entryType.getUri()));
@@ -171,7 +175,7 @@ public abstract class EventListSubscriberSbb implements Sbb,
 	private Subscription getSubscription(EventListSubscriberParentSbbLocalObject parentSbb, SubscriptionKey key, String subscriber) {
 		Subscription subscription = parentSbb.getSubscription(key);
 		if (subscription == null && getSubscriptionKey() != null) {
-			logger.warn("Unable to get subscription "+key+" from parent sbb, it does not exists anymore! Removing all virtual subscriptions");
+			tracer.warning("Unable to get subscription "+key+" from parent sbb, it does not exists anymore! Removing all virtual subscriptions");
 			unsubscribe(subscriber, key,getRLService());
 		}
 		return subscription;
@@ -212,11 +216,11 @@ public abstract class EventListSubscriberSbb implements Sbb,
 		if (subscriptionKey != null) {
 		
 			
-			if (logger.isDebugEnabled()) {
-				logger.debug("notification for rls subscription "+subscriptionKey+" from " + notifier);
+			if (tracer.isFineEnabled()) {
+				tracer.fine("notification for rls subscription "+subscriptionKey+" from " + notifier);
 			}
 
-			EventListSubscriberParentSbbLocalObject parentSbb = getParentSbbCMP();
+			EventListSubscriberParentSbbLocalObject parentSbb = getParentSbb();
 			NotificationData notificationData = getNotificationData();
 
 			if (notificationData == null) {
@@ -235,8 +239,8 @@ public abstract class EventListSubscriberSbb implements Sbb,
 				multiPart = notificationData.addNotificationData(notifier, cid, id, content, contentType, contentSubtype, status.toString(), (terminationReason == null ? null : terminationReason.toString()));
 			}
 			catch (IllegalStateException e) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(e.getMessage(),e);
+				if (tracer.isFineEnabled()) {
+					tracer.fine(e.getMessage(),e);
 				}
 				// there is a chance that on a full state update concurrent backend subscriptions may try add notification data after multipart was built, if that happens we will get this exception and do a partial notification 
 				notificationData = createPartialStateNotificationData(parentSbb, subscriptionKey, subscriber, notifier);
@@ -257,11 +261,11 @@ public abstract class EventListSubscriberSbb implements Sbb,
 	public void resubscribeError(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int error) {
 		
-		if (logger.isDebugEnabled()) {
-			logger.debug("resubscribeError: sid="+subscriptionId+", error="+error);
+		if (tracer.isFineEnabled()) {
+			tracer.fine("resubscribeError: sid="+subscriptionId+", error="+error);
 		}
 		
-		EventListSubscriberParentSbbLocalObject parentSbb = getParentSbbCMP();
+		EventListSubscriberParentSbbLocalObject parentSbb = getParentSbb();
 		SubscriptionKey key = getSubscriptionKey();
 		
 		switch (error) {
@@ -269,7 +273,7 @@ public abstract class EventListSubscriberSbb implements Sbb,
 			// perhaps virtual subscription died, lets try to subscribe again
 			Subscription subscription = getSubscription(parentSbb, key, subscriber);
 			if (subscription != null) {
-				getSubscriptionClientControlSbb().subscribe(subscriber, subscription.getSubscriberDisplayName(), notifier, eventPackage, subscriptionId, subscription.getExpires(), null, null, null);
+				((SubscriptionClientControlSbbLocalObject) getSubscriptionClientControlChildRelation().get(ChildRelationExt.DEFAULT_CHILD_NAME)).subscribe(subscriber, subscription.getSubscriberDisplayName(), notifier, eventPackage, subscriptionId, subscription.getExpires(), null, null, null);
 			}
 			break;
 	
@@ -281,18 +285,18 @@ public abstract class EventListSubscriberSbb implements Sbb,
 	public void resubscribeOk(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int expires) {
 		// ignore
-		if (logger.isDebugEnabled()) {
-			logger.debug("resubscribeOk: sid="+subscriptionId);
+		if (tracer.isFineEnabled()) {
+			tracer.fine("resubscribeOk: sid="+subscriptionId);
 		}		
 	}
 	
 	public void subscribeError(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int error) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("subscribeError: sid="+subscriptionId+", error="+error);
+		if (tracer.isFineEnabled()) {
+			tracer.fine("subscribeError: sid="+subscriptionId+", error="+error);
 		}
 		
-		EventListSubscriberParentSbbLocalObject parentSbb = getParentSbbCMP();
+		EventListSubscriberParentSbbLocalObject parentSbb = getParentSbb();
 		SubscriptionKey subscriptionKey = getSubscriptionKey();
 		NotificationData notificationData = getNotificationData();
 		
@@ -338,58 +342,38 @@ public abstract class EventListSubscriberSbb implements Sbb,
 			String eventPackage, String subscriptionId, int expires,
 			int responseCode) {
 		// ignore
-		if (logger.isDebugEnabled()) {
-			logger.debug("subscribeOk: sid="+subscriptionId);
+		if (tracer.isFineEnabled()) {
+			tracer.fine("subscribeOk: sid="+subscriptionId);
 		}
 	}
 	
 	public void unsubscribeError(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int error) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("unsubscribeError: sid="+subscriptionId+", error="+error);
+		if (tracer.isFineEnabled()) {
+			tracer.fine("unsubscribeError: sid="+subscriptionId+", error="+error);
 		}
 	}
 	
 	public void unsubscribeOk(String subscriber, String notifier,
 			String eventPackage, String subscriptionId) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("unsubscribeOk: sid="+subscriptionId);
+		if (tracer.isFineEnabled()) {
+			tracer.fine("unsubscribeOk: sid="+subscriptionId);
 		}
 	}
 	
 	// --- SIP EVENT CLIENT CHILD SBB
 	
-	public abstract ChildRelation getSubscriptionClientControlChildRelation();
-
-	public abstract SubscriptionClientControlSbbLocalObject getSubscriptionClientControlChildSbbCMP();
-
-	public abstract void setSubscriptionClientControlChildSbbCMP(
-			SubscriptionClientControlSbbLocalObject value);
-
-	public SubscriptionClientControlSbbLocalObject getSubscriptionClientControlSbb() {
-		SubscriptionClientControlSbbLocalObject childSbb = getSubscriptionClientControlChildSbbCMP();
-		if (childSbb == null) {
-			try {
-				childSbb = (SubscriptionClientControlSbbLocalObject) getSubscriptionClientControlChildRelation()
-						.create();
-			} catch (Exception e) {
-				logger.error("Failed to create child sbb", e);
-				return null;
-			}
-			setSubscriptionClientControlChildSbbCMP(childSbb);
-			childSbb
-					.setParentSbb((SubscriptionClientControlParentSbbLocalObject) this.sbbContext
-							.getSbbLocalObject());
-		}
-		return childSbb;
-	}
+	public abstract ChildRelationExt getSubscriptionClientControlChildRelation();
 	
 	// ----------- SBB OBJECT's LIFE CYCLE
 
-	private SbbContext sbbContext;
+	private SbbContextExt sbbContext;
 	
 	public void setSbbContext(SbbContext sbbContext) {
-		this.sbbContext = sbbContext;
+		this.sbbContext = (SbbContextExt) sbbContext;
+		if (tracer == null) {
+			tracer = sbbContext.getTracer(getClass().getSimpleName());
+		}
 	}
 	
 	public void sbbActivate() {

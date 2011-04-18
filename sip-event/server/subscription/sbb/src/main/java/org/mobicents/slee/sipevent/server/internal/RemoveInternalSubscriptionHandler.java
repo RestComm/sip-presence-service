@@ -2,14 +2,14 @@ package org.mobicents.slee.sipevent.server.internal;
 
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
+import javax.slee.facilities.Tracer;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
-import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
 
 /**
  * Handles the removal of a SIP subscription
@@ -19,16 +19,18 @@ import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
  */
 public class RemoveInternalSubscriptionHandler {
 
-	private static Logger logger = Logger
-			.getLogger(SubscriptionControlSbb.class);
-
+	private static Tracer tracer;
+	
 	private InternalSubscriptionHandler internalSubscriptionHandler;
 
 	public RemoveInternalSubscriptionHandler(
 			InternalSubscriptionHandler sipSubscriptionHandler) {
 		this.internalSubscriptionHandler = sipSubscriptionHandler;
+		if (tracer == null) {
+			tracer = internalSubscriptionHandler.sbb.getSbbContext().getTracer(getClass().getSimpleName());
+		}
 	}
-
+	
 	public void removeInternalSubscription(String subscriber, String notifier,
 			String eventPackage, String subscriptionId,
 			SubscriptionControlDataSource dataSource,
@@ -46,7 +48,7 @@ public class RemoveInternalSubscriptionHandler {
 
 		if (subscription == null) {
 			// subscription does not exists
-			sbb.getParentSbbCMP().unsubscribeError(subscriber, notifier,
+			sbb.getParentSbb().unsubscribeError(subscriber, notifier,
 					eventPackage, subscriptionId,
 					Response.CONDITIONAL_REQUEST_FAILED);
 			return;
@@ -55,17 +57,17 @@ public class RemoveInternalSubscriptionHandler {
 		ActivityContextInterface aci = sbb.getActivityContextNamingfacility()
 				.lookup(subscriptionKey.toString());
 		if (aci == null) {
-			logger
-					.error("Failed to retrieve aci for internal subscription with key "
+			tracer
+					.severe("Failed to retrieve aci for internal subscription with key "
 							+ subscriptionKey);
-			sbb.getParentSbbCMP().unsubscribeError(subscriber, notifier,
+			sbb.getParentSbb().unsubscribeError(subscriber, notifier,
 					eventPackage, subscriptionId,
 					Response.SERVER_INTERNAL_ERROR);
 			return;
 		}
 
 		// send OK response
-		sbb.getParentSbbCMP().unsubscribeOk(subscriber, notifier, eventPackage,
+		sbb.getParentSbb().unsubscribeOk(subscriber, notifier, eventPackage,
 				subscriptionId);
 
 		if (subscription.getResourceList()) {
@@ -92,15 +94,15 @@ public class RemoveInternalSubscriptionHandler {
 
 		// check resulting subscription state
 		if (subscription.getStatus() == Subscription.Status.terminated) {
-			if (logger.isInfoEnabled()) {
-				logger.info("Status changed for " + subscription);
+			if (tracer.isInfoEnabled()) {
+				tracer.info("Status changed for " + subscription);
 			}
 			// remove subscription data
 			internalSubscriptionHandler.sbb.removeSubscriptionData(
 					dataSource, subscription, null, aci, childSbb);
 		} else if (subscription.getStatus() == Subscription.Status.waiting) {
-			if (logger.isInfoEnabled()) {
-				logger.info("Status changed for " + subscription);
+			if (tracer.isInfoEnabled()) {
+				tracer.info("Status changed for " + subscription);
 			}
 			// keep the subscription for default waiting time so notifier may
 			// know about this attemp to subscribe him

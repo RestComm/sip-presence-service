@@ -1,6 +1,6 @@
 package org.mobicents.slee.sipevent.server.publication;
 
-import javax.slee.SbbLocalObject;
+import org.mobicents.slee.SbbLocalObjectExt;
 
 /**
  * Sbb local object interface for a client of the SIP Event Publication Control
@@ -9,7 +9,7 @@ import javax.slee.SbbLocalObject;
  * @author martins
  * 
  */
-public interface PublicationClientControlSbbLocalObject extends SbbLocalObject,PublicationClientControl {
+public interface PublicationClientControlSbbLocalObject extends SbbLocalObjectExt,PublicationClientControl {
 
 	
 }

@@ -3,7 +3,6 @@ package org.mobicents.slee.sipevent.server.publication;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.slee.ActivityContextInterface;
-import javax.slee.ChildRelation;
 import javax.slee.CreateException;
 import javax.slee.RolledBackContext;
 import javax.slee.Sbb;
@@ -18,7 +17,7 @@ import javax.slee.nullactivity.NullActivity;
 import javax.slee.nullactivity.NullActivityContextInterfaceFactory;
 import javax.slee.nullactivity.NullActivityFactory;
 
-import org.apache.log4j.Logger;
+import org.mobicents.slee.ChildRelationExt;
 import org.mobicents.slee.sipevent.server.publication.data.Publication;
 
 /**
@@ -29,8 +28,7 @@ import org.mobicents.slee.sipevent.server.publication.data.Publication;
  */
 public abstract class PublicationControlSbb extends AbstractPublicationControl implements Sbb {
 
-	private static Logger logger = Logger
-	.getLogger(PublicationControlSbb.class);
+	private static SLEEPublicationControlLogger logger;
 	
 	protected TimerFacility timerFacility;
 	protected ActivityContextNamingFacility activityContextNamingfacility;
@@ -49,6 +47,9 @@ public abstract class PublicationControlSbb extends AbstractPublicationControl i
 	 */
 	public void setSbbContext(SbbContext sbbContext) {
 		this.sbbContext = sbbContext;
+		if(logger == null) {
+			logger = new SLEEPublicationControlLogger(sbbContext.getTracer(getClass().getSimpleName()));
+		}
 		// retrieve factories, facilities & providers
 		try {
 			jndiContext = (Context) new InitialContext()
@@ -79,21 +80,20 @@ public abstract class PublicationControlSbb extends AbstractPublicationControl i
 
 	// --- IMPL CHILD SBB
 
-	public abstract ChildRelation getImplementedSbbChildRelation();
+	public abstract ChildRelationExt getImplementedSbbChildRelation();
 
 	protected ImplementedPublicationControlSbbLocalObject getImplementedPublicationControl() {
-		final ChildRelation childRelation = getImplementedSbbChildRelation();
-		if (childRelation.isEmpty()) {
+		final ChildRelationExt childRelation = getImplementedSbbChildRelation();
+		ImplementedPublicationControlSbbLocalObject child = (ImplementedPublicationControlSbbLocalObject) childRelation.get(ChildRelationExt.DEFAULT_CHILD_NAME); 
+		if (child == null) {
 			try {
-				return (ImplementedPublicationControlSbbLocalObject) childRelation.create();
+				child = (ImplementedPublicationControlSbbLocalObject) childRelation.create(ChildRelationExt.DEFAULT_CHILD_NAME);
 			} catch (Exception e) {
 				getLogger().error("Failed to create child sbb",e);
 				return null;
 			}
 		}
-		else  {
-			return (ImplementedPublicationControlSbbLocalObject) childRelation.iterator().next();
-		}
+		return child;
 	}	
 
 	/**
@@ -119,7 +119,7 @@ public abstract class PublicationControlSbb extends AbstractPublicationControl i
 	 * @see org.mobicents.slee.sipevent.server.publication.AbstractPublicationControl#getLogger()
 	 */
 	@Override
-	protected Logger getLogger() {
+	protected PublicationControlLogger getLogger() {
 		return logger;
 	}
 		

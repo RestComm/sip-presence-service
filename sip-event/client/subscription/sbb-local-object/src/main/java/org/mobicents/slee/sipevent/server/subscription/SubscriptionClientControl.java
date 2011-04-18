@@ -10,26 +10,6 @@ package org.mobicents.slee.sipevent.server.subscription;
 public interface SubscriptionClientControl {
 
 	/**
-	 * Used to set the call back sbb local object in the sbb implementing this
-	 * interface. Must be used whenever a new object of this interface is
-	 * created.
-	 * 
-	 * An example:
-	 * 
-	 * ChildRelation childRelation = getChildRelation();
-	 * SubscriptionClientControlSbbLocalObject childSbb =
-	 * (SubscriptionClientControlSbbLocalObject) childRelation.create();
-	 * childSbb.setParentSbb(
-	 * (SubscriptionClientControlParentSbbLocalObject)this
-	 * .getSbbContext().getSbbLocalObject());
-	 * 
-	 * 
-	 * @param parent
-	 */
-	public void setParentSbb(
-			SubscriptionClientControlParentSbbLocalObject sbbLocalObject);
-
-	/**
 	 * creates an internal subscription
 	 * 
 	 * @param subscriber

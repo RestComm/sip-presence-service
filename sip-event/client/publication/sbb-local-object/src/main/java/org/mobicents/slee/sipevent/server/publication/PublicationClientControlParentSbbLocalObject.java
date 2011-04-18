@@ -1,6 +1,6 @@
 package org.mobicents.slee.sipevent.server.publication;
 
-import javax.slee.SbbLocalObject;
+import org.mobicents.slee.SbbLocalObjectExt;
 
 /**
  * Callback Interface for an SBB that uses the
@@ -10,7 +10,7 @@ import javax.slee.SbbLocalObject;
  * 
  */
 public interface PublicationClientControlParentSbbLocalObject extends
-		SbbLocalObject,PublicationClientControlParent {
+		SbbLocalObjectExt,PublicationClientControlParent {
 
 	
 }

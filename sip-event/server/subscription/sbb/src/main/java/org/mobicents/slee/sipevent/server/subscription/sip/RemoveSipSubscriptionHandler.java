@@ -4,16 +4,15 @@ import javax.sip.Dialog;
 import javax.sip.ResponseEvent;
 import javax.sip.header.EventHeader;
 import javax.slee.ActivityContextInterface;
+import javax.slee.facilities.Tracer;
 
 import net.java.slee.resource.sip.DialogActivity;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
-import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
-import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
 
 /**
  * Handles the removal of a SIP subscription
@@ -23,14 +22,16 @@ import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
  */
 public class RemoveSipSubscriptionHandler {
 
-	private static Logger logger = Logger
-			.getLogger(SubscriptionControlSbb.class);
+	private static Tracer tracer;
 
 	private SipSubscriptionHandler sipSubscriptionHandler;
 
 	public RemoveSipSubscriptionHandler(
 			SipSubscriptionHandler sipSubscriptionHandler) {
 		this.sipSubscriptionHandler = sipSubscriptionHandler;
+		if (tracer == null) {
+			tracer = sipSubscriptionHandler.sbb.getSbbContext().getTracer(getClass().getSimpleName());
+		}
 	}
 
 	/**
@@ -73,20 +74,20 @@ public class RemoveSipSubscriptionHandler {
 			.createAndSendNotify(dataSource, subscription, dialog,
 					childSbb);
 		} catch (Exception e) {
-			logger.error("failed to notify subscriber", e);
+			tracer.severe("failed to notify subscriber", e);
 		}
 		
 		// check resulting subscription state
 		if (subscription.getStatus() == Subscription.Status.terminated) {
-			if (logger.isInfoEnabled()) {
-				logger.info("Status changed for " + subscription);
+			if (tracer.isInfoEnabled()) {
+				tracer.info("Status changed for " + subscription);
 			}
 			// remove subscription data
 			sipSubscriptionHandler.sbb.removeSubscriptionData(dataSource,
 					subscription, dialog, aci, childSbb);
 		} else if (subscription.getStatus() == Subscription.Status.waiting) {
-			if (logger.isInfoEnabled()) {
-				logger.info("Status changed for " + subscription);
+			if (tracer.isInfoEnabled()) {
+				tracer.info("Status changed for " + subscription);
 			}
 			// keep the subscription for default waiting time so notifier may
 			// know about this attemp to subscribe him
@@ -114,8 +115,8 @@ public class RemoveSipSubscriptionHandler {
 			Subscription subscription = dataSource.get(new SubscriptionKey(dialog.getDialogId(), eventHeader.getEventType(),
 					eventHeader.getEventId()));
 			if (subscription != null) {
-				if (logger.isInfoEnabled()) {
-					logger.info("Removing " + subscription.getKey()
+				if (tracer.isInfoEnabled()) {
+					tracer.info("Removing " + subscription.getKey()
 							+ " data due to error on notify response.");
 				}
 				if (!subscription.getResourceList()) {

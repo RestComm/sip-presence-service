@@ -9,7 +9,6 @@ import javax.sip.header.Header;
 import javax.sip.message.Response;
 import javax.xml.bind.JAXBElement;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.publication.data.ComposedPublication;
 import org.mobicents.slee.sipevent.server.publication.data.ComposedPublicationKey;
 import org.mobicents.slee.sipevent.server.publication.data.JAXBContentHandler;
@@ -33,7 +32,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 	private static final Result CONDITIONAL_REQUEST_FAILED = new Result(
 			Response.CONDITIONAL_REQUEST_FAILED);
 
-	protected abstract Logger getLogger();
+	protected abstract PublicationControlLogger getLogger();
 
 	protected abstract ImplementedPublicationControl getImplementedPublicationControl();
 
@@ -70,7 +69,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 			String document, String contentType, String contentSubType,
 			int expires) {
 
-		final Logger logger = getLogger();
+		final PublicationControlLogger logger = getLogger();
 		if (logger.isDebugEnabled()) {
 			logger.debug("new publication request: entity=" + entity
 					+ ",eventPackage=" + eventPackage);
@@ -178,7 +177,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 	public Result refreshPublication(String entity, String eventPackage,
 			String oldETag, int expires) {
 
-		final Logger logger = getLogger();
+		final PublicationControlLogger logger = getLogger();
 		if (logger.isDebugEnabled()) {
 			logger.debug("refresh Publication: entity=" + entity
 					+ ",eventPackage=" + eventPackage + ",eTag=" + oldETag
@@ -251,7 +250,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 	 */
 	public int removePublication(String entity, String eventPackage, String eTag) {
 
-		final Logger logger = getLogger();
+		final PublicationControlLogger logger = getLogger();
 		if (logger.isDebugEnabled()) {
 			logger.debug("removePublication: entity=" + entity
 					+ ",eventPackage=" + eventPackage + ",eTag=" + eTag);
@@ -342,7 +341,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 			String oldETag, String document, String contentType,
 			String contentSubType, int expires) {
 
-		final Logger logger = getLogger();
+		final PublicationControlLogger logger = getLogger();
 		if (logger.isDebugEnabled()) {
 			getLogger().debug(
 					"modifyPublication: entity=" + entity + ",eventPackage="
@@ -476,7 +475,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 	 */
 	public void timerExpired(Serializable timerID) {
 
-		final Logger logger = getLogger();
+		final PublicationControlLogger logger = getLogger();
 
 		// get publication
 		final Publication publication = dataSource.getFromTimerID(timerID);

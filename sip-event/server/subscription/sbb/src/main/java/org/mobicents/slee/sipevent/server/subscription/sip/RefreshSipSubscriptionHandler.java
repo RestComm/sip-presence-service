@@ -3,12 +3,11 @@ package org.mobicents.slee.sipevent.server.subscription.sip;
 import javax.sip.RequestEvent;
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
+import javax.slee.facilities.Tracer;
 
 import net.java.slee.resource.sip.DialogActivity;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
-import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
 
@@ -20,14 +19,16 @@ import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlD
  */
 public class RefreshSipSubscriptionHandler {
 
-	private static Logger logger = Logger
-			.getLogger(SubscriptionControlSbb.class);
+	private static Tracer tracer;
 
 	private SipSubscriptionHandler sipSubscriptionHandler;
 
 	public RefreshSipSubscriptionHandler(
 			SipSubscriptionHandler sipSubscriptionHandler) {
 		this.sipSubscriptionHandler = sipSubscriptionHandler;
+		if (tracer == null) {
+			tracer = sipSubscriptionHandler.sbb.getSbbContext().getTracer(getClass().getSimpleName());
+		}
 	}
 
 	/**
@@ -62,7 +63,7 @@ public class RefreshSipSubscriptionHandler {
 					.createExpiresHeader(expires));
 			event.getServerTransaction().sendResponse(response);			
 		} catch (Exception e) {
-			logger.error("Can't send RESPONSE", e);
+			tracer.severe("Can't send RESPONSE", e);
 		}
 
 		if (!subscription.getResourceList()) {
@@ -72,15 +73,15 @@ public class RefreshSipSubscriptionHandler {
 				.createAndSendNotify(dataSource, subscription,
 						(DialogActivity) aci.getActivity(), childSbb);
 			} catch (Exception e) {
-				logger.error("failed to notify subscriber", e);
+				tracer.severe("failed to notify subscriber", e);
 			}
 		}
 
 		// set new timer
 		sipSubscriptionHandler.sbb.setSubscriptionTimerAndPersistSubscription(subscription, expires + 1, aci);
 
-		if (logger.isInfoEnabled()) {
-			logger.info("Refreshed " + subscription + " for " + expires
+		if (tracer.isInfoEnabled()) {
+			tracer.info("Refreshed " + subscription + " for " + expires
 					+ " seconds");
 		}
 		

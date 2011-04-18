@@ -3,7 +3,6 @@ package org.mobicents.slee.sipevent.examples;
 import javax.naming.InitialContext;
 import javax.slee.ActivityContextInterface;
 import javax.slee.ActivityEndEvent;
-import javax.slee.ChildRelation;
 import javax.slee.CreateException;
 import javax.slee.RolledBackContext;
 import javax.slee.SLEEException;
@@ -14,6 +13,7 @@ import javax.slee.facilities.TimerFacility;
 import javax.slee.facilities.TimerOptions;
 import javax.slee.facilities.Tracer;
 
+import org.mobicents.slee.ChildRelationExt;
 import org.mobicents.slee.sipevent.server.publication.PublicationClientControlParent;
 import org.mobicents.slee.sipevent.server.publication.PublicationClientControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.publication.PublicationClientControlSbbLocalObject;
@@ -49,18 +49,17 @@ public abstract class InternalPublisherExampleSbb implements javax.slee.Sbb,
 
 	// --- INTERNAL CHILD SBB
 
-	public abstract ChildRelation getPublicationControlChildRelation();
+	public abstract ChildRelationExt getPublicationControlChildRelation();
 
 	private PublicationClientControlSbbLocalObject getPublicationControlChildSbb()
 			throws TransactionRequiredLocalException, SLEEException,
 			CreateException {
-		final ChildRelation childRelation = getPublicationControlChildRelation();
-		if (childRelation.isEmpty()) {
-			return (PublicationClientControlSbbLocalObject) childRelation.create();
+		final ChildRelationExt childRelation = getPublicationControlChildRelation();
+		PublicationClientControlSbbLocalObject child = (PublicationClientControlSbbLocalObject) childRelation.get(ChildRelationExt.DEFAULT_CHILD_NAME);
+		if (child == null) {
+			child = (PublicationClientControlSbbLocalObject) childRelation.create(ChildRelationExt.DEFAULT_CHILD_NAME);
 		}
-		else {
-			return (PublicationClientControlSbbLocalObject) childRelation.iterator().next();
-		}
+		return child;
 	}
 
 	// --- ETAG CMP

@@ -8,7 +8,6 @@ import java.net.URISyntaxException;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.slee.ActivityContextInterface;
-import javax.slee.ChildRelation;
 import javax.slee.RolledBackContext;
 import javax.slee.SbbContext;
 import javax.slee.facilities.TimerEvent;
@@ -21,21 +20,23 @@ import javax.slee.nullactivity.NullActivityContextInterfaceFactory;
 import javax.slee.nullactivity.NullActivityFactory;
 import javax.xml.bind.JAXBContext;
 
+import org.mobicents.slee.ChildRelationExt;
+import org.mobicents.slee.SbbContextExt;
+import org.mobicents.slee.enabler.sip.SubscriptionStatus;
+import org.mobicents.slee.enabler.sip.TerminationReason;
 import org.mobicents.slee.enabler.userprofile.jpa.jmx.UserProfileControlManagement;
 import org.mobicents.slee.enabler.xdmc.XDMClientChildSbbLocalObject;
-import org.mobicents.slee.enabler.xdmc.XDMClientParentSbbLocalObject;
 import org.mobicents.slee.enabler.xdmc.jaxb.xcapdiff.XcapDiff;
+import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Event;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
-import org.mobicents.slee.sippresence.client.PresenceClientControlParentSbbLocalObject;
-import org.mobicents.slee.sippresence.client.PresenceClientControlSbbLocalObject;
 import org.mobicents.slee.xdm.server.ServerConfiguration;
 import org.mobicents.xcap.client.uri.DocumentSelectorBuilder;
 import org.mobicents.xcap.client.uri.UriBuilder;
 import org.openxdm.xcap.client.appusage.resourcelists.jaxb.EntryType;
-import org.openxdm.xcap.client.appusage.resourcelists.jaxb.ListType;
 import org.openxdm.xcap.client.appusage.resourcelists.jaxb.EntryType.DisplayName;
+import org.openxdm.xcap.client.appusage.resourcelists.jaxb.ListType;
 import org.openxdm.xcap.client.appusage.rlsservices.jaxb.ObjectFactory;
 import org.openxdm.xcap.client.appusage.rlsservices.jaxb.PackagesType;
 import org.openxdm.xcap.client.appusage.rlsservices.jaxb.RlsServices;
@@ -59,7 +60,20 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 	
 	// --- PRESENCE CLIENT CHILD SBB
 
-	public abstract ChildRelation getPresenceClientControlSbbChildRelation();
+	public abstract ChildRelationExt getSubscriptionControlChildRelation();
+
+	private SubscriptionClientControlSbbLocalObject getSubscriptionControlChildSbb() {
+		SubscriptionClientControlSbbLocalObject childSbb = (SubscriptionClientControlSbbLocalObject) getSubscriptionControlChildRelation().get(ChildRelationExt.DEFAULT_CHILD_NAME);
+		if (childSbb == null) {
+			try {
+				childSbb = (SubscriptionClientControlSbbLocalObject) getSubscriptionControlChildRelation()
+						.create(ChildRelationExt.DEFAULT_CHILD_NAME);
+			} catch (Throwable e) {
+				tracer.severe("failed to create child",e);
+			}			
+		}
+		return childSbb;
+	}
 
 	private URI buildRLSServicesURI() {
 		String documentSelector = DocumentSelectorBuilder.getUserDocumentSelectorBuilder("rls-services",notifier,"index").toPercentEncodedString();
@@ -74,56 +88,15 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 		}
 	}
 
-	private PresenceClientControlSbbLocalObject getPresenceClientControlSbb() {
-		
-		final ChildRelation childRelation = getPresenceClientControlSbbChildRelation();
-		if (childRelation.isEmpty()) {
-			try {
-				PresenceClientControlSbbLocalObject sbb = (PresenceClientControlSbbLocalObject) childRelation.create();
-				sbb.setParentSbb((PresenceClientControlParentSbbLocalObject) sbbContext.getSbbLocalObject());
-				return sbb;
-			} catch (Exception e) {
-				tracer.severe("Failed to create child sbb", e);
-				return null;
-			}
-		}
-		else {
-			return (PresenceClientControlSbbLocalObject) childRelation.iterator().next();
-		}
+	protected RLSExampleSubscriberParentSbbLocalObject getParent() {
+		return (RLSExampleSubscriberParentSbbLocalObject) sbbContext.getSbbLocalObject().getParent();
 	}
 
 	// --- XDM CLIENT CHILD SBB
 	
-	public abstract ChildRelation getXDMClientChildRelation();
-
-	public XDMClientChildSbbLocalObject getXDMClientChildSbb() {
-		final ChildRelation childRelation = getXDMClientChildRelation();
-		if (childRelation.isEmpty()) {
-			try {
-				XDMClientChildSbbLocalObject sbb = (XDMClientChildSbbLocalObject) childRelation.create();
-				sbb.setParentSbb((XDMClientParentSbbLocalObject) sbbContext.getSbbLocalObject());
-				return sbb;
-			} catch (Exception e) {
-				tracer.severe("Failed to create child sbb", e);
-				return null;
-			}
-		}
-		else {
-			return (XDMClientChildSbbLocalObject) childRelation.iterator().next();
-		}
-	}
-	
-	// --- CMPs
-
-	public abstract void setParentSbbCMP(RLSExampleSubscriberParentSbbLocalObject value);
-
-	public abstract RLSExampleSubscriberParentSbbLocalObject getParentSbbCMP();
+	public abstract ChildRelationExt getXDMClientChildRelation();
 	
 	// --- SBB LOCAL OBJECT
-	
-	public void setParentSbb(RLSExampleSubscriberParentSbbLocalObject parentSbb) {
-		setParentSbbCMP(parentSbb);
-	}
 	
 	private EntryType createEntryType(String uri) {
 		EntryType entryType = new EntryType();
@@ -168,11 +141,11 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 	public void start(String[] entryURIs) {
 		try {
 			UserProfileControlManagement.getInstance().addUser(notifier,notifierPassword);
-			XDMClientChildSbbLocalObject xdm = getXDMClientChildSbb();
+			XDMClientChildSbbLocalObject xdm = (XDMClientChildSbbLocalObject) getXDMClientChildRelation().create(ChildRelationExt.DEFAULT_CHILD_NAME);
 			xdm.put(uri, "application/rls-services+xml", getRlsServices(entryURIs).getBytes("UTF-8"),notifier);			
 		} catch (Exception e) {
 			tracer.severe(e.getMessage(), e);
-			getParentSbbCMP().subscriberNotStarted();
+			getParent().subscriberNotStarted();
 		}
 	}
 
@@ -189,15 +162,20 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 			String eTag) {
 		tracer.info("Response to the insertion of the rls services document: status="+responseCode+",content="+responseContent);
 		if (responseCode != 200 && responseCode != 201) {			
-			getParentSbbCMP().subscriberNotStarted();
+			getParent().subscriberNotStarted();
 		}
 		else {			
 			// now subscribe the presence of it
-			getPresenceClientControlSbb().newSubscription(subscriber, "...", notifier, eventPackage, getSubscriptionId(), expires);			
+			try {
+				getSubscriptionControlChildSbb().subscribe(subscriber, "...", notifier, eventPackage, getSubscriptionId(), expires,null,null,null);
+			} catch (Throwable e) {
+				tracer.severe("failed to subscribe presence",e);
+			}			
 		}
 	}
-		
-	public void newSubscriptionOk(String subscriber, String notifier,
+	
+	@Override
+	public void subscribeOk(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int expires,
 			int responseCode) {
 		
@@ -215,7 +193,7 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 			timerFacility.setTimer(aci, null, System.currentTimeMillis() + (expires-1)
 					* 1000, (expires-1) * 1000, 0, timerOptions);
 
-			getParentSbbCMP().subscriberStarted();
+			getParent().subscriberStarted();
 		}
 		catch (Exception e) {
 			tracer.severe(e.getMessage(),e);
@@ -225,7 +203,7 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 	
 	private void deleteRlsServices() {
 		try {
-			XDMClientChildSbbLocalObject xdm = getXDMClientChildSbb();
+			XDMClientChildSbbLocalObject xdm = (XDMClientChildSbbLocalObject) getXDMClientChildRelation().get(ChildRelationExt.DEFAULT_CHILD_NAME);
 			xdm.delete(uri,notifier);			
 		} catch (Exception e) {
 			tracer.severe(e.getMessage(), e);			
@@ -233,7 +211,8 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 		UserProfileControlManagement.getInstance().removeUser(notifier);
 	}
 	
-	public void newSubscriptionError(String subscriber, String notifier,
+	@Override
+	public void subscribeError(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int error) {
 		tracer.info("error on subscribe: error=" + error);
 		deleteRlsServices();		
@@ -261,38 +240,41 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 			catch (Exception e) {
 				// ignore
 			}
-			getPresenceClientControlSbb().newSubscription(subscriber, "...", notifier, eventPackage, getSubscriptionId(), expires);
+			getSubscriptionControlChildSbb().subscribe(subscriber, "...", notifier, eventPackage, getSubscriptionId(), expires,null,null,null);
 		}
 	}
 	
 	public void onTimerEvent(TimerEvent event, ActivityContextInterface aci) {
 		// refresh subscription
-		getPresenceClientControlSbb().refreshSubscription(subscriber, notifier, eventPackage, getSubscriptionId(), expires);
+		getSubscriptionControlChildSbb().resubscribe(subscriber, notifier, eventPackage, getSubscriptionId(), expires);
 	}
 
-	public void refreshSubscriptionOk(String subscriber, String notifier,
+	@Override
+	public void resubscribeOk(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int expires) {
 		tracer.info("resubscribe Ok : expires=" + expires);
-
 	}
 
-	public void refreshSubscriptionError(String subscriber, String notifier,
+	@Override
+	public void resubscribeError(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int error) {
 		tracer.info("error on resubscribe: error=" + error);
 		deleteRlsServices();
 	}
 
 	public void stop() {
-		getPresenceClientControlSbb().removeSubscription(subscriber, notifier, eventPackage, getSubscriptionId());
+		getSubscriptionControlChildSbb().unsubscribe(subscriber, notifier, eventPackage, getSubscriptionId());
 		deleteRlsServices();
 	}
 	
-	public void removeSubscriptionError(String subscriber, String notifier,
+	@Override
+	public void unsubscribeError(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int error) {
 		tracer.info("error on unsubscribe: error=" + error);		
 	}
 	
-	public void removeSubscriptionOk(String subscriber, String notifier,
+	@Override
+	public void unsubscribeOk(String subscriber, String notifier,
 			String eventPackage, String subscriptionId) {
 		tracer.info("unsubscribe Ok");		
 	}
@@ -300,7 +282,7 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 	@Override
 	public void deleteResponse(URI uri, int responseCode,
 			String responseContent, String eTag) {
-		getParentSbbCMP().subscriberStopped();
+		getParent().subscriberStopped();
 	}
 	
 	// UNUSED XDM CLIENT ENABLER METHODS
@@ -329,21 +311,7 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 	}
 	
 	@Override
-	public void subscribeSucceed(int arg0, XDMClientChildSbbLocalObject arg1,
-			URI arg2) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	@Override
-	public void subscriptionNotification(XcapDiff arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	@Override
-	public void subscriptionTerminated(XDMClientChildSbbLocalObject arg0,
-			URI arg1) {
+	public void subscriptionNotification(XcapDiff arg0, SubscriptionStatus arg1) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -356,90 +324,15 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 	}
 	
 	@Override
-	public void unsubscribeSucceed(int arg0, XDMClientChildSbbLocalObject arg1,
-			URI arg2) {
+	public void subscriptionTerminated(XDMClientChildSbbLocalObject arg0,
+			URI arg1, TerminationReason arg2) {
 		// TODO Auto-generated method stub
 		
 	}
-	
-	// UNUSED PRESENCE CLIENT ENABLER METHODS
-	
-	/* (non-Javadoc)
-	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#modifyPublicationError(java.lang.Object, int)
-	 */
-	@Override
-	public void modifyPublicationError(Object requestId, int error) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#modifyPublicationOk(java.lang.Object, java.lang.String, int)
-	 */
-	@Override
-	public void modifyPublicationOk(Object requestId, String eTag, int expires) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#newPublicationError(java.lang.Object, int)
-	 */
-	@Override
-	public void newPublicationError(Object requestId, int error) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#newPublicationOk(java.lang.Object, java.lang.String, int)
-	 */
-	@Override
-	public void newPublicationOk(Object requestId, String eTag, int expires) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#refreshPublicationError(java.lang.Object, int)
-	 */
-	@Override
-	public void refreshPublicationError(Object requestId, int error) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#refreshPublicationOk(java.lang.Object, java.lang.String, int)
-	 */
-	@Override
-	public void refreshPublicationOk(Object requestId, String eTag, int expires) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#removePublicationError(java.lang.Object, int)
-	 */
-	@Override
-	public void removePublicationError(Object requestId, int error) {
-		// TODO Auto-generated method stub
-		
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.mobicents.slee.sippresence.client.PresenceClientControlParent#removePublicationOk(java.lang.Object)
-	 */
-	@Override
-	public void removePublicationOk(Object requestId) {
-		// TODO Auto-generated method stub
-		
-	}
-		
 	
 	// --- SBB OBJECT
 
-	private SbbContext sbbContext = null; // This SBB's context
+	private SbbContextExt sbbContext = null; // This SBB's context
 
 	private TimerFacility timerFacility = null;
 	private NullActivityContextInterfaceFactory nullACIFactory;
@@ -450,7 +343,7 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 	 */
 	public void setSbbContext(SbbContext sbbContext) {
 
-		this.sbbContext = sbbContext;
+		this.sbbContext = (SbbContextExt) sbbContext;
 		tracer = sbbContext.getTracer("RLSExampleSubscriberSbb");
 		try {
 			Context context = (Context) new InitialContext()

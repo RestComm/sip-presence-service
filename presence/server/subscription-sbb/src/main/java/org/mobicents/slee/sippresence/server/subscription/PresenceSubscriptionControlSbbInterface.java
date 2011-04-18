@@ -22,11 +22,13 @@ import org.mobicents.slee.sippresence.server.subscription.rules.PublishedSphereS
  */
 public interface PresenceSubscriptionControlSbbInterface extends ImplementedSubscriptionControl, PublishedSphereSource {
 
+	@SuppressWarnings("rawtypes")
 	public HashMap getCombinedRules();
 
+	@SuppressWarnings("rawtypes")
 	public void setCombinedRules(HashMap combinedRules);
 
-	public ImplementedSubscriptionControlParentSbbLocalObject getParentSbbCMP();
+	public ImplementedSubscriptionControlParentSbbLocalObject getParentSbb();
 
 	public PresRulesActivityContextInterfaceFactory getPresRulesACIF();
 	

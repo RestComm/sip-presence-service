@@ -12,9 +12,9 @@
 		
 	<dependencies>
 		<dependency>
-			<groupId>${pom.groupId}</groupId>
-			<version>${pom.version}</version>	
-			<artifactId>sip-presence-client-sbb-local-object</artifactId>
+			<artifactId>sip-event-client-publication-sbb-local-object</artifactId>
+			<groupId>org.mobicents.servers.sipevent</groupId>
+			<version>${pom.version}</version>
 		</dependency>
 		 <dependency>
 			<artifactId>user-profile-jmx</artifactId>				

@@ -4,13 +4,13 @@ import java.io.ByteArrayInputStream;
 
 import javax.slee.ActivityContextInterface;
 import javax.slee.ActivityEndEvent;
-import javax.slee.ChildRelation;
 import javax.slee.RolledBackContext;
 import javax.slee.Sbb;
 import javax.slee.SbbContext;
 import javax.slee.facilities.Tracer;
 import javax.slee.serviceactivity.ServiceActivity;
 
+import org.mobicents.slee.ChildRelationExt;
 import org.mobicents.slee.xdm.server.ServerConfiguration;
 import org.mobicents.xdm.server.appusage.AppUsage;
 import org.mobicents.xdm.server.appusage.AppUsageAddedEvent;
@@ -71,25 +71,23 @@ public abstract class XCAPCapsAppUsageSbb implements Sbb {
 	public void sbbRolledBack(RolledBackContext sbbRolledBack) {		
 	}
 	
-	public abstract ChildRelation getRequestProcessorChildRelation();
+	public abstract ChildRelationExt getRequestProcessorChildRelation();
 
 	private RequestProcessorSbbLocalObject getRequestProcessor()
 			throws InternalServerErrorException {
 		// get the child relation
-		ChildRelation childRelation = getRequestProcessorChildRelation();
+		ChildRelationExt childRelation = getRequestProcessorChildRelation();
+		RequestProcessorSbbLocalObject sbb = (RequestProcessorSbbLocalObject) childRelation.get(ChildRelationExt.DEFAULT_CHILD_NAME);
 		// creates the child sbb if does not exist
-		if (childRelation.isEmpty()) {
+		if (sbb == null) {
 			try {
-				return (RequestProcessorSbbLocalObject) childRelation.create();
+				sbb = (RequestProcessorSbbLocalObject) childRelation.create(ChildRelationExt.DEFAULT_CHILD_NAME);
 			} catch (Exception e) {
 				tracer.severe("unable to create the child sbb.", e);
 				throw new InternalServerErrorException("");
 			}
-		} else {
-			// return the child sbb
-			return (RequestProcessorSbbLocalObject) childRelation.iterator()
-					.next();
-		}
+		} 
+		return sbb;
 	}
 
 	// EVENT HANDLERS

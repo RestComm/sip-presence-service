@@ -2,11 +2,10 @@ package org.mobicents.slee.sipevent.server.internal;
 
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
+import javax.slee.facilities.Tracer;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
-import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
@@ -19,16 +18,18 @@ import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
  */
 public class RefreshInternalSubscriptionHandler {
 
-	private static Logger logger = Logger
-			.getLogger(SubscriptionControlSbb.class);
-
+	private static Tracer tracer;
+	
 	private InternalSubscriptionHandler internalSubscriptionHandler;
 
 	public RefreshInternalSubscriptionHandler(
 			InternalSubscriptionHandler sipSubscriptionHandler) {
 		this.internalSubscriptionHandler = sipSubscriptionHandler;
+		if (tracer == null) {
+			tracer = internalSubscriptionHandler.sbb.getSbbContext().getTracer(getClass().getSimpleName());
+		}
 	}
-
+	
 	/**
 	 * Refreshes an internal subscription
 	 * 
@@ -56,7 +57,7 @@ public class RefreshInternalSubscriptionHandler {
 
 		if (subscription == null) {
 			// subscription does not exists
-			sbb.getParentSbbCMP().resubscribeError(subscriber, notifier,
+			sbb.getParentSbb().resubscribeError(subscriber, notifier,
 					eventPackage, subscriptionId,
 					Response.CONDITIONAL_REQUEST_FAILED);
 			return;
@@ -71,7 +72,7 @@ public class RefreshInternalSubscriptionHandler {
 		} else {
 			// expires is > 0 but < min expires, respond (Interval
 			// Too Brief) with Min-Expires = MINEXPIRES
-			sbb.getParentSbbCMP().resubscribeError(subscriber, notifier,
+			sbb.getParentSbb().resubscribeError(subscriber, notifier,
 					eventPackage, subscriptionId, Response.INTERVAL_TOO_BRIEF);
 			return;
 		}
@@ -79,10 +80,10 @@ public class RefreshInternalSubscriptionHandler {
 		ActivityContextInterface aci = sbb.getActivityContextNamingfacility()
 				.lookup(subscriptionKey.toString());
 		if (aci == null) {
-			logger
-					.error("Failed to retrieve aci for internal subscription with key "
+			tracer
+					.severe("Failed to retrieve aci for internal subscription with key "
 							+ subscriptionKey);
-			sbb.getParentSbbCMP().resubscribeError(subscriber, notifier,
+			sbb.getParentSbb().resubscribeError(subscriber, notifier,
 					eventPackage, subscriptionId,
 					Response.SERVER_INTERNAL_ERROR);
 			return;
@@ -96,7 +97,7 @@ public class RefreshInternalSubscriptionHandler {
 		subscription.refresh(expires);
 
 		// send OK response
-		internalSubscriptionHandler.sbb.getParentSbbCMP().resubscribeOk(
+		internalSubscriptionHandler.sbb.getParentSbb().resubscribeOk(
 				subscriber, notifier, eventPackage, subscriptionId, expires);
 
 		if (!subscription.getResourceList()) {
@@ -110,8 +111,8 @@ public class RefreshInternalSubscriptionHandler {
 		internalSubscriptionHandler.sbb
 				.setSubscriptionTimerAndPersistSubscription(subscription, expires + 1, aci);
 
-		if (logger.isInfoEnabled()) {
-			logger.info("Refreshed " + subscription + " for " + expires
+		if (tracer.isInfoEnabled()) {
+			tracer.info("Refreshed " + subscription + " for " + expires
 					+ " seconds");
 		}
 		

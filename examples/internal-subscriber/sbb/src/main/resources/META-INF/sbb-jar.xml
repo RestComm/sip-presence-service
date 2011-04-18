@@ -20,9 +20,6 @@
             <sbb-abstract-class reentrant="True">
                 <sbb-abstract-class-name>org.mobicents.slee.sipevent.examples.InternalSubscriberExampleSbb</sbb-abstract-class-name>
                 <cmp-field>
-                	<cmp-field-name>subscriptionControlChildSbbCMP</cmp-field-name>
-                </cmp-field>    
-                <cmp-field>
                 	<cmp-field-name>subscriptionId</cmp-field-name>
                 </cmp-field>
                 <get-child-relation-method>                	

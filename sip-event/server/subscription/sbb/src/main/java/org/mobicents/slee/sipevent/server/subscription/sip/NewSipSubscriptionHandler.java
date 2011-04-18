@@ -11,12 +11,11 @@ import javax.sip.header.FromHeader;
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
 import javax.slee.SbbLocalObject;
+import javax.slee.facilities.Tracer;
 
 import net.java.slee.resource.sip.DialogActivity;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
-import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
 import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
@@ -30,14 +29,16 @@ import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
  */
 public class NewSipSubscriptionHandler {
 
-	private static Logger logger = Logger
-			.getLogger(SubscriptionControlSbb.class);
+	private static Tracer tracer;
 
 	private SipSubscriptionHandler sipSubscriptionHandler;
 
 	public NewSipSubscriptionHandler(
 			SipSubscriptionHandler sipSubscriptionHandler) {
 		this.sipSubscriptionHandler = sipSubscriptionHandler;
+		if (tracer == null) {
+			tracer = sipSubscriptionHandler.sbb.getSbbContext().getTracer(getClass().getSimpleName());
+		}
 	}
 
 	/**
@@ -83,7 +84,7 @@ public class NewSipSubscriptionHandler {
 				dialog = sipSubscriptionHandler.sbb.getSipProvider()
 						.getNewDialog(event.getServerTransaction());				
 			} catch (Exception e) {
-				logger.error("Can't create dialog", e);
+				tracer.severe("Can't create dialog", e);
 				// cleanup
 				try {
 					Response response = sipSubscriptionHandler.sbb
@@ -94,7 +95,7 @@ public class NewSipSubscriptionHandler {
 							.addContactHeader(response);
 					event.getServerTransaction().sendResponse(response);					
 				} catch (Exception f) {
-					logger.error("Can't send RESPONSE", f);
+					tracer.severe("Can't send RESPONSE", f);
 				}
 				return;
 			}
@@ -127,7 +128,7 @@ public class NewSipSubscriptionHandler {
 					response.addHeader(sipSubscriptionHandler.sbb.getHeaderFactory().createRequireHeader("eventlist"));
 					event.getServerTransaction().sendResponse(response);					
 				} catch (Exception f) {
-					logger.error("Can't send RESPONSE", f);
+					tracer.severe("Can't send RESPONSE", f);
 				}
 				return;			
 			}
@@ -228,8 +229,8 @@ public class NewSipSubscriptionHandler {
 			} else {
 				response = sipSubscriptionHandler.addContactHeader(response);
 				serverTransaction.sendResponse(response);
-				if (logger.isInfoEnabled()) {
-					logger.info("Subscription: subscriber=" + subscriber
+				if (tracer.isInfoEnabled()) {
+					tracer.info("Subscription: subscriber=" + subscriber
 							+ ",notifier=" + notifier + ",eventPackage="
 							+ key.getEventPackage() + " not authorized ("
 							+ responseCode + ")");
@@ -237,7 +238,7 @@ public class NewSipSubscriptionHandler {
 				return;
 			}
 		} catch (Exception e) {
-			logger.error("Can't send new subscription request's reponse", e);
+			tracer.severe("Can't send new subscription request's reponse", e);
 			// cleanup
 			try {
 				Response response = sipSubscriptionHandler.sbb
@@ -247,7 +248,7 @@ public class NewSipSubscriptionHandler {
 				response = sipSubscriptionHandler.addContactHeader(response);
 				serverTransaction.sendResponse(response);				
 			} catch (Exception f) {
-				logger.error("Can't send RESPONSE", f);
+				tracer.severe("Can't send RESPONSE", f);
 			}
 			return;
 		}
@@ -265,7 +266,7 @@ public class NewSipSubscriptionHandler {
 				.createAndSendNotify(dataSource, subscription, dialog,
 						childSbb);
 			} catch (Exception e) {
-				logger.error("failed to notify subscriber", e);
+				tracer.severe("failed to notify subscriber", e);
 			}
 		}
 		
@@ -279,7 +280,7 @@ public class NewSipSubscriptionHandler {
 			sipSubscriptionHandler.sbb.getActivityContextNamingfacility().bind(
 					dialogAci, key.toString());
 		} catch (Exception e) {
-			logger.error("failed to bind a name to dialog's aci", e);
+			tracer.severe("failed to bind a name to dialog's aci", e);
 		}
 
 		// set new timer
@@ -295,8 +296,8 @@ public class NewSipSubscriptionHandler {
 			}
 		}
 		
-		if (logger.isInfoEnabled()) {
-			logger.info("Created " + subscription);
+		if (tracer.isInfoEnabled()) {
+			tracer.info("Created " + subscription);
 		}
 	}
 }

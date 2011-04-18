@@ -6,11 +6,11 @@ import java.security.NoSuchAlgorithmException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.slee.ActivityContextInterface;
-import javax.slee.ChildRelation;
 import javax.slee.RolledBackContext;
 import javax.slee.SbbContext;
 import javax.slee.facilities.Tracer;
 
+import org.mobicents.slee.ChildRelationExt;
 import org.mobicents.slee.enabler.userprofile.UserProfile;
 import org.mobicents.slee.enabler.userprofile.UserProfileControlSbbLocalObject;
 import org.mobicents.slee.xdm.server.ServerConfiguration;
@@ -55,11 +55,11 @@ import org.openxdm.xcap.server.slee.auth.RFC2617ChallengeParamGenerator;
  *         SHALL check whether an XDM Client identity has been inserted in
  *         X-3GPP-Intended-Identity header of HTTP request.
  * 
- *         • If the X-3GPP-Intended-Identity is included , the Aggregation Proxy
+ *         ï¿½ If the X-3GPP-Intended-Identity is included , the Aggregation Proxy
  *         SHALL check the value in the header is allowed to be used by the
  *         authenticated identity.
  * 
- *         • If the X-3GPP-Intended-Identity is not included, the Aggregation
+ *         ï¿½ If the X-3GPP-Intended-Identity is not included, the Aggregation
  *         Proxy SHALL insert the authenticated identity in the
  *         X-3GPP-Asserted-Identity header of the HTTP request.
  * 
@@ -478,12 +478,12 @@ public abstract class AuthenticationProxySbb implements javax.slee.Sbb,
 	
 	// -- user profile enabler child relation
 	
-	public abstract ChildRelation getUserProfileControlChildRelation();
+	public abstract ChildRelationExt getUserProfileControlChildRelation();
 
 	protected UserProfileControlSbbLocalObject getUserProfileControlSbb() {
 			try {
 				return (UserProfileControlSbbLocalObject) getUserProfileControlChildRelation()
-						.create();
+						.create(ChildRelationExt.DEFAULT_CHILD_NAME);
 			} catch (Exception e) {
 				logger.severe("Failed to create child sbb", e);
 				return null;

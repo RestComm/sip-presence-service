@@ -7,11 +7,11 @@ import java.util.List;
 
 import javax.sip.header.ContentTypeHeader;
 import javax.slee.ActivityContextInterface;
+import javax.slee.facilities.Tracer;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
 import org.mobicents.slee.sipevent.server.subscription.WInfoNotifyEvent;
@@ -30,13 +30,15 @@ import org.mobicents.slee.sipevent.server.subscription.winfo.pojo.Watcherinfo;
  */
 public class WInfoSubscriptionHandler {
 
-	private static Logger logger = Logger
-			.getLogger(SubscriptionControlSbb.class);
+	private static Tracer tracer;
 
 	private SubscriptionControlSbb sbb;
 
 	public WInfoSubscriptionHandler(SubscriptionControlSbb sbb) {
 		this.sbb = sbb;
+		if (tracer == null) {
+			tracer = sbb.getSbbContext().getTracer(getClass().getSimpleName());
+		}
 	}
 
 	public void notifyWinfoSubscriptions(SubscriptionControlDataSource dataSource,Subscription subscription,
@@ -62,15 +64,15 @@ public class WInfoSubscriptionHandler {
 							sbb.fireWInfoNotifyEvent(new WInfoNotifyEvent(winfoSubscription.getKey(), subscription.getKey(), createWInfoWatcher(subscription)), winfoAci, null);							
 						} else {
 							// aci is gone, cleanup subscription
-							logger
-									.warn("Unable to find subscription aci to notify subscription "
+							tracer
+									.warning("Unable to find subscription aci to notify subscription "
 											+ winfoSubscription.getKey()
 											+ ". Removing subscription data");
 							sbb.removeSubscriptionData(dataSource,winfoSubscription, null,
 									null, childSbb);
 						}
 					} catch (Exception e) {
-						logger.error("failed to notify winfo subscriber", e);
+						tracer.severe("failed to notify winfo subscriber", e);
 					}
 				}
 			}
@@ -84,7 +86,7 @@ public class WInfoSubscriptionHandler {
 			return JAXBContext
 					.newInstance("org.mobicents.slee.sipevent.server.subscription.winfo.pojo");
 		} catch (JAXBException e) {
-			logger.error("failed to create winfo jaxb context");
+			tracer.severe("failed to create winfo jaxb context");
 			return null;
 		}
 	}
@@ -93,7 +95,7 @@ public class WInfoSubscriptionHandler {
 		try {
 			return winfoJAXBContext.createMarshaller();
 		} catch (JAXBException e) {
-			logger.error("failed to create winfo unmarshaller", e);
+			tracer.severe("failed to create winfo unmarshaller", e);
 			return null;
 		}
 	}
@@ -135,11 +137,11 @@ public class WInfoSubscriptionHandler {
 			result = stringWriter.toString();
 			stringWriter.close();
 		} catch (Exception e) {
-			logger.error("failed to marshall winfo", e);
+			tracer.severe("failed to marshall winfo", e);
 			try {
 				stringWriter.close();
 			} catch (Exception f) {
-				logger.error("failed to close winfo string writer", f);
+				tracer.severe("failed to close winfo string writer", f);
 			}
 		}
 
@@ -203,7 +205,7 @@ public class WInfoSubscriptionHandler {
 			return sbb.getHeaderFactory().createContentTypeHeader("application",
 					"watcherinfo+xml");
 		} catch (ParseException e) {
-			logger.error(e.getMessage(), e);
+			tracer.severe("failure creating content type header", e);
 			return null;
 		}
 	}

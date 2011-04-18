@@ -8,12 +8,12 @@ import javax.naming.NamingException;
 import javax.sip.ServerTransaction;
 import javax.sip.header.HeaderFactory;
 import javax.slee.ActivityContextInterface;
-import javax.slee.ChildRelation;
 import javax.slee.CreateException;
 import javax.slee.RolledBackContext;
 import javax.slee.Sbb;
 import javax.slee.SbbContext;
 import javax.slee.SbbLocalObject;
+import javax.slee.facilities.Tracer;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -21,7 +21,8 @@ import javax.xml.bind.Unmarshaller;
 
 import net.java.slee.resource.sip.SleeSipProvider;
 
-import org.apache.log4j.Logger;
+import org.mobicents.slee.ChildRelationExt;
+import org.mobicents.slee.SbbContextExt;
 import org.mobicents.slee.sipevent.server.publication.PublicationControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
@@ -42,8 +43,7 @@ import org.mobicents.slee.sippresence.server.presrulescache.RulesetUpdatedEvent;
 public abstract class PresenceSubscriptionControlSbb implements Sbb,
 		PresenceSubscriptionControlSbbInterface {
 
-	private static Logger logger = Logger
-			.getLogger(PresenceSubscriptionControlSbb.class);
+	private static Tracer tracer;
 
 	private static final SipPresenceServerManagement configuration = SipPresenceServerManagement.getInstance();
 	private static final PresenceSubscriptionControl presenceSubscriptionControl = new PresenceSubscriptionControl();
@@ -66,10 +66,13 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 	/**
 	 * SbbObject's sbb context
 	 */
-	private SbbContext sbbContext;
+	private SbbContextExt sbbContext;
 
 	public void setSbbContext(SbbContext sbbContext) {
-		this.sbbContext = sbbContext;
+		this.sbbContext = (SbbContextExt) sbbContext;
+		if (tracer == null) {
+			tracer = sbbContext.getTracer(getClass().getSimpleName());
+		}
 		// retrieve factories, facilities & providers
 		try {
 			Context context = (Context) new InitialContext()
@@ -87,7 +90,7 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 			presRulesACIF = (PresRulesActivityContextInterfaceFactory) context
 				.lookup("slee/resources/presence/presrulescache/1.0/acif");
 		} catch (NamingException e) {
-			logger.error("Can't set sbb context.", e);
+			tracer.severe("Can't set sbb context.", e);
 		}
 	}
 
@@ -97,14 +100,9 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 		return true;
 	};
 	
-	public abstract ImplementedSubscriptionControlParentSbbLocalObject getParentSbbCMP();
-
-	public abstract void setParentSbbCMP(
-			ImplementedSubscriptionControlParentSbbLocalObject sbbLocalObject);
-
-	public void setParentSbb(
-			ImplementedSubscriptionControlParentSbbLocalObject sbbLocalObject) {
-		setParentSbbCMP(sbbLocalObject);
+	@Override
+	public ImplementedSubscriptionControlParentSbbLocalObject getParentSbb() {
+		return (ImplementedSubscriptionControlParentSbbLocalObject) sbbContext.getSbbLocalObject().getParent();
 	}
 
 	public String[] getEventPackages() {
@@ -147,7 +145,7 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 		try {
 			return jaxbContext.createMarshaller();
 		} catch (JAXBException e) {
-			logger.error("failed to create marshaller", e);
+			tracer.severe("failed to create marshaller", e);
 			return null;
 		}
 	}
@@ -168,31 +166,28 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 	// ------------ PresenceSubscriptionControlSbbLocalObject
 
 	// --- PUBLICATION CHILD SBB
-	public abstract ChildRelation getPublicationControlChildRelation();
-
-	public abstract PublicationControlSbbLocalObject getPublicationControlChildSbbCMP();
-
-	public abstract void setPublicationControlChildSbbCMP(
-			PublicationControlSbbLocalObject value);
+	public abstract ChildRelationExt getPublicationControlChildRelation();
 
 	public PublicationControlSbbLocalObject getPublicationChildSbb() {
-		PublicationControlSbbLocalObject childSbb = getPublicationControlChildSbbCMP();
+		ChildRelationExt childRelationExt = getPublicationControlChildRelation();
+		PublicationControlSbbLocalObject childSbb = (PublicationControlSbbLocalObject) childRelationExt.get(ChildRelationExt.DEFAULT_CHILD_NAME);
 		if (childSbb == null) {
 			try {
-				childSbb = (PublicationControlSbbLocalObject) getPublicationControlChildRelation()
-						.create();
+				childSbb = (PublicationControlSbbLocalObject) childRelationExt
+						.create(ChildRelationExt.DEFAULT_CHILD_NAME);
 			} catch (Exception e) {
-				logger.error("Failed to create child sbb", e);
+				tracer.severe("Failed to create child sbb", e);
 				return null;
-			}
-			setPublicationControlChildSbbCMP(childSbb);
+			}			
 		}
 		return childSbb;
 	}
 
 	// --- COMBINED RULES CMP
+	@SuppressWarnings("rawtypes")
 	public abstract void setCombinedRules(HashMap rules);
 
+	@SuppressWarnings("rawtypes")
 	public abstract HashMap getCombinedRules();
 
 	public HeaderFactory getHeaderFactory() {
@@ -203,7 +198,7 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 		try {
 			return jaxbContext.createUnmarshaller();
 		} catch (JAXBException e) {
-			logger.error("failed to create unmarshaller", e);
+			tracer.severe("failed to create unmarshaller", e);
 			return null;
 		}
 	}
@@ -228,7 +223,7 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 			return JAXBContext
 					.newInstance(configuration.getJaxbPackageNames());
 		} catch (JAXBException e) {
-			logger.error("failed to create jaxb context");
+			tracer.severe("failed to create jaxb context");
 			return null;
 		}
 	}

@@ -1,12 +1,12 @@
 package org.mobicents.slee.sipevent.server.subscription;
 
-import javax.slee.SbbLocalObject;
+import org.mobicents.slee.SbbLocalObjectExt;
 
 /**
  * 
  * @author martins
  *
  */
-public interface EventListSubscriberParentSbbLocalObject extends SbbLocalObject, EventListSubscriberParent {
+public interface EventListSubscriberParentSbbLocalObject extends SbbLocalObjectExt, EventListSubscriberParent {
 	
 }

@@ -16,8 +16,8 @@
 			<version>${pom.version}</version>
 		</dependency>
 		<dependency>
-			<artifactId>jain-slee</artifactId>
-			<groupId>javax.slee</groupId>			
+			<groupId>org.mobicents.servers.jainslee.api</groupId>
+			<artifactId>jain-slee-11-ext</artifactId>
 		</dependency> 
 	</dependencies>
 	

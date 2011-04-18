@@ -57,7 +57,7 @@ public class PresenceSubscriptionControl {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Failed to create document selector for notifier "+notifier.getUri()+", can't proceed with subscription.");
 			}
-			sbb.getParentSbbCMP().newSubscriptionAuthorization(subscriber,
+			sbb.getParentSbb().newSubscriptionAuthorization(subscriber,
 					subscriberDisplayName, notifier, key, expires,
 					Response.FORBIDDEN,eventList,serverTransaction);
 			return;
@@ -69,7 +69,7 @@ public class PresenceSubscriptionControl {
 			activity = sbb.getPresRulesSbbInterface().getActivity(documentSelector);
 		} catch (StartActivityException e) {
 			logger.error("Failed to start activity, can't proceed, refusing subscription",e);
-			sbb.getParentSbbCMP().newSubscriptionAuthorization(subscriber,
+			sbb.getParentSbb().newSubscriptionAuthorization(subscriber,
 					subscriberDisplayName, notifier, key, expires,
 					Response.FORBIDDEN,eventList,serverTransaction);
 			return;
@@ -95,7 +95,7 @@ public class PresenceSubscriptionControl {
 			}
 			combinedRules.put(new PresRuleCMPKey(subscriber,notifier,key), combinedRule);
 			sbb.setCombinedRules(combinedRules);
-			sbb.getParentSbbCMP().newSubscriptionAuthorization(subscriber,
+			sbb.getParentSbb().newSubscriptionAuthorization(subscriber,
 					subscriberDisplayName, notifier, key, expires,
 					Response.OK,eventList,serverTransaction);
 			return;
@@ -114,11 +114,12 @@ public class PresenceSubscriptionControl {
 			combinedRules.put(new PresRuleCMPKey(subscriber,notifier,key), combinedRule);
 			sbb.setCombinedRules(combinedRules);
 		}
-		sbb.getParentSbbCMP().newSubscriptionAuthorization(subscriber,
+		sbb.getParentSbb().newSubscriptionAuthorization(subscriber,
 				subscriberDisplayName, notifier, key, expires,
 				responseCode,eventList,serverTransaction);
 	}
 
+	@SuppressWarnings("unchecked")
 	public void removingSubscription(Subscription subscription,
 			String presRulesAUID, String presRulesDocumentName, PresenceSubscriptionControlSbbInterface sbb) {
 
@@ -160,6 +161,7 @@ public class PresenceSubscriptionControl {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public void rulesetUpdated(DocumentSelector documentSelector,
 			Ruleset ruleset, PresenceSubscriptionControlSbbInterface sbb) {
 		
@@ -185,7 +187,7 @@ public class PresenceSubscriptionControl {
 				// check permission changed
 				if (oldCombinedRule.getSubHandling().getResponseCode() != newCombinedRule
 						.getSubHandling().getResponseCode()) {
-					sbb.getParentSbbCMP().authorizationChanged(
+					sbb.getParentSbb().authorizationChanged(
 							presRuleCMPKey.getSubscriber(), presRuleCMPKey.getNotifier(), subscriptionKey.getEventPackage(),
 							subscriptionKey.getEventId(),
 							newCombinedRule.getSubHandling().getResponseCode());
@@ -200,6 +202,7 @@ public class PresenceSubscriptionControl {
 	/**
 	 * interface used by rules processor to get sphere for a notifier
 	 */
+	@SuppressWarnings("rawtypes")
 	public String getSphere(String notifier, PresenceSubscriptionControlSbbInterface sbb) {
 
 		// get ridden of notifier uri params, if any
@@ -269,6 +272,7 @@ public class PresenceSubscriptionControl {
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	public Object filterContentPerSubscriber(Subscription subscription, Object unmarshalledContent, PresenceSubscriptionControlSbbInterface sbb) {
 		
 		// get rules for subscriptions on this sbb entity (sip dialog)
@@ -284,8 +288,8 @@ public class PresenceSubscriptionControl {
 			return unmarshalledContent;
 		}
 		
-		final JAXBElement<Presence> jaxbElement = (JAXBElement<Presence>) unmarshalledContent;
-		final Presence presence = jaxbElement.getValue();
+		//final JAXBElement<Presence> jaxbElement = (JAXBElement<Presence>) unmarshalledContent;
+		//final Presence presence = jaxbElement.getValue();
 		// TODO apply transformations, including polite-block (see pres-rules
 		// specs)
 		

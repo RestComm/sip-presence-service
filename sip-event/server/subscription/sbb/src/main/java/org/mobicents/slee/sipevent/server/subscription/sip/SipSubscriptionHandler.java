@@ -17,8 +17,8 @@ import javax.sip.header.ExpiresHeader;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
+import javax.slee.facilities.Tracer;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
@@ -33,8 +33,7 @@ import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
  */
 public class SipSubscriptionHandler {
 
-	private static Logger logger = Logger
-			.getLogger(SubscriptionControlSbb.class);
+	private static Tracer tracer;
 
 	protected SubscriptionControlSbb sbb;
 	private NewSipSubscriptionHandler newSipSubscriptionHandler;
@@ -44,6 +43,9 @@ public class SipSubscriptionHandler {
 
 	public SipSubscriptionHandler(SubscriptionControlSbb sbb) {
 		this.sbb = sbb;
+		if (tracer == null) {
+			tracer = sbb.getSbbContext().getTracer(getClass().getSimpleName());
+		}
 		newSipSubscriptionHandler = new NewSipSubscriptionHandler(this);
 		refreshSipSubscriptionHandler = new RefreshSipSubscriptionHandler(this);
 		removeSipSubscriptionHandler = new RemoveSipSubscriptionHandler(this);
@@ -89,15 +91,15 @@ public class SipSubscriptionHandler {
 						Response.SERVER_INTERNAL_ERROR, event.getRequest());
 				event.getServerTransaction().sendResponse(response);				
 			} catch (Exception f) {
-				logger.error("Can't send error response!", f);
+				tracer.severe("Can't send error response!", f);
 			}
 			return;
 		}
 
 		final SubscriptionControlDataSource dataSource = sbb.getConfiguration().getDataSource();
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("Processing SUBSCRIBE request...");
+		if (tracer.isFineEnabled()) {
+			tracer.fine("Processing SUBSCRIBE request...");
 		}
 
 		// get event header
@@ -199,7 +201,7 @@ public class SipSubscriptionHandler {
 									event.getServerTransaction().sendResponse(
 											response);									
 								} catch (Exception e) {
-									logger.error("Can't send RESPONSE", e);
+									tracer.severe("Can't send RESPONSE", e);
 								}
 								// remove subscription
 								if (subscription.getResourceList()) {
@@ -315,7 +317,7 @@ public class SipSubscriptionHandler {
 			
 			serverTransaction.sendResponse(response);			
 		} catch (Exception e) {
-			logger.error("Can't send response!", e);
+			tracer.severe("Can't send response!", e);
 		}
 	}
 

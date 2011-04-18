@@ -1,8 +1,8 @@
 package org.mobicents.slee.sipevent.examples;
 
-import javax.slee.SbbLocalObject;
+import org.mobicents.slee.SbbLocalObjectExt;
 
-public interface RLSExampleSubscriberParentSbbLocalObject extends RLSExampleSubscriberParent , SbbLocalObject {
+public interface RLSExampleSubscriberParentSbbLocalObject extends RLSExampleSubscriberParent , SbbLocalObjectExt {
 
 	
 	

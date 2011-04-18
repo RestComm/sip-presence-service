@@ -18,6 +18,7 @@ import javax.xml.bind.Unmarshaller;
 import net.java.slee.resource.sip.SleeSipProvider;
 
 import org.apache.log4j.Logger;
+import org.mobicents.slee.SbbContextExt;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
 import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
@@ -58,10 +59,10 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 	// private MessageFactory messageFactory;
 	protected HeaderFactory headerFactory;
 
-	private SbbContext sbbContext;
+	private SbbContextExt sbbContext;
 	
 	public void setSbbContext(SbbContext sbbContext) {
-		this.sbbContext = sbbContext;
+		this.sbbContext = (SbbContextExt) sbbContext;
 		// retrieve factories, facilities & providers
 		try {
 			Context context = (Context) new InitialContext()
@@ -90,16 +91,6 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 	public boolean acceptsEventList() { 
 		return false;
 	};
-	
-	public abstract ImplementedSubscriptionControlParentSbbLocalObject getParentSbbCMP();
-
-	public abstract void setParentSbbCMP(
-			ImplementedSubscriptionControlParentSbbLocalObject sbbLocalObject);
-
-	public void setParentSbb(
-			ImplementedSubscriptionControlParentSbbLocalObject sbbLocalObject) {
-		setParentSbbCMP(sbbLocalObject);
-	}
 
 	public String[] getEventPackages() {
 		return XcapDiffSubscriptionControl.getEventPackages();
@@ -176,11 +167,16 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 		return dataSourceACIF;
 	}
 	
+	@Override
+	public ImplementedSubscriptionControlParentSbbLocalObject getParentSbb() {
+		return (ImplementedSubscriptionControlParentSbbLocalObject) sbbContext.getSbbLocalObject().getParent();
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see org.mobicents.slee.xdm.server.subscription.XcapDiffSubscriptionControlSbbInterface#getSbbContext()
 	 */
-	public SbbContext getSbbContext() {
+	public SbbContextExt getSbbContext() {
 		return sbbContext;
 	}
 	

@@ -1,7 +1,6 @@
 package org.mobicents.slee.sipevent.server.subscription;
 
 import java.text.ParseException;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.naming.Context;
@@ -17,7 +16,6 @@ import javax.sip.message.MessageFactory;
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
 import javax.slee.Address;
-import javax.slee.ChildRelation;
 import javax.slee.CreateException;
 import javax.slee.RolledBackContext;
 import javax.slee.Sbb;
@@ -28,6 +26,7 @@ import javax.slee.facilities.TimerFacility;
 import javax.slee.facilities.TimerID;
 import javax.slee.facilities.TimerOptions;
 import javax.slee.facilities.TimerPreserveMissed;
+import javax.slee.facilities.Tracer;
 import javax.slee.nullactivity.NullActivity;
 import javax.slee.nullactivity.NullActivityContextInterfaceFactory;
 import javax.slee.nullactivity.NullActivityFactory;
@@ -36,17 +35,18 @@ import net.java.slee.resource.sip.DialogActivity;
 import net.java.slee.resource.sip.SipActivityContextInterfaceFactory;
 import net.java.slee.resource.sip.SleeSipProvider;
 
-import org.apache.log4j.Logger;
+import org.mobicents.slee.ChildRelationExt;
+import org.mobicents.slee.SbbContextExt;
 import org.mobicents.slee.sipevent.server.internal.InternalSubscriptionHandler;
 import org.mobicents.slee.sipevent.server.rlscache.RLSServicesCacheActivityContextInterfaceFactory;
 import org.mobicents.slee.sipevent.server.rlscache.RLSServicesCacheSbbInterface;
 import org.mobicents.slee.sipevent.server.rlscache.events.RLSServicesAddedEvent;
 import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
-import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
-import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Event;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
+import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.mobicents.slee.sipevent.server.subscription.eventlist.EventListSubscriptionHandler;
 import org.mobicents.slee.sipevent.server.subscription.eventlist.MultiPart;
 import org.mobicents.slee.sipevent.server.subscription.jmx.SubscriptionControlManagement;
@@ -62,13 +62,10 @@ import org.mobicents.slee.sipevent.server.subscription.winfo.WInfoSubscriptionHa
 public abstract class SubscriptionControlSbb implements Sbb,
 		SubscriptionControl {
 
-	private static final Logger logger = Logger
-			.getLogger(SubscriptionControlSbb.class);
-
-	private final InternalSubscriptionHandler internalSubscriptionHandler = new InternalSubscriptionHandler(this);
-	private final SipSubscriptionHandler sipSubscriptionHandler = new SipSubscriptionHandler(this);
-	private final WInfoSubscriptionHandler wInfoSubscriptionHandler = new WInfoSubscriptionHandler(this);
-	private final EventListSubscriptionHandler eventListSubscriptionHandler = new EventListSubscriptionHandler(this);
+	private InternalSubscriptionHandler internalSubscriptionHandler;
+	private SipSubscriptionHandler sipSubscriptionHandler;
+	private WInfoSubscriptionHandler wInfoSubscriptionHandler;
+	private EventListSubscriptionHandler eventListSubscriptionHandler;
 	
 	private RLSServicesCacheSbbInterface rlsServicesCacheRASbbInterface; 
 	private RLSServicesCacheActivityContextInterfaceFactory rlsServicesCacheACIF;
@@ -95,8 +92,9 @@ public abstract class SubscriptionControlSbb implements Sbb,
 	/**
 	 * SbbObject's sbb context
 	 */
-	private SbbContext sbbContext;
-
+	private SbbContextExt sbbContext;
+	private static Tracer tracer;
+	
 	// GETTERS
 
 	public EventListSubscriptionHandler getEventListSubscriptionHandler() {
@@ -172,67 +170,32 @@ public abstract class SubscriptionControlSbb implements Sbb,
 		return SubscriptionControlManagement.getInstance();
 	}	
 		
-	// -- STORAGE OF PARENT SBB (USED BY INTERNAL CLIENTS)
+	// -- PARENT GETTER
 
-	public void setParentSbb(
-			SubscriptionClientControlParentSbbLocalObject parentSbb) {
-		setParentSbbCMP(parentSbb);
+	public SubscriptionClientControlParentSbbLocalObject getParentSbb() {
+		return (SubscriptionClientControlParentSbbLocalObject) sbbContext.getSbbLocalObject().getParent();
 	}
-
-	public abstract SubscriptionClientControlParentSbbLocalObject getParentSbbCMP();
-
-	public abstract void setParentSbbCMP(
-			SubscriptionClientControlParentSbbLocalObject value);
 
 	// --- CONCRETE IMPLEMENTATION CHILD SBB
 
-	public abstract ChildRelation getImplementedControlChildRelation();
-
-	public abstract ImplementedSubscriptionControlSbbLocalObject getImplementedControlChildSbbCMP();
-
-	public abstract void setImplementedControlChildSbbCMP(
-			ImplementedSubscriptionControlSbbLocalObject value);
+	public abstract ChildRelationExt getImplementedControlChildRelation();
 
 	public ImplementedSubscriptionControlSbbLocalObject getImplementedControlChildSbb() {
-		ImplementedSubscriptionControlSbbLocalObject childSbb = getImplementedControlChildSbbCMP();
-		if (childSbb == null) {
+		ChildRelationExt childRelation = getImplementedControlChildRelation();
+		ImplementedSubscriptionControlSbbLocalObject child = (ImplementedSubscriptionControlSbbLocalObject) childRelation.get(ChildRelationExt.DEFAULT_CHILD_NAME);
+		if(child == null) { 
 			try {
-				childSbb = (ImplementedSubscriptionControlSbbLocalObject) getImplementedControlChildRelation()
-						.create();
-			} catch (Exception e) {
-				logger.error("Failed to create child sbb",e);
-				return null;
+				child = (ImplementedSubscriptionControlSbbLocalObject) childRelation.create(ChildRelationExt.DEFAULT_CHILD_NAME);
+			} catch (Throwable e) {
+				tracer.severe("failed to create child sbb", e);
 			}
-			setImplementedControlChildSbbCMP(childSbb);
-			childSbb
-					.setParentSbb((ImplementedSubscriptionControlParentSbbLocalObject) this.sbbContext
-							.getSbbLocalObject());
 		}
-		return childSbb;
+		return child;
 	}
 	
 	// --- EVENT LIST SUBSCRIBER SBB
 
-	public abstract ChildRelation getEventListSubscriberChildRelation();
-
-	public EventListSubscriberSbbLocalObject getEventListSubscriberSbb(
-			SubscriptionKey subscriptionKey) {
-		ChildRelation childRelation = getEventListSubscriberChildRelation();
-		EventListSubscriberSbbLocalObject subscriptionChildSbb = null;
-		// let's see if child is already created
-		for (Iterator<?> it = childRelation.iterator(); it.hasNext();) {
-			EventListSubscriberSbbLocalObject childSbb = (EventListSubscriberSbbLocalObject) it
-					.next();
-			SubscriptionKey childSbbSubscriptionKey = childSbb
-					.getSubscriptionKey();
-			if (childSbbSubscriptionKey != null
-					&& childSbbSubscriptionKey.equals(subscriptionKey)) {
-				subscriptionChildSbb = childSbb;
-				break;
-			}
-		}
-		return subscriptionChildSbb;
-	}
+	public abstract ChildRelationExt getEventListSubscriberChildRelation();
 
 	// ----------- EVENT HANDLERS
 
@@ -250,8 +213,8 @@ public abstract class SubscriptionControlSbb implements Sbb,
 		
 		if (getConfiguration().getEventListSupportOn() && getImplementedControlChildSbb().acceptsEventList()) {
 						
-			if (logger.isDebugEnabled()) {
-				logger.debug("terminating rls service "+notifier+" subscriptions defined as single entities");
+			if (tracer.isFineEnabled()) {
+				tracer.fine("terminating rls service "+notifier+" subscriptions defined as single entities");
 			}
 			
 			SubscriptionControlDataSource dataSource = getConfiguration().getDataSource();
@@ -281,8 +244,8 @@ public abstract class SubscriptionControlSbb implements Sbb,
 	
 	public void onTerminateSubscriptionEvent(TerminateSubscriptionEvent event, ActivityContextInterface aci) {
 		
-		if (logger.isDebugEnabled()) {
-			logger.debug("terminating invalid rls service subscription "+event.getSubscriptionKey());
+		if (tracer.isFineEnabled()) {
+			tracer.fine("terminating invalid rls service subscription "+event.getSubscriptionKey());
 		}
 		
 		SubscriptionControlDataSource dataSource = getConfiguration().getDataSource();
@@ -298,7 +261,7 @@ public abstract class SubscriptionControlSbb implements Sbb,
 					sipSubscriptionHandler.getRemoveSipSubscriptionHandler().removeSipSubscription(aci, subscription, dataSource, getImplementedControlChildSbb());
 				}
 			} catch (Exception e) {
-				logger.error("failed to notify internal subscriber", e);
+				tracer.severe("failed to notify internal subscriber", e);
 			}
 		}
 	}
@@ -370,14 +333,14 @@ public abstract class SubscriptionControlSbb implements Sbb,
 		
 		Subscription subscription = getConfiguration().getDataSource().getFromTimerID(event.getTimerID());
 		if (subscription == null) {
-			if (logger.isInfoEnabled()) {
-				logger.info("Subscription for timer "+event.getTimerID()+" not found, ignoring event.");
+			if (tracer.isInfoEnabled()) {
+				tracer.info("Subscription for timer "+event.getTimerID()+" not found, ignoring event.");
 			}
 			return;
 		}
 		
-		if (logger.isInfoEnabled()) {
-			logger.info("Timer expired for " + subscription);
+		if (tracer.isInfoEnabled()) {
+			tracer.info("Timer expired for " + subscription);
 		}
 
 		ImplementedSubscriptionControlSbbLocalObject childSbb = getImplementedControlChildSbb();
@@ -387,8 +350,8 @@ public abstract class SubscriptionControlSbb implements Sbb,
 		if (subscription.getStatus().equals(Subscription.Status.waiting)) {
 			// change subscription status
 			subscription.changeStatus(Subscription.Event.giveup);
-			if (logger.isInfoEnabled()) {
-				logger.info("Status changed for " + subscription);
+			if (tracer.isInfoEnabled()) {
+				tracer.info("Status changed for " + subscription);
 			}
 			// notify winfo subscription(s)
 			getWInfoSubscriptionHandler().notifyWinfoSubscriptions(dataSource,subscription, childSbb);
@@ -422,14 +385,14 @@ public abstract class SubscriptionControlSbb implements Sbb,
 		
 		final Subscription subscription = dataSource.get(event.getSubscriptionKey());
 		if (subscription == null) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Unable to notify state change for "+event.getSubscriptionKey()+", subscription not found");
+			if (tracer.isFineEnabled()) {
+				tracer.fine("Unable to notify state change for "+event.getSubscriptionKey()+", subscription not found");
 			}
 			return;
 		}
 		if (subscription.getStatus() != Status.active) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Unable to notify state change for "+event.getSubscriptionKey()+", subscription not active");
+			if (tracer.isFineEnabled()) {
+				tracer.fine("Unable to notify state change for "+event.getSubscriptionKey()+", subscription not active");
 			}
 			return;
 		}
@@ -461,14 +424,14 @@ public abstract class SubscriptionControlSbb implements Sbb,
 		
 		final Subscription subscription = dataSource.get(event.getSubscriptionKey());
 		if (subscription == null) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Unable to notify state change for "+event.getSubscriptionKey()+", subscription not found");
+			if (tracer.isFineEnabled()) {
+				tracer.fine("Unable to notify state change for "+event.getSubscriptionKey()+", subscription not found");
 			}
 			return;
 		}
 		if (subscription.getStatus() != Status.active) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Unable to notify state change for "+event.getSubscriptionKey()+", subscription not active");
+			if (tracer.isFineEnabled()) {
+				tracer.fine("Unable to notify state change for "+event.getSubscriptionKey()+", subscription not active");
 			}
 			return;
 		}
@@ -526,7 +489,7 @@ public abstract class SubscriptionControlSbb implements Sbb,
 			}
 
 		} catch (Exception e) {
-			logger.error("Error processing new subscription authorization", e);
+			tracer.severe("Error processing new subscription authorization", e);
 			// cleanup
 			if (!key.isInternalSubscription()) {
 				if (serverTransaction != null) {
@@ -537,16 +500,16 @@ public abstract class SubscriptionControlSbb implements Sbb,
 												Response.SERVER_INTERNAL_ERROR,
 												serverTransaction.getRequest()));
 						serverTransaction.sendResponse(response);
-						if (logger.isDebugEnabled()) {
-							logger.debug("Response sent:\n"
+						if (tracer.isFineEnabled()) {
+							tracer.fine("Response sent:\n"
 									+ response.toString());
 						}
 					} catch (Exception f) {
-						logger.error("Can't send RESPONSE", f);
+						tracer.severe("Can't send RESPONSE", f);
 					}
 				}
 			} else {
-				getParentSbbCMP().subscribeError(subscriber, notifier.getUriWithParam(),
+				getParentSbb().subscribeError(subscriber, notifier.getUriWithParam(),
 						key.getEventPackage(), key.getEventId(),
 						Response.SERVER_INTERNAL_ERROR);
 			}
@@ -568,8 +531,8 @@ public abstract class SubscriptionControlSbb implements Sbb,
 					fireNotifyEvent(new NotifyEvent(subscription.getKey(), content, contentTypeHeader), aci, null);
 				}
 				else {
-					if (logger.isDebugEnabled()) {
-						logger.debug("Subscription aci not found, unable to fire notify event for "+subscription);
+					if (tracer.isFineEnabled()) {
+						tracer.fine("Subscription aci not found, unable to fire notify event for "+subscription);
 					}
 				}
 			}
@@ -584,8 +547,8 @@ public abstract class SubscriptionControlSbb implements Sbb,
 			fireNotifyEvent(new NotifyEvent(key, content, contentTypeHeader), aci, null);
 		}
 		else {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Unable to notify subscriber, the aci was not found for "+key);
+			if (tracer.isFineEnabled()) {
+				tracer.fine("Unable to notify subscriber, the aci was not found for "+key);
 			}
 		}
 	}
@@ -670,16 +633,15 @@ public abstract class SubscriptionControlSbb implements Sbb,
 				break;
 
 			default:
-				logger
-						.warn("Received authorization update with unknown auth code "
+				tracer.warning("Received authorization update with unknown auth code "
 								+ authorizationCode);
 				return;
 			}
 
 			if (!oldStatus.equals(subscription.getStatus())) {
 				// subscription status changed
-				if (logger.isInfoEnabled()) {
-					logger.info("Status changed for " + subscription);
+				if (tracer.isInfoEnabled()) {
+					tracer.info("Status changed for " + subscription);
 				}
 				ImplementedSubscriptionControlSbbLocalObject childSbb = getImplementedControlChildSbb();
 				
@@ -740,7 +702,7 @@ public abstract class SubscriptionControlSbb implements Sbb,
 								.createAndSendNotify(dataSource,
 										subscription, dialog, childSbb);
 							} catch (Exception e) {
-								logger.error("failed to notify subscriber", e);
+								tracer.severe("failed to notify subscriber", e);
 							}
 						}	
 						subscription.store();
@@ -778,7 +740,7 @@ public abstract class SubscriptionControlSbb implements Sbb,
 			contentTypeHeader.setParameter("boundary", multiPart.getBoundary());
 			notifySubscriber(key, multiPart.toString(),contentTypeHeader);
 		} catch (ParseException e) {
-			logger.error("failed to create content type header for event list notification", e);
+			tracer.severe("failed to create content type header for event list notification", e);
 		}
 	}
 	
@@ -823,7 +785,7 @@ public abstract class SubscriptionControlSbb implements Sbb,
 				break;
 			default:
 				// rls provided an error while validating event list possible subscribe
-				getParentSbbCMP().subscribeError(subscriber, notifierString, eventPackage, subscriptionId, rlsResponse);
+				getParentSbb().subscribeError(subscriber, notifierString, eventPackage, subscriptionId, rlsResponse);
 			break;
 			}
 		}
@@ -898,7 +860,7 @@ public abstract class SubscriptionControlSbb implements Sbb,
 			getActivityContextNamingfacility().unbind(
 					subscription.getKey().toString());
 		} catch (Exception e) {
-			logger.error("failed to unbind subscription aci name");
+			tracer.severe("failed to unbind subscription aci name");
 		}
 		// if dialog is not null that's a sip subscription and we need to verify
 		// if dialog is not needed anymore (and remove if that's the case)
@@ -906,8 +868,8 @@ public abstract class SubscriptionControlSbb implements Sbb,
 			// get subscriptions of dialog from persistence
 			List<Subscription> subscriptionsInDialog = dataSource.getSubscriptionsByDialog(dialog.getDialogId());
 			if (subscriptionsInDialog.size() == 0) {
-				if (logger.isInfoEnabled()) {
-					logger.info("No more subscriptions on dialog, deleting...");
+				if (tracer.isInfoEnabled()) {
+					tracer.info("No more subscriptions on dialog, deleting...");
 				}
 				// no more subscriptions in dialog, detach and delete the dialog
 				aci.detach(sbbContext.getSbbLocalObject());
@@ -918,8 +880,8 @@ public abstract class SubscriptionControlSbb implements Sbb,
 		// note: we don't remove null acis here, otherwise the final notify
 		// couldn't be handled
 
-		if (logger.isInfoEnabled()) {
-			logger.info("Removed data for " + subscription);
+		if (tracer.isInfoEnabled()) {
+			tracer.info("Removed data for " + subscription);
 		}
 	}
 
@@ -929,7 +891,10 @@ public abstract class SubscriptionControlSbb implements Sbb,
 	 * SbbObject's context setting
 	 */
 	public void setSbbContext(SbbContext sbbContext) {
-		this.sbbContext = sbbContext;
+		this.sbbContext = (SbbContextExt) sbbContext;
+		if (tracer == null) {
+			tracer = sbbContext.getTracer(getClass().getSimpleName());
+		}
 		// retrieve factories, facilities & providers
 		try {
 			Context context = (Context) new InitialContext()
@@ -954,9 +919,14 @@ public abstract class SubscriptionControlSbb implements Sbb,
 			rlsServicesCacheACIF = (RLSServicesCacheActivityContextInterfaceFactory) context
 			.lookup("slee/resources/sipevent/rlscache/1.0/acif");
 		} catch (Exception e) {
-			logger.error(
+			tracer.severe(
 					"Unable to retrieve factories, facilities & providers", e);
 		}
+		this.internalSubscriptionHandler = new InternalSubscriptionHandler(this);
+		this.sipSubscriptionHandler = new SipSubscriptionHandler(this);
+		this.wInfoSubscriptionHandler = new WInfoSubscriptionHandler(this);
+		this.eventListSubscriptionHandler = new EventListSubscriptionHandler(this);
+		
 	}
 
 	public void sbbActivate() {
@@ -989,6 +959,10 @@ public abstract class SubscriptionControlSbb implements Sbb,
 
 	public void unsetSbbContext() {
 		this.sbbContext = null;
+		this.internalSubscriptionHandler = null;
+		this.sipSubscriptionHandler = null;
+		this.wInfoSubscriptionHandler = null;
+		this.eventListSubscriptionHandler = null;
 	}
 
 	/**

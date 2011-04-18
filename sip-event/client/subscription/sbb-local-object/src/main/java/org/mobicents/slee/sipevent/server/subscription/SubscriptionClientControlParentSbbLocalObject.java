@@ -1,6 +1,6 @@
 package org.mobicents.slee.sipevent.server.subscription;
 
-import javax.slee.SbbLocalObject;
+import org.mobicents.slee.SbbLocalObjectExt;
 
 /**
  * Call back interface for the parent sbb of the
@@ -11,7 +11,7 @@ import javax.slee.SbbLocalObject;
  * 
  */
 public interface SubscriptionClientControlParentSbbLocalObject extends
-		SbbLocalObject,SubscriptionClientControlParent {
+		SbbLocalObjectExt,SubscriptionClientControlParent {
 
 	
 

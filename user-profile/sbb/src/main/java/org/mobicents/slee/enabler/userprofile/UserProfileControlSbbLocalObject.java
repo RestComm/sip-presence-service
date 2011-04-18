@@ -1,12 +1,12 @@
 package org.mobicents.slee.enabler.userprofile;
 
-import javax.slee.SbbLocalObject;
+import org.mobicents.slee.SbbLocalObjectExt;
 
 /**
  * 
  * @author martins
  * 
  */
-public interface UserProfileControlSbbLocalObject extends SbbLocalObject,UserProfileControl {
+public interface UserProfileControlSbbLocalObject extends SbbLocalObjectExt,UserProfileControl {
 	
 }

@@ -7,13 +7,10 @@ import javax.sip.header.ContentTypeHeader;
 import javax.sip.header.Header;
 import javax.sip.header.HeaderFactory;
 import javax.slee.ActivityContextInterface;
-import javax.slee.ChildRelation;
 import javax.slee.CreateException;
 import javax.slee.RolledBackContext;
-import javax.slee.SLEEException;
 import javax.slee.Sbb;
 import javax.slee.SbbContext;
-import javax.slee.TransactionRequiredLocalException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -21,6 +18,7 @@ import javax.xml.bind.JAXBException;
 import net.java.slee.resource.sip.SleeSipProvider;
 
 import org.apache.log4j.Logger;
+import org.mobicents.slee.ChildRelationExt;
 import org.mobicents.slee.sipevent.server.publication.ImplementedPublicationControl;
 import org.mobicents.slee.sipevent.server.publication.StateComposer;
 import org.mobicents.slee.sipevent.server.publication.data.ComposedPublication;
@@ -63,20 +61,19 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 		return headerFactory;
 	}
 
-	public abstract ChildRelation getChildRelation();
+	public abstract ChildRelationExt getChildRelation();
 
-	public abstract SubscriptionControlSbbLocalObject getChildSbbCMP();
-
-	public abstract void setChildSbbCMP(SubscriptionControlSbbLocalObject value);
-
-	private SubscriptionControlSbbLocalObject getChildSbb()
-			throws TransactionRequiredLocalException, SLEEException,
-			CreateException {
-		SubscriptionControlSbbLocalObject childSbb = getChildSbbCMP();
+	private SubscriptionControlSbbLocalObject getChildSbb() {
+		ChildRelationExt childRelationExt = getChildRelation();
+		SubscriptionControlSbbLocalObject childSbb = (SubscriptionControlSbbLocalObject) childRelationExt.get(ChildRelationExt.DEFAULT_CHILD_NAME);
 		if (childSbb == null) {
-			childSbb = (SubscriptionControlSbbLocalObject) getChildRelation()
-					.create();
-			setChildSbbCMP(childSbb);
+			try {
+				childSbb = (SubscriptionControlSbbLocalObject) childRelationExt
+						.create(ChildRelationExt.DEFAULT_CHILD_NAME);
+			} catch (Exception e) {
+				logger.error("Failed to create child sbb", e);
+				return null;
+			}			
 		}
 		return childSbb;
 	}

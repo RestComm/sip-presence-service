@@ -1,14 +1,12 @@
 package org.mobicents.slee.sipevent.examples;
 
-import java.util.Iterator;
-
 import javax.slee.ActivityContextInterface;
 import javax.slee.ActivityEndEvent;
-import javax.slee.ChildRelation;
 import javax.slee.RolledBackContext;
 import javax.slee.SbbContext;
 import javax.slee.facilities.Tracer;
 
+import org.mobicents.slee.ChildRelationExt;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlSbbLocalObject;
 
@@ -37,9 +35,7 @@ public abstract class RLSExampleRootSbb implements javax.slee.Sbb,
 		
 			tracer.info("Service activated...");
 			try {
-				RLSExamplePublisherSbbLocalObject child  = (RLSExamplePublisherSbbLocalObject) getPublisherChildRelation().create();
-				child.setParentSbb((RLSExamplePublisherParentSbbLocalObject)this.sbbContext.getSbbLocalObject());
-				child.start(publishers[0]);
+				((RLSExamplePublisherSbbLocalObject) getPublisherChildRelation().create(publishers[0])).start(publishers[0]);
 			} catch (Exception e) {
 				tracer.severe(e.getMessage(),e);
 			}
@@ -55,18 +51,14 @@ public abstract class RLSExampleRootSbb implements javax.slee.Sbb,
 		if (publisher.equals(publishers[0])) {
 			// start the other publisher
 			try {
-				RLSExamplePublisherSbbLocalObject child  = (RLSExamplePublisherSbbLocalObject) getPublisherChildRelation().create();
-				child.setParentSbb((RLSExamplePublisherParentSbbLocalObject)this.sbbContext.getSbbLocalObject());
-				child.start(publishers[1]);
+				((RLSExamplePublisherSbbLocalObject) getPublisherChildRelation().create(publishers[1])).start(publishers[1]);
 			} catch (Exception e) {
 				tracer.severe(e.getMessage(),e);
 			}
 		}	
 		else {
 			try {
-				RLSExampleSubscriberSbbLocalObject child  = (RLSExampleSubscriberSbbLocalObject) getSubscriberChildRelation().create();
-				child.setParentSbb((RLSExampleSubscriberParentSbbLocalObject)this.sbbContext.getSbbLocalObject());
-				child.start(publishers);				
+				((RLSExampleSubscriberSbbLocalObject) getSubscriberChildRelation().create(ChildRelationExt.DEFAULT_CHILD_NAME)).start(publishers);				
 			} catch (Exception e) {
 				tracer.severe(e.getMessage(),e);
 			}
@@ -98,16 +90,13 @@ public abstract class RLSExampleRootSbb implements javax.slee.Sbb,
 		
 		tracer.info("Service deactivated...");
 		try {
-			try {
-				for (Iterator<?> it = getPublisherChildRelation().iterator(); it.hasNext(); ) {
-					((RLSExamplePublisherSbbLocalObject)it.next()).stop();
-				}
-				for (Iterator<?> it = getSubscriberChildRelation().iterator(); it.hasNext(); ) {
-					((RLSExampleSubscriberSbbLocalObject)it.next()).stop();
-				}				
-			} catch (Exception e) {
-				tracer.severe(e.getMessage(),e);
+			for(Object publisher : getPublisherChildRelation()) {
+				((RLSExamplePublisherSbbLocalObject)publisher).stop();
 			}
+			RLSExampleSubscriberSbbLocalObject subscriber = (RLSExampleSubscriberSbbLocalObject) getSubscriberChildRelation().get(ChildRelationExt.DEFAULT_CHILD_NAME);
+			if (subscriber != null) {
+				subscriber.stop();
+			}			
 		} catch (Exception e) {
 			tracer.severe("",e);
 		}
@@ -116,26 +105,20 @@ public abstract class RLSExampleRootSbb implements javax.slee.Sbb,
 
 	// --- CHILDS
 	
-	public abstract ChildRelation getPublisherChildRelation();
+	public abstract ChildRelationExt getPublisherChildRelation();
 	
-	public abstract ChildRelation getSubscriberChildRelation();
+	public abstract ChildRelationExt getSubscriberChildRelation();
 	
 	// --- SBB OBJECT
-
-	private SbbContext sbbContext = null; // This SBB's context
 	
 	/**
 	 * Called when an sbb object is instantied and enters the pooled state.
 	 */
 	public void setSbbContext(SbbContext sbbContext) {
-
-		this.sbbContext = sbbContext;
 		tracer = sbbContext.getTracer("RLSExampleRootSbb");
-		
 	}
 
 	public void unsetSbbContext() {
-		this.sbbContext = null;
 	}
 
 	public void sbbCreate() throws javax.slee.CreateException {

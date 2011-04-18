@@ -6,14 +6,13 @@ import java.text.ParseException;
 
 import javax.sip.header.ContentTypeHeader;
 import javax.slee.ActivityContextInterface;
+import javax.slee.facilities.Tracer;
 import javax.slee.nullactivity.NullActivity;
 import javax.xml.bind.JAXBException;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlParentSbbLocalObject;
-import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 
 /**
@@ -24,14 +23,16 @@ import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
  */
 public class InternalSubscriberNotificationHandler {
 
-	private static Logger logger = Logger
-			.getLogger(SubscriptionControlSbb.class);
-
+	private static Tracer tracer;
+	
 	private InternalSubscriptionHandler internalSubscriptionHandler;
 
 	public InternalSubscriberNotificationHandler(
 			InternalSubscriptionHandler sbb) {
 		this.internalSubscriptionHandler = sbb;
+		if (tracer == null) {
+			tracer = internalSubscriptionHandler.sbb.getSbbContext().getTracer(getClass().getSimpleName());
+		}
 	}
 
 	public void notifyInternalSubscriber(
@@ -78,7 +79,7 @@ public class InternalSubscriberNotificationHandler {
 			((NullActivity) aci.getActivity()).endActivity();
 		}
 
-		SubscriptionClientControlParentSbbLocalObject parent = internalSubscriptionHandler.sbb.getParentSbbCMP();
+		SubscriptionClientControlParentSbbLocalObject parent = internalSubscriptionHandler.sbb.getParentSbb();
 		if (parent != null) {
 			parent.notifyEvent(
 				subscription.getSubscriber(),
@@ -107,7 +108,7 @@ public class InternalSubscriberNotificationHandler {
 						(content != null ? (String)content : null), contentTypeHeader, aci);
 			}
 		} catch (Exception e) {
-			logger.error("failed to notify internal subscriber", e);
+			tracer.severe("failed to notify internal subscriber", e);
 		}
 	}
 	

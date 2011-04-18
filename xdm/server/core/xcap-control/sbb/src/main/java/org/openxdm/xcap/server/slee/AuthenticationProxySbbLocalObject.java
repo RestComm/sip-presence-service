@@ -1,12 +1,12 @@
 package org.openxdm.xcap.server.slee;
 
-import javax.slee.SbbLocalObject;
+import org.mobicents.slee.SbbLocalObjectExt;
 
 /**
  * 
  * @author martins
  *
  */
-public interface AuthenticationProxySbbLocalObject extends SbbLocalObject,AuthenticationProxy {
+public interface AuthenticationProxySbbLocalObject extends SbbLocalObjectExt,AuthenticationProxy {
 
 }

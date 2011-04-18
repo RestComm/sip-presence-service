@@ -28,13 +28,7 @@
                 <sbb-abstract-class-name>org.mobicents.slee.sippresence.server.subscription.PresenceSubscriptionControlSbb</sbb-abstract-class-name>
                 <cmp-field>
                 	<cmp-field-name>combinedRules</cmp-field-name>
-                </cmp-field>
-                <cmp-field>
-                	<cmp-field-name>parentSbbCMP</cmp-field-name>
-                </cmp-field>
-                <cmp-field>
-                	<cmp-field-name>publicationControlChildSbbCMP</cmp-field-name>
-                </cmp-field>
+                </cmp-field>            
                 <get-child-relation-method>                	
                 	<sbb-alias-ref>publicationChildSbb</sbb-alias-ref>
                 	<get-child-relation-method-name>getPublicationControlChildRelation</get-child-relation-method-name>

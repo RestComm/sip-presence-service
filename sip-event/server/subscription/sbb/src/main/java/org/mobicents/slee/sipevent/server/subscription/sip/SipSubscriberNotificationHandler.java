@@ -17,15 +17,14 @@ import javax.sip.header.EventHeader;
 import javax.sip.header.SubscriptionStateHeader;
 import javax.sip.message.Request;
 import javax.slee.ActivityContextInterface;
+import javax.slee.facilities.Tracer;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 
 import net.java.slee.resource.sip.DialogActivity;
 
-import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
-import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
 
@@ -37,14 +36,16 @@ import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlD
  */
 public class SipSubscriberNotificationHandler {
 
-	private static Logger logger = Logger
-			.getLogger(SubscriptionControlSbb.class);
+	private static Tracer tracer;
 
 	private SipSubscriptionHandler sipSubscriptionHandler;
 
 	public SipSubscriberNotificationHandler(
 			SipSubscriptionHandler sipSubscriptionHandler) {
 		this.sipSubscriptionHandler = sipSubscriptionHandler;
+		if (tracer == null) {
+			tracer = sipSubscriptionHandler.sbb.getSbbContext().getTracer(getClass().getSimpleName());
+		}
 	}
 
 	public void notifySipSubscriber(Object content,
@@ -66,7 +67,7 @@ public class SipSubscriberNotificationHandler {
 			// send notify in dialog related with subscription
 			dialog.sendRequest(notify);							
 		} catch (Exception e) {
-			logger.error("failed to notify subscriber", e);
+			tracer.severe("failed to notify subscriber", e);
 		}
 	}
 
@@ -138,7 +139,7 @@ public class SipSubscriberNotificationHandler {
 								notifyContent.getContent(), notifyContent
 										.getContentTypeHeader(), childSbb);
 					} catch (Exception e) {
-						logger.error("failed to set notify content", e);
+						tracer.severe("failed to set notify content", e);
 					}
 				}
 			}
@@ -216,7 +217,7 @@ public class SipSubscriberNotificationHandler {
 			}
 			
 		} catch (Exception e) {
-			logger.error("unable to fill notify headers", e);
+			tracer.severe("unable to fill notify headers", e);
 		}
 		return notify;
 	}

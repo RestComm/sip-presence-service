@@ -121,7 +121,7 @@ public class XcapDiffSubscriptionControl {
 										logger.info("subscribing auid " + auid);
 									}
 									// FIXME authorize and allow it in case authorization succeeds, right now forbidden this kind of subscription
-									sbb.getParentSbbCMP().newSubscriptionAuthorization(subscriber, subscriberDisplayName, notifier, key, expires, Response.FORBIDDEN, eventList, serverTransaction);
+									sbb.getParentSbb().newSubscriptionAuthorization(subscriber, subscriberDisplayName, notifier, key, expires, Response.FORBIDDEN, eventList, serverTransaction);
 									return;
 									//appUsagesToSubscribe.add(auid);
 								} else {
@@ -132,13 +132,13 @@ public class XcapDiffSubscriptionControl {
 									// FIXME add proper authorization
 									if (!documentSelector.isUserDocument()) {
 										// right now we don't support an external PS or RLS so it is secure to forbidden subscription to all global docs
-										sbb.getParentSbbCMP().newSubscriptionAuthorization(subscriber, subscriberDisplayName, notifier, key, expires, Response.FORBIDDEN, eventList, serverTransaction);
+										sbb.getParentSbb().newSubscriptionAuthorization(subscriber, subscriberDisplayName, notifier, key, expires, Response.FORBIDDEN, eventList, serverTransaction);
 										return;
 									}
 									else {
 										if (!documentSelector.getDocumentParent().substring("users/".length()).startsWith(subscriber)) {
 											// right now, due to security, do not allow any subscription where the subscriber is different than the XUI
-											sbb.getParentSbbCMP().newSubscriptionAuthorization(subscriber, subscriberDisplayName, notifier, key, expires, Response.FORBIDDEN, eventList, serverTransaction);
+											sbb.getParentSbb().newSubscriptionAuthorization(subscriber, subscriberDisplayName, notifier, key, expires, Response.FORBIDDEN, eventList, serverTransaction);
 											return;
 										}
 									}
@@ -228,7 +228,7 @@ public class XcapDiffSubscriptionControl {
 			}
 
 			// continue new subscription process
-			sbb.getParentSbbCMP().newSubscriptionAuthorization(subscriber,
+			sbb.getParentSbb().newSubscriptionAuthorization(subscriber,
 					subscriberDisplayName, notifier, key, expires, Response.OK,eventList,serverTransaction);
 		} catch (JAXBException e) {
 			logger.error("failed to parse resource-lists in initial subscribe",
@@ -236,7 +236,7 @@ public class XcapDiffSubscriptionControl {
 			if (stringReader != null) {
 				stringReader.close();
 			}
-			sbb.getParentSbbCMP().newSubscriptionAuthorization(subscriber,
+			sbb.getParentSbb().newSubscriptionAuthorization(subscriber,
 					subscriberDisplayName, notifier, key, expires,
 					Response.FORBIDDEN,eventList,serverTransaction);
 		}
@@ -399,7 +399,7 @@ public class XcapDiffSubscriptionControl {
 								newETag, oldETag);
 					}
 					// tell underlying sip event framework to notify subscriber
-					sbb.getParentSbbCMP().notifySubscriber(s.getKey(),
+					sbb.getParentSbb().notifySubscriber(s.getKey(),
 							xcapDiff, getXcapDiffContentTypeHeader(sbb));
 				}
 			}

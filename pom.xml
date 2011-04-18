@@ -11,9 +11,9 @@
 	</licenses>
 	
 	<parent>
-		<artifactId>mobicents-parent</artifactId>
 		<groupId>org.mobicents</groupId>
-		<version>2.17</version>
+		<artifactId>mobicents-parent</artifactId>
+		<version>2.18-SNAPSHOT</version>
 	</parent>
 		
 	<artifactId>sip-presence-parent</artifactId>
@@ -56,14 +56,13 @@
 		<module>xdm/server/slee-resources-du</module>
 		<module>xdm/server/slee-services-du</module>
 				
-		<module>presence/client</module>
 		<module>presence/server/jaxb-pojos</module>
 		<module>presence/server/library</module>
 		<module>presence/server/configuration</module>
 		<module>presence/server/pres-rules-cache</module>
 		<module>presence/server/publication-sbb</module>
 		<module>presence/server/subscription-sbb</module>
-		<module>presence/server/internal-client-sbb</module>
+		<module>presence/server/pidf-manipulation-sbb</module>
 
 		<module>integrated/server/subscription-library</module>
 		<module>integrated/server/subscription-sbb</module>
@@ -100,7 +99,7 @@
 			<dependency>
 				<groupId>org.mobicents.servers.jainslee.core</groupId>
 				<artifactId>spi</artifactId>
-				<version>2.4.0.CR1</version>
+				<version>2.4.0-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>org.mobicents.servers.jainslee.core</groupId>
@@ -140,7 +139,7 @@
 			<dependency>
 				<groupId>org.mobicents.servers.jainslee.enablers</groupId>
 				<artifactId>xdm-client-sbb</artifactId>
-				<version>1.0.0.BETA2</version>
+				<version>1.0.0-SNAPSHOT</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

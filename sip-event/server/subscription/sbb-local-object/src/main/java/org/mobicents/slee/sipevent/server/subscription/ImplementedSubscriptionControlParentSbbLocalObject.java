@@ -1,6 +1,6 @@
 package org.mobicents.slee.sipevent.server.subscription;
 
-import javax.slee.SbbLocalObject;
+import org.mobicents.slee.SbbLocalObjectExt;
 
 /**
  * Callback interface of {@link SubscriptionControlSbb}, to receive info from
@@ -10,6 +10,6 @@ import javax.slee.SbbLocalObject;
  * 
  */
 public interface ImplementedSubscriptionControlParentSbbLocalObject extends
-		SbbLocalObject,ImplementedSubscriptionControlParent {
+		SbbLocalObjectExt,ImplementedSubscriptionControlParent {
 	
 }

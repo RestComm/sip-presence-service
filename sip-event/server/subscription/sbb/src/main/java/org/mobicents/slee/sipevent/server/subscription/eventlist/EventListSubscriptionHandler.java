@@ -7,12 +7,12 @@ import javax.sip.header.AcceptHeader;
 import javax.sip.header.SupportedHeader;
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
+import javax.slee.facilities.Tracer;
 
-import org.apache.log4j.Logger;
+import org.mobicents.slee.ChildRelationExt;
 import org.mobicents.slee.sipevent.server.rlscache.RLSService;
 import org.mobicents.slee.sipevent.server.rlscache.RLSServiceActivity;
 import org.mobicents.slee.sipevent.server.rlscache.RLSServicesCacheSbbInterface;
-import org.mobicents.slee.sipevent.server.subscription.EventListSubscriberParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.EventListSubscriberSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb;
 import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
@@ -26,8 +26,7 @@ import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
  */
 public class EventListSubscriptionHandler {
 
-	private static final Logger logger = Logger
-			.getLogger(EventListSubscriptionHandler.class);
+	private static Tracer tracer;
 
 	private final SubscriptionControlSbb sbb;
 
@@ -39,26 +38,29 @@ public class EventListSubscriptionHandler {
 	public EventListSubscriptionHandler(
 			SubscriptionControlSbb sbb) {
 		this.sbb = sbb;
+		if (tracer == null) {
+			tracer = sbb.getSbbContext().getTracer(getClass().getSimpleName());
+		}
 	}
 
 
 	public int validateSubscribeRequest(String subscriber, Notifier notifier,
 			String eventPackage, RequestEvent event) {
 
-		boolean debugLog = logger.isDebugEnabled();
+		boolean fineLog = tracer.isFineEnabled();
 				
 		RLSService rlsService = sbb.getRlsServicesCacheRASbbInterface().getRLSService(notifier.getUriWithParam());
 
 		final RLSService.Status rlsServiceStatus = rlsService != null ? rlsService.getStatus() : RLSService.Status.DOES_NOT_EXISTS;
 		
-		if (debugLog) {
-			logger.debug(notifier.getUriWithParam()+" rlsService status retreived from rls services cache: "+rlsServiceStatus);
+		if (fineLog) {
+			tracer.fine(notifier.getUriWithParam()+" rlsService status retreived from rls services cache: "+rlsServiceStatus);
 		}
 		
 		if (rlsServiceStatus != RLSService.Status.DOES_NOT_EXISTS && rlsServiceStatus != RLSService.Status.RESOLVING) {
 
-			if (debugLog) {
-				logger.debug(notifier + " is a resource list.");
+			if (fineLog) {
+				tracer.fine(notifier + " is a resource list.");
 			}
 
 			if (event != null) {
@@ -73,8 +75,8 @@ public class EventListSubscriptionHandler {
 					}
 				}
 				if (!isEventListSupported) {
-					if (logger.isInfoEnabled()) {
-						logger
+					if (tracer.isInfoEnabled()) {
+						tracer
 								.info("SIP subscription request for resource list doesn't included Supported: eventlist header");
 					}
 					return Response.EXTENSION_REQUIRED;
@@ -103,8 +105,8 @@ public class EventListSubscriptionHandler {
 					}
 				}
 				if (!isMultipartAccepted || !isRlmiAccepted) {
-					if (logger.isInfoEnabled()) {
-						logger
+					if (tracer.isInfoEnabled()) {
+						tracer
 								.info("SIP subscription request for resource list doesn't included proper Accept headers");
 					}
 					return Response.NOT_ACCEPTABLE;
@@ -116,8 +118,8 @@ public class EventListSubscriptionHandler {
 			
 			// check service's packages contains provided event package
 			if (!serviceTypePackageVerifier.hasPackage(rlsService.getPackages(), eventPackage)) {
-				if (logger.isInfoEnabled()) {
-					logger.info("Resource list " + notifier
+				if (tracer.isInfoEnabled()) {
+					tracer.info("Resource list " + notifier
 							+ " doesn't applies to event package "
 							+ eventPackage);
 				}
@@ -127,16 +129,16 @@ public class EventListSubscriptionHandler {
 			// it is a subscribe for a resource list and it is ok (note: the
 			// flat list may had errors, but it's not empty so we let it
 			// proceed
-			if (logger.isDebugEnabled()) {
-				logger.debug("Resource list " + notifier
+			if (tracer.isFineEnabled()) {
+				tracer.fine("Resource list " + notifier
 						+ " subscription request validated with sucess.");
 			}
 			return Response.OK;
 			
 		} else {
 			// no resource list found
-			if (debugLog) {
-				logger.debug(notifier + " is not a known resource list.");
+			if (fineLog) {
+				tracer.fine(notifier + " is not a known resource list.");
 			}
 			return Response.NOT_FOUND;
 		}
@@ -153,7 +155,7 @@ public class EventListSubscriptionHandler {
 			aci = sbb.getRlsServicesCacheACIF().getActivityContextInterface(activity);
 		}
 		catch (Throwable e) {
-			logger.error("failed to get rls service activity "+subscription.getNotifier().getUriWithParam(),e);
+			tracer.severe("failed to get rls service activity "+subscription.getNotifier().getUriWithParam(),e);
 			return false;
 		}
 		
@@ -163,42 +165,40 @@ public class EventListSubscriptionHandler {
 			return false;
 		}
 		// now create a event list subscriber child sbb
+		ChildRelationExt childRelationExt = sbb.getEventListSubscriberChildRelation();
+		
 		EventListSubscriberSbbLocalObject subscriptionChildSbb = null;
 		try {
-			subscriptionChildSbb = (EventListSubscriberSbbLocalObject) sbb.getEventListSubscriberChildRelation()
-					.create();
-			subscriptionChildSbb
-					.setParentSbb((EventListSubscriberParentSbbLocalObject) sbb.getSbbContext().getSbbLocalObject());
-			aci.attach(subscriptionChildSbb);
-		} catch (Exception e) {
-			logger.error("Failed to create child sbb", e);
+			subscriptionChildSbb = (EventListSubscriberSbbLocalObject) childRelationExt.create(subscription.getKey().toString());
+		}
+		catch (Exception e) {
+			tracer.severe("failed to create event list subscriber",e);
 			return false;
 		}
-		
+		aci.attach(subscriptionChildSbb);
+				
 		// give the child control over the subscription
 		subscriptionChildSbb.subscribe(subscription, rlsService, aci);
 		return true;
 	}
 
 	public void refreshSubscription(Subscription subscription) {
-		EventListSubscriberSbbLocalObject childSbb = sbb.getEventListSubscriberSbb(subscription
-				.getKey());
+		EventListSubscriberSbbLocalObject childSbb = (EventListSubscriberSbbLocalObject) sbb.getEventListSubscriberChildRelation().get(subscription.getKey().toString());
 		if (childSbb != null) {
 			childSbb.resubscribe(subscription,sbb.getRlsServicesCacheRASbbInterface().getRLSService(subscription.getNotifier().getUriWithParam()));
 		} else {
-			logger
-					.warn("trying to refresh a event list subscription but child sbb not found");
+			tracer
+					.warning("trying to refresh a event list subscription but child sbb not found");
 		}
 	}
 
 	public void removeSubscription(Subscription subscription) {
-		EventListSubscriberSbbLocalObject childSbb = sbb.getEventListSubscriberSbb(subscription
-				.getKey());
+		EventListSubscriberSbbLocalObject childSbb = (EventListSubscriberSbbLocalObject) sbb.getEventListSubscriberChildRelation().get(subscription.getKey().toString());
 		if (childSbb != null) {
 			childSbb.unsubscribe(subscription,sbb.getRlsServicesCacheRASbbInterface().getRLSService(subscription.getNotifier().getUriWithParam()));
 		} else {
-			logger
-					.warn("trying to unsubscribe a event list subscription but child sbb not found");
+			tracer
+					.warning("trying to unsubscribe a event list subscription but child sbb not found");
 		}
 	}
 

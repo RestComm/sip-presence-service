@@ -22,6 +22,8 @@ import javax.xml.bind.Unmarshaller;
 
 import net.java.slee.resource.sip.SleeSipProvider;
 
+import org.mobicents.slee.ChildRelationExt;
+import org.mobicents.slee.SbbContextExt;
 import org.mobicents.slee.sipevent.server.publication.PublicationControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
@@ -97,10 +99,10 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 	/**
 	 * SbbObject's sbb context
 	 */
-	private SbbContext sbbContext;
+	private SbbContextExt sbbContext;
 
 	public void setSbbContext(SbbContext sbbContext) {
-		this.sbbContext = sbbContext;
+		this.sbbContext = (SbbContextExt) sbbContext;
 		if (tracer == null) {
 			tracer = sbbContext.getTracer(this.getClass().getSimpleName());
 		}
@@ -135,15 +137,11 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 		return true;
 	};
 	
-	public abstract ImplementedSubscriptionControlParentSbbLocalObject getParentSbbCMP();
-
-	public abstract void setParentSbbCMP(
-			ImplementedSubscriptionControlParentSbbLocalObject sbbLocalObject);
-
-	public void setParentSbb(
-			ImplementedSubscriptionControlParentSbbLocalObject sbbLocalObject) {
-		setParentSbbCMP(sbbLocalObject);
+	@Override
+	public ImplementedSubscriptionControlParentSbbLocalObject getParentSbb() {
+		return (ImplementedSubscriptionControlParentSbbLocalObject) sbbContext.getSbbLocalObject().getParent();
 	}
+	
 
 	public String[] getEventPackages() {
 		return eventPackages;
@@ -237,24 +235,19 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 	// ------------ PresenceSubscriptionControlSbbLocalObject
 
 	// --- PUBLICATION CHILD SBB
-	public abstract ChildRelation getPublicationControlChildRelation();
-
-	public abstract PublicationControlSbbLocalObject getPublicationControlChildSbbCMP();
-
-	public abstract void setPublicationControlChildSbbCMP(
-			PublicationControlSbbLocalObject value);
+	public abstract ChildRelationExt getPublicationControlChildRelation();
 
 	public PublicationControlSbbLocalObject getPublicationChildSbb() {
-		PublicationControlSbbLocalObject childSbb = getPublicationControlChildSbbCMP();
+		ChildRelationExt childRelationExt = getPublicationControlChildRelation();
+		PublicationControlSbbLocalObject childSbb = (PublicationControlSbbLocalObject) childRelationExt.get(ChildRelationExt.DEFAULT_CHILD_NAME);
 		if (childSbb == null) {
 			try {
-				childSbb = (PublicationControlSbbLocalObject) getPublicationControlChildRelation()
-						.create();
+				childSbb = (PublicationControlSbbLocalObject) childRelationExt
+						.create(ChildRelationExt.DEFAULT_CHILD_NAME);
 			} catch (Exception e) {
 				tracer.severe("Failed to create child sbb", e);
 				return null;
-			}
-			setPublicationControlChildSbbCMP(childSbb);
+			}			
 		}
 		return childSbb;
 	}
@@ -264,10 +257,10 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 
 	public abstract SubscriptionsMap getSubscriptionsMap();
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public abstract void setCombinedRules(HashMap rules);
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	public abstract HashMap getCombinedRules();
 
 	// -- 
@@ -292,7 +285,7 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 	 * (non-Javadoc)
 	 * @see org.mobicents.slee.xdm.server.subscription.XcapDiffSubscriptionControlSbbInterface#getSbbContext()
 	 */
-	public SbbContext getSbbContext() {
+	public SbbContextExt getSbbContext() {
 		return sbbContext;
 	}
 	

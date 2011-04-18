@@ -1,12 +1,12 @@
 package org.openxdm.xcap.server.slee;
 
-import javax.slee.SbbLocalObject;
+import org.mobicents.slee.SbbLocalObjectExt;
 
 /**
  * 
  * @author martins
  *
  */
-public interface RequestProcessorSbbLocalObject extends SbbLocalObject, RequestProcessor {
+public interface RequestProcessorSbbLocalObject extends SbbLocalObjectExt, RequestProcessor {
 
 }

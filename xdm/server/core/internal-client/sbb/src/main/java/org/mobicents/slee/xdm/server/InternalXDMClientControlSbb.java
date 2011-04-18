@@ -9,6 +9,7 @@ import javax.slee.CreateException;
 import javax.slee.SbbContext;
 import javax.slee.facilities.Tracer;
 
+import org.mobicents.slee.ChildRelationExt;
 import org.mobicents.slee.enabler.xdmc.XDMClientChildSbb;
 import org.mobicents.xcap.client.auth.Credentials;
 import org.openxdm.xcap.common.error.ConflictException;
@@ -95,7 +96,7 @@ public abstract class InternalXDMClientControlSbb extends XDMClientChildSbb {
 						+ responseContent);
 			}
 		}
-		getParentSbbCMP().deleteResponse(uri, responseCode, responseContent,
+		getParent().deleteResponse(uri, responseCode, responseContent,
 				eTag);
 	}
 
@@ -262,7 +263,7 @@ public abstract class InternalXDMClientControlSbb extends XDMClientChildSbb {
 						+ responseCode);
 			}
 		}
-		getParentSbbCMP().getResponse(uri, responseCode, mimetype, content,
+		getParent().getResponse(uri, responseCode, mimetype, content,
 				eTag);
 	}
 
@@ -342,7 +343,7 @@ public abstract class InternalXDMClientControlSbb extends XDMClientChildSbb {
 						+ responseContent);
 			}
 		}
-		getParentSbbCMP().putResponse(uri, responseCode, responseContent, eTag);
+		getParent().putResponse(uri, responseCode, responseContent, eTag);
 	}
 
 	/*
@@ -435,21 +436,20 @@ public abstract class InternalXDMClientControlSbb extends XDMClientChildSbb {
 		}
 	}
 
-	public abstract ChildRelation getRequestProcessorChildRelation();
+	public abstract ChildRelationExt getRequestProcessorChildRelation();
 
 	private RequestProcessorSbbLocalObject getRequestProcessor()
 			throws IOException {
-		ChildRelation childRelation = getRequestProcessorChildRelation();
-		if (childRelation.isEmpty()) {
+		ChildRelationExt childRelation = getRequestProcessorChildRelation();
+		RequestProcessorSbbLocalObject child = (RequestProcessorSbbLocalObject) childRelation.get(ChildRelationExt.DEFAULT_CHILD_NAME);
+		if (child == null) {
 			try {
-				return (RequestProcessorSbbLocalObject) childRelation.create();
+				child  = (RequestProcessorSbbLocalObject) childRelation.create(ChildRelationExt.DEFAULT_CHILD_NAME);
 			} catch (CreateException e) {
 				throw new IOException(e);
 			}
-		} else {
-			return (RequestProcessorSbbLocalObject) childRelation.iterator()
-					.next();
-		}
+		} 
+		return child;
 	}
 
 	/*

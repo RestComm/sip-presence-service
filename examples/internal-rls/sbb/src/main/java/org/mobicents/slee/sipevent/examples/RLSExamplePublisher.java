@@ -3,20 +3,14 @@
  */
 package org.mobicents.slee.sipevent.examples;
 
-import org.mobicents.slee.sippresence.client.PresenceClientControlParent;
+import org.mobicents.slee.sipevent.server.publication.PublicationClientControlParent;
 
 /**
  * @author martins
  *
  */
-public interface RLSExamplePublisher extends PresenceClientControlParent{
+public interface RLSExamplePublisher extends PublicationClientControlParent{
 
-	/**
-	 * Stores the parent sbb local object, to be used on callbacks
-	 * @param parentSbb
-	 */
-	public void setParentSbb(RLSExamplePublisherParentSbbLocalObject parentSbb);
-	
 	/**
 	 * Starts publishing for the specified publisher...
 	 * @param publisher

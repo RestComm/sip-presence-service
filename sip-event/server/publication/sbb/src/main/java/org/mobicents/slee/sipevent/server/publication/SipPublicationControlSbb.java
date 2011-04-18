@@ -17,7 +17,6 @@ import javax.sip.message.MessageFactory;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
-import javax.slee.ChildRelation;
 import javax.slee.CreateException;
 import javax.slee.InitialEventSelector;
 import javax.slee.RolledBackContext;
@@ -28,6 +27,7 @@ import javax.slee.SbbLocalObject;
 import net.java.slee.resource.sip.SleeSipProvider;
 
 import org.apache.log4j.Logger;
+import org.mobicents.slee.ChildRelationExt;
 import org.mobicents.slee.sipevent.server.publication.jmx.PublicationControlManagement;
 import org.mobicents.slee.sipevent.server.publication.jmx.PublicationControlManagementMBean;
 
@@ -68,11 +68,11 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 		
 	// --- INTERNAL CHILD SBB
 	
-	public abstract ChildRelation getPublicationControlChildRelation();
+	public abstract ChildRelationExt getPublicationControlChildRelation();
 	
 	private PublicationControlSbbLocalObject getPublicationControlChildSbb() {
 		try {
-			return (PublicationControlSbbLocalObject) getPublicationControlChildRelation().create();
+			return (PublicationControlSbbLocalObject) getPublicationControlChildRelation().create(ChildRelationExt.DEFAULT_CHILD_NAME);
 		} catch (Exception e) {
 			logger.error("Failed to create child sbb",e);
 			return null;

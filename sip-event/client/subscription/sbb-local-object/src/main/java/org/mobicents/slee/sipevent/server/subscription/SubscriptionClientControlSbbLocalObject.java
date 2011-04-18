@@ -1,7 +1,7 @@
 package org.mobicents.slee.sipevent.server.subscription;
 
-import javax.slee.SbbLocalObject;
+import org.mobicents.slee.SbbLocalObjectExt;
 
-public interface SubscriptionClientControlSbbLocalObject extends SbbLocalObject,SubscriptionClientControl {
+public interface SubscriptionClientControlSbbLocalObject extends SbbLocalObjectExt,SubscriptionClientControl {
 
 }

@@ -33,12 +33,6 @@
         <sbb-classes>
             <sbb-abstract-class reentrant="True">
                 <sbb-abstract-class-name>org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbb</sbb-abstract-class-name>
-                <cmp-field>
-                	<cmp-field-name>implementedControlChildSbbCMP</cmp-field-name>
-                </cmp-field>
-                <cmp-field>
-                	<cmp-field-name>parentSbbCMP</cmp-field-name>
-                </cmp-field>
                 <get-child-relation-method>                	
                 	<sbb-alias-ref>implementedChildSbb</sbb-alias-ref>
                 	<get-child-relation-method-name>getImplementedControlChildRelation</get-child-relation-method-name>
@@ -212,9 +206,6 @@
         <sbb-classes>
             <sbb-abstract-class reentrant="True">
                 <sbb-abstract-class-name>org.mobicents.slee.sipevent.server.subscription.eventlist.EventListSubscriberSbb</sbb-abstract-class-name>
-           		<cmp-field>
-                	<cmp-field-name>subscriptionClientControlChildSbbCMP</cmp-field-name>
-                </cmp-field>
                 <cmp-field>
                 	<cmp-field-name>rLSServiceACI</cmp-field-name>
                 </cmp-field>
@@ -226,10 +217,7 @@
                 </cmp-field> 
                 <cmp-field>
                 	<cmp-field-name>subscriptionKey</cmp-field-name>
-                </cmp-field> 
-                <cmp-field>
-                	<cmp-field-name>parentSbbCMP</cmp-field-name>
-                </cmp-field>   
+                </cmp-field>            
                 <get-child-relation-method>                	
                 	<sbb-alias-ref>childSbb</sbb-alias-ref>
                 	<get-child-relation-method-name>getSubscriptionClientControlChildRelation</get-child-relation-method-name>

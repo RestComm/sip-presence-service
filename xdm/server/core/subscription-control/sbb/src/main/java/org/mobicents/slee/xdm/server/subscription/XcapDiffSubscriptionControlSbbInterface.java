@@ -4,9 +4,9 @@
 package org.mobicents.slee.xdm.server.subscription;
 
 import javax.sip.header.HeaderFactory;
-import javax.slee.SbbContext;
 import javax.xml.bind.Unmarshaller;
 
+import org.mobicents.slee.SbbContextExt;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControl;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlParentSbbLocalObject;
 import org.openxdm.xcap.server.slee.resource.datasource.DataSourceActivityContextInterfaceFactory;
@@ -24,9 +24,9 @@ public interface XcapDiffSubscriptionControlSbbInterface extends ImplementedSubs
 
 	public HeaderFactory getHeaderFactory();
 
-	public ImplementedSubscriptionControlParentSbbLocalObject getParentSbbCMP();
+	public ImplementedSubscriptionControlParentSbbLocalObject getParentSbb();
 
-	public SbbContext getSbbContext();
+	public SbbContextExt getSbbContext();
 	
 	public SubscriptionsMap getSubscriptionsMap();
 

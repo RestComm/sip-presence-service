@@ -8,12 +8,13 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.slee.ActivityContextInterface;
-import javax.slee.ChildRelation;
 import javax.slee.RolledBackContext;
 import javax.slee.SbbContext;
 import javax.slee.facilities.Tracer;
 
 import net.java.slee.resource.http.events.HttpServletRequestEvent;
+
+import org.mobicents.slee.ChildRelationExt;
 import org.mobicents.slee.xdm.server.ServerConfiguration;
 import org.openxdm.xcap.common.error.BadRequestException;
 import org.openxdm.xcap.common.error.ConflictException;
@@ -107,12 +108,12 @@ public abstract class AggregationProxySbb implements javax.slee.Sbb {
 	// CHILD RELATIONS & RA ABSTRACTIONS
 	// ################################################################
 
-	public abstract ChildRelation getRequestProcessorChildRelation();
+	public abstract ChildRelationExt getRequestProcessorChildRelation();
 
 	protected RequestProcessorSbbLocalObject getRequestProcessor() {
 		try {
 			return (RequestProcessorSbbLocalObject) getRequestProcessorChildRelation()
-			.create();
+			.create(ChildRelationExt.DEFAULT_CHILD_NAME);
 		} catch (Exception e) {
 			logger.severe("Failed to create child sbb", e);
 			return null;
@@ -121,12 +122,12 @@ public abstract class AggregationProxySbb implements javax.slee.Sbb {
 
 	// added by aayush here: Child relation and child sbb creation
 	// for Authentication Proxy.
-	public abstract ChildRelation getAuthenticationProxyChildRelation();
+	public abstract ChildRelationExt getAuthenticationProxyChildRelation();
 
 	protected AuthenticationProxySbbLocalObject getAuthenticationProxy() {
 			try {
 				return (AuthenticationProxySbbLocalObject) getAuthenticationProxyChildRelation()
-						.create();
+						.create(ChildRelationExt.DEFAULT_CHILD_NAME);
 			} catch (Exception e) {
 				logger.severe("Failed to create child sbb", e);
 				return null;
