@@ -96,7 +96,9 @@ public class PublicationControlDataSource {
 			throw new IllegalStateException("publication "+pk+" already exists");
 		}
 		eTagNode.put(Boolean.TRUE, p);
-		timersRoot.addChild(Fqn.fromElements(p.getTimerID())).put(Boolean.TRUE, pk);
+		if (p.getTimerID() != null) {
+			timersRoot.addChild(Fqn.fromElements(p.getTimerID())).put(Boolean.TRUE, pk);
+		}
 	}
 
 	public Publication get(PublicationKey pk) {
@@ -136,7 +138,9 @@ public class PublicationControlDataSource {
 		final PublicationKey pk = p.getPublicationKey();
 		final Node entityAndPackageNode = getEntityAndPackagePubNode(pk.getEventPackage(),pk.getEntity());
 		if (entityAndPackageNode != null && entityAndPackageNode.removeChild(pk.getETag())) {
-			timersRoot.removeChild(p.getTimerID());
+			if (p.getTimerID() != null) {
+				timersRoot.removeChild(p.getTimerID());
+			}
 		}
 		else {
 			throw new IllegalStateException("original publication "+pk+" not found");
@@ -150,7 +154,9 @@ public class PublicationControlDataSource {
 			throw new IllegalStateException("new publication "+qk+" already exists");
 		}
 		eTagNode.put(Boolean.TRUE, q);
-		timersRoot.addChild(Fqn.fromElements(q.getTimerID())).put(Boolean.TRUE, qk);
+		if (q.getTimerID() != null) {
+			timersRoot.addChild(Fqn.fromElements(q.getTimerID())).put(Boolean.TRUE, qk);
+		}
 	}
 	
 	public void delete(Publication p) {
@@ -158,7 +164,9 @@ public class PublicationControlDataSource {
 		final PublicationKey pk = p.getPublicationKey();
 		final Node entityAndPackageNode = getEntityAndPackagePubNode(pk.getEventPackage(),pk.getEntity());
 		if (entityAndPackageNode != null && entityAndPackageNode.removeChild(pk.getETag())) {
-			timersRoot.removeChild(p.getTimerID());
+			if (p.getTimerID() != null) {
+				timersRoot.removeChild(p.getTimerID());
+			}
 		}
 		else {
 			throw new IllegalStateException("publication "+pk+" not found");

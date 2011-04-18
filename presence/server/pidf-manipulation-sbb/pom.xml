@@ -16,6 +16,11 @@
 			<artifactId>xdms-core-datasource-ratype</artifactId>
 			<version>${pom.version}</version>
 		</dependency>
+		<dependency>
+			<artifactId>sip-event-client-publication-sbb-local-object</artifactId>
+			<groupId>org.mobicents.servers.sipevent</groupId>
+			<version>${pom.version}</version>
+		</dependency>
 	</dependencies>
 	
 </project>
