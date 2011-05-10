@@ -45,28 +45,28 @@
 
 	<target name="build-core" description="">
 		<exec executable="${mvn.executable}" dir="${ant.file.mobicents.release}/../..">
-			<arg line="clean install -P maven-release,set-svn-revision" />
+			<arg line="clean install -P maven-release,set-svn-revision,validate-source-headers" />
 		</exec>
 	</target>
 	
 	<target name="build-xdms" description="">
 		<exec executable="${mvn.executable}" dir="${ant.file.mobicents.release}/../../xdm/server/installer">
-			<arg line="clean install -P set-svn-revision -Djboss.home=${jboss.home}" />
+			<arg line="clean install -P set-svn-revision,validate-source-headers -Djboss.home=${jboss.home}" />
 		</exec>
 	</target>
 
 	<target name="build-integrated" description="">
 		<exec executable="${mvn.executable}" dir="${ant.file.mobicents.release}/../../integrated/server/installer">
-			<arg line="clean install -P set-svn-revision -Djboss.home=${jboss.home}" />
+			<arg line="clean install -P set-svn-revision,validate-source-headers -Djboss.home=${jboss.home}" />
 		</exec>
 	</target>
 
 	<target name="build-examples" description="">
 		<exec executable="${mvn.executable}" dir="${ant.file.mobicents.release}/../../examples/internal-publisher">
-			<arg line="clean install -P set-svn-revision -Djboss.home=${jboss.home}" />
+			<arg line="clean install -P set-svn-revision,validate-source-headers -Djboss.home=${jboss.home}" />
 		</exec>
 		<exec executable="${mvn.executable}" dir="${ant.file.mobicents.release}/../../examples/internal-subscriber">
-			<arg line="clean install -P set-svn-revision -Djboss.home=${jboss.home}" />
+			<arg line="clean install -P set-svn-revision,validate-source-headers -Djboss.home=${jboss.home}" />
 		</exec>
 	</target>
 
