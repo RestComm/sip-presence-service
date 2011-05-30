@@ -37,7 +37,7 @@ public class UserAttributeUriKey extends AttributeUriKey {
 	private String user;
 	
 	public UserAttributeUriKey(String auid, String user, String documentName, ElementSelector elementSelector,AttributeSelector attributeSelector,Map<String,String> namespaces) {
-		super(new DocumentSelector(auid,KeyUtils.getPercentEncodedDocumentParent(user),documentName),elementSelector,attributeSelector,namespaces);
+		super(new DocumentSelector(auid+"/"+KeyUtils.getPercentEncodedDocumentParent(user),documentName),elementSelector,attributeSelector,namespaces);
 		this.user = user;
 	}	
 	

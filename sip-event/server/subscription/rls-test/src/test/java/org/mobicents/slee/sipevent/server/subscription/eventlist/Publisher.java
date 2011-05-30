@@ -149,7 +149,7 @@ public class Publisher implements SipListener {
 		messageFactory = sipFactory.createMessageFactory();
 
 		this.listeningPoint = sipStack.createListeningPoint(
-				ServerConfiguration.SERVER_HOST, listeningPort, transport);
+				"localhost", listeningPort, transport);
 		sipProvider = sipStack.createSipProvider(listeningPoint);
 		sipProvider.addSipListener(this);
 
@@ -170,7 +170,7 @@ public class Publisher implements SipListener {
 		ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
 		int port = sipProvider.getListeningPoint(transport).getPort();
 		ViaHeader viaHeader = headerFactory.createViaHeader(
-				ServerConfiguration.SERVER_HOST, port, transport, null);
+				"localhost", port, transport, null);
 		viaHeaders.add(viaHeader);
 
 		// Create a new CallId header
@@ -202,7 +202,7 @@ public class Publisher implements SipListener {
 
 		// add route
 		request.addHeader(headerFactory.createRouteHeader(addressFactory
-				.createAddress("<sip:" + ServerConfiguration.SERVER_HOST + ":"
+				.createAddress("<sip:localhost:"
 						+ notifierPort + ";transport=" + transport + ";lr>")));
 
 		// Create an event header for the subscription.

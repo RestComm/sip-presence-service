@@ -22,96 +22,102 @@
 
 package org.openxdm.xcap.server.slee.resource.datasource;
 
-import java.io.Serializable;
 import java.util.Map;
 
 import javax.slee.EventTypeID;
 
+import org.mobicents.protocols.xcap.diff.BuildPatchException;
+import org.mobicents.protocols.xcap.diff.dom.DOMDocumentPatchComponentBuilder;
+import org.mobicents.protocols.xcap.diff.dom.DOMXcapDiffPatchBuilder;
 import org.openxdm.xcap.common.uri.DocumentSelector;
 import org.openxdm.xcap.common.uri.NodeSelector;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-public final class ElementUpdatedEvent implements Serializable {
+public final class ElementUpdatedEvent extends DocumentUpdatedEvent {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	
+
 	/**
 	 * IMPORTANT: must sync with the event descriptor data!!!!
 	 */
-	public static final EventTypeID EVENT_TYPE_ID = new EventTypeID("ElementUpdatedEvent","org.openxdm","1.0");
-		
-	private final DocumentSelector documentSelector;
+	public static final EventTypeID EVENT_TYPE_ID = new EventTypeID(
+			"ElementUpdatedEvent", "org.openxdm", "1.0");
+
 	private final NodeSelector nodeSelector;
-	private final Map<String, String> namespaces;
-	private final String oldETag;
-	private final String newETag;
-	private final String documentAsString;
-	private final String elementAsString;
-	private final Element element;
-	
+	private final Element oldElement;
+	private final Element newElement;
+
 	public ElementUpdatedEvent(DocumentSelector documentSelector,
-			NodeSelector nodeSelector, Map<String, String> namespaces,
-			String oldETag, String newETag, String documentAsString,
-			String elementAsString, Element element) {
-		if (newETag == null) {
-			throw new IllegalArgumentException("newETag arg can't be null");
-		}
-		this.documentSelector = documentSelector;
+			String defaultDocNamespace,
+			org.openxdm.xcap.common.datasource.Document oldDocument,
+			Document newDocumentDOM, String newDocumentString, String newETag,
+			NodeSelector nodeSelector, Element oldElement, Element newElement) {
+		super(documentSelector, defaultDocNamespace, oldDocument,
+				newDocumentDOM, newDocumentString, newETag);
 		this.nodeSelector = nodeSelector;
-		this.namespaces = namespaces;
-		this.oldETag = oldETag;
-		this.newETag = newETag;
-		this.documentAsString = documentAsString;
-		
-		this.elementAsString = elementAsString;
-		this.element = element;
+		this.oldElement = oldElement;
+		this.newElement = newElement;
 	}
 
-	public String getDocumentAsString() {
-		return documentAsString;
+	@Override
+	protected Document createDocXcapDiff(boolean mayPatch) throws BuildPatchException {
+		
+		if (!mayPatch) {
+			// if xml patch ops may not be included, then just reuse the parent logic
+			return super.createDocXcapDiff(false);		
+		}
+		
+		// since element in xcap must be valid doc fragment (i.e. have all
+		// namespaces declared) the namespace bindings for the patch are only
+		// the ones used by the node selector
+		Map<String, String> namespaceBindings = nodeSelector
+				.getNamespaceContext() != null ? nodeSelector
+				.getNamespaceContext().getNamespaces() : null;
+		DOMXcapDiffPatchBuilder patchBuilder = XCAP_DIFF_FACTORY
+				.getPatchBuilder();
+		DOMDocumentPatchComponentBuilder documentPatchComponentBuilder = patchBuilder
+				.getDocumentPatchComponentBuilder();
+		Element patchInstruction = null;
+		if (oldElement == null) {
+			patchInstruction = documentPatchComponentBuilder
+					.getXmlPatchOperationsBuilder().addElement(
+							nodeSelector.getElementSelector(), newElement,
+							namespaceBindings);
+		} else {
+			if (newElement == null) {
+				patchInstruction = documentPatchComponentBuilder
+						.getXmlPatchOperationsBuilder().removeElement(
+								nodeSelector.getElementSelector(), null,
+								namespaceBindings);
+			} else {
+				patchInstruction = documentPatchComponentBuilder
+						.getXmlPatchOperationsBuilder().replaceElement(
+								nodeSelector.getElementSelector(), newElement,
+								namespaceBindings);
+			}
+		}
+		Element[] patchInstructions = { patchInstruction };
+		Element[] patchComponent = { documentPatchComponentBuilder
+				.buildPatchComponent(documentSelector.toString(),
+						getPreviousETag(), getNewETag(), patchInstructions) };
+		return patchBuilder.buildPatch(
+				XDM_SERVER_CONFIGURATION.getFullXcapRoot(), patchComponent);
 	}
-	
-	public DocumentSelector getDocumentSelector() {
-		return documentSelector;
+
+	public Element getOldElement() {
+		return oldElement;
 	}
-	
-	public Element getElement() {
-		return element;
+
+	public Element getNewElement() {
+		return newElement;
 	}
-	
-	public String getElementAsString() {
-		return elementAsString;
-	}
-	
-	public String getNewETag() {
-		return newETag;
-	}
-	
-	public Map<String, String> getNamespaces() {
-		return namespaces;
-	}
-	
+
 	public NodeSelector getNodeSelector() {
 		return nodeSelector;
 	}
-	
-	public String getOldETag() {
-		return oldETag;
-	}
-	
-	public boolean equals(Object o) {
-		if (o != null && o.getClass() == this.getClass()) {
-			return ((ElementUpdatedEvent)o).newETag.equals(newETag);
-		}
-		else {
-			return false;
-		}	
-	}
-	
-	public int hashCode() {		
-		return newETag.hashCode();
-	}
+
 }

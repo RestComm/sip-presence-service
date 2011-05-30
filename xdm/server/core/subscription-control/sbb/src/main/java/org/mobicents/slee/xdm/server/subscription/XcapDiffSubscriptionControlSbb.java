@@ -227,19 +227,20 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 
 	public void onAttributeUpdatedEvent(AttributeUpdatedEvent event,
 			ActivityContextInterface aci) {
-		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event.getDocumentSelector(), event.getOldETag(), event.getNewETag(), event.getDocumentAsString(), this);		
+		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event, aci, this);		
 	}
 
 	public void onDocumentUpdatedEvent(DocumentUpdatedEvent event,
 			ActivityContextInterface aci) {
-		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event.getDocumentSelector(), event.getOldETag(), event.getNewETag(), event.getDocumentAsString(), this);
+		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event, aci, this);
 	}
 
 	public void onElementUpdatedEvent(ElementUpdatedEvent event,
 			ActivityContextInterface aci) {
-		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event.getDocumentSelector(), event.getOldETag(), event.getNewETag(), event.getDocumentAsString(), this);
+		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event, aci, this);
 	}
 
+	
 	// --------- JAXB
 
 	/*

@@ -22,82 +22,113 @@
 
 package org.mobicents.xdm.server.appusage;
 
+import org.apache.log4j.Logger;
 import org.openxdm.xcap.common.uri.DocumentSelector;
 
 /**
- * This XCAP Authorization Policy implements the Default
- * Authorization Policy.
+ * This XCAP Authorization Policy implements the Default Authorization Policy.
  * 
  * By XCAP Specs:
  * 
- * "By default, each user is able to access (read, modify, and delete)
- * all of the documents below their home directory, and any user is able
- * to read documents within the global directory.  However, only trusted
- * users, explicitly provisioned into the server, can modify global
- * documents."
- *    
+ * "By default, each user is able to access (read, modify, and delete) all of
+ * the documents below their home directory, and any user is able to read
+ * documents within the global directory. However, only trusted users,
+ * explicitly provisioned into the server, can modify global documents."
+ * 
  * @author Eduardo Martins
- *
+ * 
  */
 public class DefaultAuthorizationPolicy implements AuthorizationPolicy {
 
+	private static final Logger LOGGER = Logger
+			.getLogger(DefaultAuthorizationPolicy.class);
+
 	private final String authorizedUserDocumentName;
-	
+
 	public DefaultAuthorizationPolicy(String authorizedUserDocumentName) {
 		this.authorizedUserDocumentName = authorizedUserDocumentName;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
-	 * @see org.mobicents.xdm.server.appusage.AuthorizationPolicy#isAuthorized(java.lang.String, org.mobicents.xdm.server.appusage.AuthorizationPolicy.Operation, org.openxdm.xcap.common.uri.DocumentSelector, org.mobicents.xdm.server.appusage.AppUsageDataSource)
+	 * 
+	 * @see
+	 * org.mobicents.xdm.server.appusage.AuthorizationPolicy#isAuthorized(java
+	 * .lang.String,
+	 * org.mobicents.xdm.server.appusage.AuthorizationPolicy.Operation,
+	 * org.openxdm.xcap.common.uri.DocumentSelector,
+	 * org.mobicents.xdm.server.appusage.AppUsageDataSource)
 	 */
-	public boolean isAuthorized(String user, AuthorizationPolicy.Operation operation, DocumentSelector documentSelector, AppUsageDataSource dataSource) throws NullPointerException {
-		
+	public boolean isAuthorized(String user,
+			AuthorizationPolicy.Operation operation,
+			DocumentSelector documentSelector, AppUsageDataSource dataSource)
+			throws NullPointerException {
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("checking " + user + " is authorized to " + operation
+					+ " for " + documentSelector);
+		}
+
 		// check args
 		if (user == null) {
 			throw new NullPointerException("user is null");
 		}
 		if (operation == null) {
 			throw new NullPointerException("operation is null");
-		}		
+		}
 		if (documentSelector == null) {
 			throw new NullPointerException("document selector is null");
 		}
-				
+
 		try {
 			if (documentSelector.isUserDocument()) {
-				String xui = documentSelector.getDocumentParent().substring(6);
-				// only the user is authorized to operate on it's directory 
+				String xui = documentSelector.getUser();
+				// only the user is authorized to operate on it's directory
 				if (user.equalsIgnoreCase(xui)) {
 					if (operation == Operation.PUT) {
 						// check doc name if is set
 						if (authorizedUserDocumentName != null) {
-							return authorizedUserDocumentName.equals(documentSelector.getDocumentName());
-						}
-						else {
+							return authorizedUserDocumentName
+									.equals(documentSelector.getDocumentName());
+						} else {
+							if (LOGGER.isDebugEnabled()) {
+								LOGGER.debug("request authorized");
+							}
 							return true;
 						}
-					}
-					else {
+					} else {
+						if (LOGGER.isDebugEnabled()) {
+							LOGGER.debug("request authorized");
+						}
 						return true;
 					}
 				} else {
+					if (LOGGER.isDebugEnabled()) {
+						LOGGER.debug("request not authorized, user "
+								+ user
+								+ " may not interact with documents not under user "
+								+ xui + " directory.");
+					}
 					return false;
 				}
-			}
-			else {
-				// /auid/global  or invalid dir, authorize operation only if is a get operation
-				if(operation == Operation.GET) {
+			} else {
+				// /auid/global or invalid dir, authorize operation only if is a
+				// get operation
+				if (operation == Operation.GET) {
+					if (LOGGER.isDebugEnabled()) {
+						LOGGER.debug("non user document retrieval authorized");
+					}
 					return true;
-				}
-				else {
+				} else {
+					if (LOGGER.isDebugEnabled()) {
+						LOGGER.debug("non user document modification not authorized");
+					}
 					return false;
 				}
 			}
-		}
-		catch (IndexOutOfBoundsException e) {
+		} catch (IndexOutOfBoundsException e) {
 			throw new IllegalArgumentException("invalid document selector");
 		}
-		
+
 	}
 }

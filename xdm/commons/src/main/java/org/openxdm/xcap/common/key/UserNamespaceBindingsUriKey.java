@@ -36,7 +36,7 @@ public class UserNamespaceBindingsUriKey extends NamespaceBindingsUriKey {
 	private String user;
 	
 	public UserNamespaceBindingsUriKey(String auid,String user,String documentName,ElementSelector elementSelector,Map<String,String> namespaces) {
-		super(new DocumentSelector(auid,KeyUtils.getPercentEncodedDocumentParent(user),documentName),elementSelector,namespaces);
+		super(new DocumentSelector(auid+"/"+KeyUtils.getPercentEncodedDocumentParent(user),documentName),elementSelector,namespaces);
 		this.user = user;
 	}	
 	

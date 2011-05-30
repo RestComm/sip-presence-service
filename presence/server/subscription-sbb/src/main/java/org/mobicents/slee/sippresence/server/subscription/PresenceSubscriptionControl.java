@@ -286,7 +286,7 @@ public class PresenceSubscriptionControl {
 						.getUnmarshalledContent(), sbb.getHeaderFactory()
 						.createContentTypeHeader(
 								composedPublication.getContentType(),
-								composedPublication.getContentSubType()));
+								composedPublication.getContentSubType()),null);
 			}
 		} catch (Exception e) {
 			logger.error("failed to get notify content", e);
@@ -298,20 +298,18 @@ public class PresenceSubscriptionControl {
 	public Object filterContentPerSubscriber(Subscription subscription, Object unmarshalledContent, PresenceSubscriptionControlSbbInterface sbb) {
 		
 		// get rules for subscriptions on this sbb entity (sip dialog)
-		HashMap<PresRuleCMPKey,OMAPresRule> combinedRules = sbb.getCombinedRules();
-		if (combinedRules == null) {
+		//HashMap<PresRuleCMPKey,OMAPresRule> combinedRules = sbb.getCombinedRules();
+		//if (combinedRules == null) {
 			// no rules, return full content
-			return unmarshalledContent;
-		}
+		//	return unmarshalledContent;
+		//}
 		// get rule for this specific subscription
-		final OMAPresRule rule = combinedRules.get(new PresRuleCMPKey(subscription.getSubscriber(),subscription.getNotifier(), subscription.getKey()));
-		if (rule == null) {
+		//final OMAPresRule rule = combinedRules.get(new PresRuleCMPKey(subscription.getSubscriber(),subscription.getNotifier(), subscription.getKey()));
+		//if (rule == null) {
 			// no rule for the subscription, return full content
-			return unmarshalledContent;
-		}
+		//	return unmarshalledContent;
+		//}
 		
-		//final JAXBElement<Presence> jaxbElement = (JAXBElement<Presence>) unmarshalledContent;
-		//final Presence presence = jaxbElement.getValue();
 		// TODO apply transformations, including polite-block (see pres-rules
 		// specs)
 		
@@ -328,7 +326,7 @@ public class PresenceSubscriptionControl {
 	 */
 	private DocumentSelector getDocumentSelector(String user,
 			String presRulesAUID, String presRulesDocumentName) {
-		return new DocumentSelector(presRulesAUID, "users/" + user,
+		return new DocumentSelector(new StringBuilder(presRulesAUID).append("/users/").append(user).toString(),
 				presRulesDocumentName);
 	}
 

@@ -58,47 +58,34 @@ public interface DataSource {
 	 * @param documentSelector
 	 * @param eTag
 	 * @param xml
-	 * @param document
 	 * @throws InternalServerErrorException
 	 */
-	public void createDocument(DocumentSelector documentSelector,String eTag, String xml, org.w3c.dom.Document document) throws InternalServerErrorException;
+	public void createDocument(DocumentSelector documentSelector, String eTag, String xml) throws InternalServerErrorException;
 
 	/**
 	 * 
 	 * @param documentSelector
-	 * @param oldETag
-	 * @param newETag
-	 * @param documentAsString
-	 * @param document
+	 * @param eTag
+	 * @param xml
 	 * @throws InternalServerErrorException
 	 */
 	public void updateDocument(DocumentSelector documentSelector,
-			String oldETag, String newETag, String documentAsString,
-			org.w3c.dom.Document document) throws InternalServerErrorException;
+			String eTag, String xml) throws InternalServerErrorException;
 	
 	/**
 	 * 
 	 * @param documentSelector
-	 * @param oldETag
 	 * @throws InternalServerErrorException
 	 */
-	public void deleteDocument(DocumentSelector documentSelector, String oldETag) throws InternalServerErrorException;
+	public void deleteDocument(DocumentSelector documentSelector) throws InternalServerErrorException;
 	
 	/**
 	 * 
-	 * @param auid
-	 * @param documentParent
+	 * @param collection
+	 * @param includeChildCollections
 	 * @return
 	 * @throws InternalServerErrorException
 	 */
-	public Document[] getDocuments(String auid, String documentParent) throws InternalServerErrorException;
-	
-	/**
-	 * 
-	 * @param auid
-	 * @return
-	 * @throws InternalServerErrorException
-	 */
-	public Document[] getDocuments(String auid) throws InternalServerErrorException;
+	public Document[] getDocuments(String collection, boolean includeChildCollections) throws InternalServerErrorException;
 	
 }

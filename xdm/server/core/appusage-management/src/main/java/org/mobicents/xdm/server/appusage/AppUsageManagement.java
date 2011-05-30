@@ -116,34 +116,10 @@ public class AppUsageManagement {
 			LOGGER.info("Added app usage "+appUsageFactory.getAppUsageId());
 			if (appUsageFactory.getDataSourceInterceptor() != null) {
 				interceptors.put(appUsageFactory.getAppUsageId(), appUsageFactory.getDataSourceInterceptor());
-			}
-			// inform SLEE
-			fireEventToSLEE(new AppUsageAddedEvent(appUsageFactory.getAppUsageId()), APPUSAGE_ADDED_EVENT_TYPE);
+			}			
 		}
 	}
 		
-	private void fireEventToSLEE(Object event, EventTypeID eventTypeID) {
-		try {
-			InitialContext ic = new InitialContext();
-			SleeConnectionFactory factory = (SleeConnectionFactory) ic.lookup("java:/MobicentsConnectionFactory");
-			if (factory != null) {
-				SleeConnection connection = factory.getConnection();
-				ExternalActivityHandle handle = connection.createActivityHandle();
-				// ensuring the event type exists in SLEE
-				EventTypeID eventTypeID2 = connection.getEventTypeID(eventTypeID.getName(), eventTypeID.getVendor(), eventTypeID.getVersion());
-				if (eventTypeID2 != null) {
-					connection.fireEvent(event, eventTypeID2, handle, null);
-				}
-				connection.close();
-			}
-		} catch (Exception e) {
-			// SLEE is not running ?
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(e.getMessage(),e);
-			}
-		}
-	}
-
 	/**
 	 * Removes the app usage from cache with the specified id
 	 * @param auid
@@ -153,9 +129,7 @@ public class AppUsageManagement {
 		if (pool != null) {
 			LOGGER.info("Removed app usage "+auid);
 			pool.close();
-			interceptors.remove(auid);
-			// inform SLEE
-			fireEventToSLEE(new AppUsageRemovedEvent(auid),APPUSAGE_REMOVED_EVENT_TYPE);
+			interceptors.remove(auid);			
 		}
 	}
 

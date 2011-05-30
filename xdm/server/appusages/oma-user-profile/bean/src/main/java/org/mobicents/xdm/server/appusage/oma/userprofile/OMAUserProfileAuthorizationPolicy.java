@@ -47,7 +47,7 @@ public class OMAUserProfileAuthorizationPolicy implements AuthorizationPolicy {
 		}
 		else {
 			// modifications can only be done by the profile principal
-			String xui = documentSelector.getDocumentParent().substring(6);
+			String xui = documentSelector.getUser();
 			if (user.equals(xui)) {
 				if (operation == Operation.PUT) {
 					// check doc name

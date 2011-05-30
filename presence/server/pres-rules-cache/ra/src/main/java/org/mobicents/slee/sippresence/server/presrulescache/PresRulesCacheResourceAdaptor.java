@@ -70,7 +70,7 @@ public class PresRulesCacheResourceAdaptor implements ResourceAdaptor,
 
 	// dummy activity for watcher of the pres rules app usage
 	private final PresRulesActivityImpl presRulesAppUsageActivity = new PresRulesActivityImpl(
-			new DocumentSelector("null", "null", "null"), this);
+			new DocumentSelector("null", "null"), this);
 	private final PresRulesActivityHandle presRulesAppUsageActivityHandle = new PresRulesActivityHandle(
 			presRulesAppUsageActivity.getDocumentSelector());
 

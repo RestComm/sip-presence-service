@@ -41,34 +41,31 @@ public class DocumentPrimaryKey implements Serializable {
 	 */
 	private static final long serialVersionUID = -6638892043798746768L;
 
-	@Column(name = "AUID", nullable = false)
-	private String appUsage;
-	
 	@Column(name = "DOCUMENT_NAME", nullable = false)
 	private String documentName;
 
-	@Column(name = "DOCUMENT_PARENT", nullable = false)
-	private String documentParent;
+	@Column(name = "COLLECTION", nullable = false)
+	private String collection;
 
 	public DocumentPrimaryKey() {
 		// TODO Auto-generated constructor stub
 	}
 	
-	public DocumentPrimaryKey(String auid, String documentParent, String documentName) {
+	public DocumentPrimaryKey(String collection, String documentName) {
 		setDocumentName(documentName);
-		setAppUsage(auid);
-		setDocumentParent(documentParent);
+		setCollection(collection);
 	}
 
 	// -- GETTERS AND SETTERS
 
-	public String getAppUsage() {
-		return appUsage;
+	public String getCollection() {
+		return collection;
 	}
 	
-	public void setAppUsage(String appUsage) {
-		this.appUsage = appUsage;
+	public void setCollection(String collection) {
+		this.collection = collection;
 	}
+	
 	
 	public String getDocumentName() {
 		return documentName;
@@ -78,18 +75,9 @@ public class DocumentPrimaryKey implements Serializable {
 		this.documentName = documentName;
 	}
 
-	public String getDocumentParent() {
-		return documentParent;
-	}
-	
-	public void setDocumentParent(String documentParent) {
-		this.documentParent = documentParent;
-	}
-
 	@Override
 	public int hashCode() {
-		int result = appUsage.hashCode();
-		result = 31 * result + documentParent.hashCode();
+		int result = collection.hashCode();
 		result = 31 * result + documentName.hashCode();
 		return result;
 	}
@@ -103,9 +91,7 @@ public class DocumentPrimaryKey implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		DocumentPrimaryKey other = (DocumentPrimaryKey) obj;
-		if (!appUsage.equals(other.appUsage)) 
-			return false;
-		if (!documentParent.equals(other.documentParent)) 
+		if (!collection.equals(other.collection)) 
 			return false;
 		if (!documentName.equals(other.documentName)) 
 			return false;
@@ -113,7 +99,7 @@ public class DocumentPrimaryKey implements Serializable {
 	}
 
 	public String toString() {
-		return "DocumentPrimaryKey : appUsage = "+appUsage+", documentParent = "+documentParent+" , documentName = " + documentName;
+		return "DocumentPrimaryKey : collection = "+collection+" , documentName = " + documentName;
 	}
 
 }

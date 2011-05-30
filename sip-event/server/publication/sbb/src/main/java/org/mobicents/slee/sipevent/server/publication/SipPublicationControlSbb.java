@@ -45,6 +45,7 @@ import javax.slee.RolledBackContext;
 import javax.slee.Sbb;
 import javax.slee.SbbContext;
 import javax.slee.SbbLocalObject;
+import javax.slee.serviceactivity.ServiceStartedEvent;
 
 import net.java.slee.resource.sip.SleeSipProvider;
 
@@ -93,12 +94,16 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 	public abstract ChildRelationExt getPublicationControlChildRelation();
 	
 	private PublicationControlSbbLocalObject getPublicationControlChildSbb() {
-		try {
-			return (PublicationControlSbbLocalObject) getPublicationControlChildRelation().create(ChildRelationExt.DEFAULT_CHILD_NAME);
-		} catch (Exception e) {
-			logger.error("Failed to create child sbb",e);
-			return null;
-		}		
+		ChildRelationExt childRelation = getPublicationControlChildRelation();
+		PublicationControlSbbLocalObject child = (PublicationControlSbbLocalObject) childRelation.get(ChildRelationExt.DEFAULT_CHILD_NAME);
+		if (child == null) {
+			try {
+				child = (PublicationControlSbbLocalObject) childRelation.create(ChildRelationExt.DEFAULT_CHILD_NAME);
+			} catch (Exception e) {
+				logger.error("Failed to create child sbb",e);				
+			}		
+		}
+		return child;
 	}
 	
 	// -- CONFIGURATION	
@@ -139,13 +144,13 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 		SbbLocalObject sbbLocalObject = this.sbbContext.getSbbLocalObject();
 		aci.detach(sbbLocalObject);
 		
-		if (logger.isDebugEnabled()) {
-			logger.debug("Processing PUBLISH request...");
-		}
-		
 		// get child sbb that handles all the publication logic
 		PublicationControlSbbLocalObject childSbb = getPublicationControlChildSbb();						
 		
+		if (logger.isDebugEnabled()) {
+			logger.debug("Processing PUBLISH request...");
+		}
+				
 		if (childSbb == null) { 
 			try {
 				// create response
@@ -479,6 +484,13 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 			}
 		}
 		return false;
+	}
+	
+	public void onServiceStartedEvent(ServiceStartedEvent event, ActivityContextInterface aci) {
+		logger.info("Mobicents SIP Event Publication Control service activated.");
+		// FIXME forcing load of classes of childs,  till deadlocks on slee class loaders nailed
+		getPublicationControlChildSbb();
+		aci.detach(sbbContext.getSbbLocalObject());
 	}
 	
 	// ----------- SBB OBJECT's LIFE CYCLE

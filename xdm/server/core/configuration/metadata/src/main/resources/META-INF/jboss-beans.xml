@@ -24,7 +24,7 @@
       <property name="schemeAndAuthority">http://127.0.0.1:8080</property>
       -->
       
-      <!-- the xcap root of the server, must begin with / -->
+      <!-- the xcap root of the server, must begin and end with / -->
       <property name="xcapRoot">${xdm.server.xcap.root}</property>
       
       <!-- enables authentication for local xcap requests -->
@@ -36,6 +36,14 @@
       <!--  realm for http digest user authentication, if not set the server host will be used
       <property name="authenticationRealm">...</property>
        -->
+      
+      <!-- xcap diff super users, may subscribe any collection, others may only subscribe collections in its user directory 
+      <property name="xcapDiffSuperUsers">
+      	<set elementClass="java.lang.String">
+            <value>sip:su@mobicents.org</value>            
+        </set>
+      </property>
+      -->
       
    </bean>
    

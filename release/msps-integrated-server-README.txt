@@ -24,5 +24,3 @@ IP that Mobicents JAIN SLEE server is bound using -b parameter.
 
 To undeploy the examples just remove the deployable unit jars
 msps-examples-*.jar from the server/default/deploy directory.
-
-Author: Eduardo Martins, JBoss R&D

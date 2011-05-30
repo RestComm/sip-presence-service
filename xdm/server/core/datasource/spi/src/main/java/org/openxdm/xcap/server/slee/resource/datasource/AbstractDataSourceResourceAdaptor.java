@@ -290,13 +290,18 @@ public abstract class AbstractDataSourceResourceAdaptor implements DataSourceRes
 	private void postEvent(Object event, FireableEventType eventId, DocumentSelector documentSelector) {
 		if (getLogger().isFineEnabled()) {
 			getLogger().fine("postEvent(documentSelector="+documentSelector.toString()+")");
-}
-		// try to fire event on document selector and auid activities
+		}
+		// try to fire event on document selector and all parent collection activities
 		fireEvent(event, eventId, new ActivityHandle(documentSelector.toString()));
-		fireEvent(event, eventId, new ActivityHandle(documentSelector.getAUID()));
+		for (String collection : documentSelector.getParentCollections()) {
+			fireEvent(event, eventId, new ActivityHandle(collection));
+		}
 	}
 	
 	private void fireEvent(Object event, FireableEventType eventId, ActivityHandle handle) {
+		if (getLogger().isFineEnabled()) {
+			getLogger().fine("fireEvent(eventId="+eventId+",handleId="+handle.getId()+")");
+		}
 		if (getActivity(handle) != null) {
 			// handle exists, fire event
 			try {
@@ -322,12 +327,12 @@ public abstract class AbstractDataSourceResourceAdaptor implements DataSourceRes
 	/**
 	 * creates a new activity, if does not exists
 	 */
-	public AppUsageActivity createAppUsageActivity(String auid) {
-		final ActivityHandle activityHandle = new ActivityHandle(auid);
-		AppUsageActivity activity = (AppUsageActivity) activities.get(activityHandle);
+	public CollectionActivity createCollectionActivity(String collection) {
+		final ActivityHandle activityHandle = new ActivityHandle(collection);
+		CollectionActivity activity = (CollectionActivity) activities.get(activityHandle);
 		if (activity == null) {
-			activity = new AppUsageActivity(auid);
-			final AppUsageActivity anotherActivity = (AppUsageActivity) activities.putIfAbsent(activityHandle, activity);
+			activity = new CollectionActivity(collection);
+			final CollectionActivity anotherActivity = (CollectionActivity) activities.putIfAbsent(activityHandle, activity);
 			if (anotherActivity != null) {
 				activity = anotherActivity;
 			}
@@ -336,7 +341,7 @@ public abstract class AbstractDataSourceResourceAdaptor implements DataSourceRes
 				try {
 					sleeEndpoint.startActivityTransacted(activityHandle, activity,ACTIVITY_FLAGS);
 				} catch (Throwable e) {
-					getLogger().severe("failed to start activity for auid "+auid,e);
+					getLogger().severe("failed to start activity for collection "+collection,e);
 				}
 			}
 		}

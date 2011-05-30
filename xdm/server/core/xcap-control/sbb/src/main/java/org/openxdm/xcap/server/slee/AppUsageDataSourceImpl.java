@@ -23,10 +23,10 @@
 package org.openxdm.xcap.server.slee;
 
 import org.mobicents.xdm.server.appusage.AppUsageDataSource;
-import org.openxdm.xcap.common.datasource.DataSource;
 import org.openxdm.xcap.common.datasource.Document;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
 import org.openxdm.xcap.common.uri.DocumentSelector;
+import org.openxdm.xcap.server.slee.resource.datasource.DataSourceSbbInterface;
 
 /**
  * 
@@ -38,13 +38,13 @@ public class AppUsageDataSourceImpl implements AppUsageDataSource {
 	/**
 	 * 
 	 */
-	private final DataSource dataSource;
+	private final DataSourceSbbInterface dataSource;
 
 	/**
 	 * 
 	 * @param dataSource
 	 */
-	public AppUsageDataSourceImpl(DataSource dataSource) {
+	public AppUsageDataSourceImpl(DataSourceSbbInterface dataSource) {
 		this.dataSource = dataSource;
 	}
 
@@ -61,30 +61,10 @@ public class AppUsageDataSourceImpl implements AppUsageDataSource {
 		return dataSource.getDocument(documentSelector);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.mobicents.xdm.server.appusage.AppUsageDataSource#getDocuments(java
-	 * .lang.String, java.lang.String)
-	 */
 	@Override
-	public Document[] getDocuments(String auid, String documentParent)
+	public Document[] getDocuments(String collection,
+			boolean includeChildCollections)
 			throws InternalServerErrorException {
-		return dataSource.getDocuments(auid, documentParent);
+		return dataSource.getDocuments(collection, includeChildCollections);
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.mobicents.xdm.server.appusage.AppUsageDataSource#getDocuments(java
-	 * .lang.String)
-	 */
-	@Override
-	public Document[] getDocuments(String auid)
-			throws InternalServerErrorException {
-		return dataSource.getDocuments(auid);
-	}
-
 }

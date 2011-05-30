@@ -24,8 +24,6 @@ package org.mobicents.xdm.server.appusage.oma.prescontent;
 
 import org.mobicents.xdm.server.appusage.AppUsageDataSource;
 import org.mobicents.xdm.server.appusage.AuthorizationPolicy;
-import org.openxdm.xcap.common.datasource.Document;
-import org.openxdm.xcap.common.error.InternalServerErrorException;
 import org.openxdm.xcap.common.uri.DocumentSelector;
 
 public class OMAPresContentAuthorizationPolicy implements AuthorizationPolicy {
@@ -52,7 +50,7 @@ public class OMAPresContentAuthorizationPolicy implements AuthorizationPolicy {
 			return false;
 		}
 		
-		String xui = documentSelector.getDocumentParent().substring(6);
+		String xui = documentSelector.getUser();
 		if (!user.equals(xui)) {
 			if (operation != Operation.GET) {
 				// other user may only read

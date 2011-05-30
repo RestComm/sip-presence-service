@@ -22,8 +22,6 @@
 
 package org.mobicents.slee.sipevent.server.subscription;
 
-import javax.sip.header.ContentTypeHeader;
-
 import org.mobicents.sipevent.server.subscription.util.AbstractEvent;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 
@@ -36,23 +34,16 @@ import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 public class NotifyEvent extends AbstractEvent {
 
 	private final SubscriptionKey subscriptionKey;
-	private final Object content;
-	private final ContentTypeHeader contentTypeHeader;
+	private final NotifyContent notifyContent;
 	
-	public NotifyEvent(SubscriptionKey subscriptionKey, Object content,
-			ContentTypeHeader contentTypeHeader) {
+	public NotifyEvent(SubscriptionKey subscriptionKey, NotifyContent notifyContent) {
 		super();
 		this.subscriptionKey = subscriptionKey;
-		this.content = content;
-		this.contentTypeHeader = contentTypeHeader;
+		this.notifyContent = notifyContent;
 	}
 	
-	public Object getContent() {
-		return content;
-	}
-	
-	public ContentTypeHeader getContentTypeHeader() {
-		return contentTypeHeader;
+	public NotifyContent getNotifyContent() {
+		return notifyContent;
 	}
 	
 	public SubscriptionKey getSubscriptionKey() {
@@ -64,7 +55,7 @@ public class NotifyEvent extends AbstractEvent {
 	public String toString() {
 		if (toString == null) {
 			toString = new StringBuilder("NOTIFY EVENT [").append(String.valueOf(subscriptionKey))
-				.append("]: Content:\n\n").append(content).toString();
+				.append("]: Content:\n\n").append(notifyContent.getContent()).toString();
 		}
 		return toString;
 	}

@@ -30,6 +30,8 @@ import gov.nist.javax.sip.header.ims.PChargingVectorHeader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.sip.Dialog;
 import javax.sip.SipException;
@@ -42,6 +44,7 @@ import javax.slee.ActivityContextInterface;
 import javax.slee.facilities.Tracer;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
+import javax.xml.transform.TransformerException;
 
 import net.java.slee.resource.sip.DialogActivity;
 
@@ -49,6 +52,8 @@ import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionCo
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionControlDataSource;
+import org.openxdm.xcap.common.xml.TextWriter;
+import org.w3c.dom.Node;
 
 /**
  * Handles the notification of a SIP subscriber
@@ -70,19 +75,19 @@ public class SipSubscriberNotificationHandler {
 		}
 	}
 
-	public void notifySipSubscriber(Object content,
-			ContentTypeHeader contentTypeHeader, Subscription subscription,
+	public void notifySipSubscriber(NotifyContent notifyContent, Subscription subscription,
 			ActivityContextInterface dialogACI,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 
 		try {
 			DialogActivity dialog = (DialogActivity) dialogACI.getActivity();
 			// create notify
-			Request notify = createNotify(dialog, subscription);
+			Request notify = createNotify(dialog, subscription, notifyContent.getEventHeaderParams());
 			// add content
-			if (content != null) {
-				notify = setNotifyContent(subscription, notify, content,
-						contentTypeHeader, childSbb);
+			if (notifyContent.getContent() != null) {
+				notify = setNotifyContent(subscription, notify, notifyContent.getContent(),
+						notifyContent.getContentTypeHeader(), childSbb);
+				
 			}
 			// ....aayush added code here (with ref issue #567)
 			notify.addHeader(addPChargingVectorHeader());
@@ -104,9 +109,20 @@ public class SipSubscriberNotificationHandler {
 			// filter content per notifier (subscriber rules)
 			// TODO
 			// marshall content and add to sip message
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			childSbb.getMarshaller().marshal(filteredContent, baos);
-			notify.setContent(baos.toByteArray(), contentTypeHeader);
+			if (content instanceof Node) {
+				// dom
+				try {
+					notify.setContent(TextWriter.toString((Node)content), contentTypeHeader);
+				} catch (TransformerException e) {
+					throw new IOException("failed to marshall DOM content",e);
+				}
+			}
+			else {
+				// jaxb
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				childSbb.getMarshaller().marshal(filteredContent, baos);
+				notify.setContent(baos.toByteArray(), contentTypeHeader);
+			}
 		}
 		else {
 			// resource list or winfo subscription, no filtering, it's done at each backend subscription
@@ -135,10 +151,11 @@ public class SipSubscriberNotificationHandler {
 			ParseException {
 
 		// create notify
-		Request notify = createNotify(dialog, subscription);
+		Request notify = null;
 		// add content if subscription is active
 		if (subscription.getStatus().equals(Subscription.Status.active)) {
 			if (subscription.getKey().getEventPackage().endsWith(".winfo")) {
+				notify = createNotify(dialog, subscription,null);
 				// winfo content, increment version before adding the content
 				subscription.incrementVersion();
 				subscription.store();
@@ -154,17 +171,26 @@ public class SipSubscriberNotificationHandler {
 				// specific event package content
 				NotifyContent notifyContent = childSbb
 						.getNotifyContent(subscription);
-				// add content
-				if (notifyContent != null) {
-					try {
-						notify = setNotifyContent(subscription, notify,
-								notifyContent.getContent(), notifyContent
-										.getContentTypeHeader(), childSbb);
-					} catch (Exception e) {
-						tracer.severe("failed to set notify content", e);
-					}
+				if (notifyContent == null) {
+					notify = createNotify(dialog, subscription, null);
 				}
+				else {
+					notify = createNotify(dialog, subscription, notifyContent.getEventHeaderParams());
+					// add content
+					if (notifyContent.getContent() != null) {
+						try {
+							notify = setNotifyContent(subscription, notify,
+									notifyContent.getContent(), notifyContent
+											.getContentTypeHeader(), childSbb);
+						} catch (Exception e) {
+							tracer.severe("failed to set notify content", e);
+						}
+					}
+				}				
 			}
+		}
+		else {
+			notify = createNotify(dialog, subscription,null);
 		}
 		
 		// ....aayush added code here (with ref issue #567)
@@ -175,7 +201,7 @@ public class SipSubscriberNotificationHandler {
 	}
 
 	// creates a notify request and fills headers
-	public Request createNotify(Dialog dialog, Subscription subscription) {
+	public Request createNotify(Dialog dialog, Subscription subscription, Map<String, String> eventHeaderParams) {
 
 		Request notify = null;
 		try {
@@ -186,6 +212,11 @@ public class SipSubscriberNotificationHandler {
 							subscription.getKey().getEventPackage());
 			if (subscription.getKey().getEventId() != null)
 				eventHeader.setEventId(subscription.getKey().getEventId());
+			if (eventHeaderParams != null) {
+				for(Entry<String, String> entry : eventHeaderParams.entrySet()) {
+					eventHeader.setParameter(entry.getKey(), entry.getValue());
+				}
+			}
 			notify.setHeader(eventHeader);
 			// add max forwards header
 			notify.setHeader(sipSubscriptionHandler.sbb.getHeaderFactory()

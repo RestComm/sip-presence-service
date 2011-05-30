@@ -27,6 +27,8 @@ import gov.nist.javax.sip.Utils;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -58,6 +60,7 @@ import javax.sip.address.SipURI;
 import javax.sip.header.CSeqHeader;
 import javax.sip.header.CallIdHeader;
 import javax.sip.header.ContactHeader;
+import javax.sip.header.EventHeader;
 import javax.sip.header.FromHeader;
 import javax.sip.header.HeaderFactory;
 import javax.sip.header.MaxForwardsHeader;
@@ -76,11 +79,11 @@ import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.openxdm.xcap.client.Response;
+import org.mobicents.xcap.client.XcapResponse;
+import org.mobicents.xcap.client.uri.DocumentSelectorBuilder;
+import org.mobicents.xcap.client.uri.UriBuilder;
 import org.openxdm.xcap.client.test.AbstractXDMJunitTest;
 import org.openxdm.xcap.client.test.ServerConfiguration;
-import org.openxdm.xcap.common.key.DocumentUriKey;
-import org.openxdm.xcap.common.key.UserDocumentUriKey;
 import org.openxdm.xcap.common.xcapdiff.DocumentType;
 import org.openxdm.xcap.common.xcapdiff.XcapDiff;
 
@@ -129,48 +132,86 @@ public class SubscribeDocumentTest extends AbstractXDMJunitTest implements SipLi
 	// a sempahore to control processing using async events
 	protected Semaphore semaphore = new Semaphore(1);
 	
-	/**
-	 * the key used to manipulate XCAP document
-	 */
-	protected DocumentUriKey getDocumentUriKey() {
-		
-		return new UserDocumentUriKey(appUsage.getAUID(),subscriberSipUri,documentName);
+	protected String getDocumentSelector() {		
+		return DocumentSelectorBuilder.getUserDocumentSelectorBuilder(appUsage.getAUID(),user,documentName).toPercentEncodedString();
 	}
 	
-	/**
-	 * the content used in initial xcap put and initial subscribe
-	 * @return
-	 */
-	protected String getContent() {
+	protected URI getDocumentXcapURI() throws URISyntaxException {
+		// create uri to put doc		
+		UriBuilder uriBuilder = new UriBuilder()
+			.setSchemeAndAuthority("http://"+ServerConfiguration.SERVER_HOST+":"+ServerConfiguration.SERVER_PORT)
+			.setXcapRoot(ServerConfiguration.SERVER_XCAP_ROOT+"/")
+			.setDocumentSelector(getDocumentSelector());
+		return uriBuilder.toURI();	
+	}
+	
+	protected String getTest1XcapContent() {
 		return 	"<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
 				"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\">" +
 					"<list>" +
-						"<entry uri=\""+getDocumentUriKey().getDocumentSelector()+"\"/>" +
+						"<entry uri=\""+appUsage.getAUID()+"/users/"+user+"/"+documentName+"\"/>" +
 					"</list>" +
 				"</resource-lists>";
 	}
 	
+	protected void sendTest1XcapRequest() throws IOException, URISyntaxException {
+		// ensure doc does not exists
+		client.delete(getDocumentXcapURI(),getAssertedUserIdHeaders(client.getHeaderFactory(), user),null);
+		// send put request and get response
+		XcapResponse putResponse = client.put(getDocumentXcapURI(),appUsage.getMimetype(),getTest1XcapContent(),getAssertedUserIdHeaders(client.getHeaderFactory(), user),null);
+		// check put response
+		assertTrue("Put response must exists",putResponse != null);
+		assertTrue("Put response code should be 200 or 201",putResponse.getCode() == 201 || putResponse.getCode() == 200);
+		// set initial etag
+		newEtag = putResponse.getETag();		
+	}
+	
+	protected void sendTest2XcapRequest() throws IOException, URISyntaxException {
+		String content =
+			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+			"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\">" +
+				"<list/>" +
+			"</resource-lists>";
+		
+		// send put request and get response
+		XcapResponse putResponse = client.put(getDocumentXcapURI(),appUsage.getMimetype(),content,getAssertedUserIdHeaders(client.getHeaderFactory(), user),null);
+		
+		// check put response
+		assertTrue("Put response must exists",putResponse != null);
+		assertTrue("Put response code should be 200",putResponse.getCode() == 200);
+		
+		// set etags
+		previousEtag = newEtag;
+		newEtag = putResponse.getETag();
+	}
+	
+	protected void sendTest3XcapRequest() throws IOException, URISyntaxException {
+		
+		// send put request and get response
+		XcapResponse deleteResponse = client.delete(getDocumentXcapURI(),getAssertedUserIdHeaders(client.getHeaderFactory(), user),null);
+		
+		// set previous etag
+		previousEtag = newEtag;
+		
+		// check put response
+		assertTrue("Delete response must exists",deleteResponse != null);
+		assertTrue("Delete response code should be 200",deleteResponse.getCode() == 200);
+	}
+
 	/**
 	 * puts a new doc through xcap, store etag of response and then subscribes doc through sip
 	 * @throws InvalidArgumentException 
 	 * @throws ParseException 
 	 * @throws SipException 
+	 * @throws URISyntaxException 
 	 */
 	@Test
-	public void test() throws HttpException, IOException, JAXBException, InterruptedException, ParseException, InvalidArgumentException, SipException {
+	public void test() throws HttpException, IOException, JAXBException, InterruptedException, ParseException, InvalidArgumentException, SipException, URISyntaxException {
 		
 		// set test state machine
 		testRunning = Tests.test1;
 		
-		// send put request and get response
-		Response putResponse = client.put(getDocumentUriKey(),appUsage.getMimetype(),getContent(),null);
-		
-		// check put response
-		assertTrue("Put response must exists",putResponse != null);
-		assertTrue("Put response code should be 200 or 201",putResponse.getCode() == 201 || putResponse.getCode() == 200);
-		
-		// set initial etag
-		newEtag = putResponse.getETag();
+		sendTest1XcapRequest();
 		
 		// send subscribe
 		sendInitialSubscribe();
@@ -185,6 +226,7 @@ public class SubscribeDocumentTest extends AbstractXDMJunitTest implements SipLi
 		assertTrue("Test timer expired (15 secs)",passed);
 	}
 	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void sendInitialSubscribe() throws ParseException, InvalidArgumentException, SipException {
 
 			// create >From Header
@@ -235,10 +277,12 @@ public class SubscribeDocumentTest extends AbstractXDMJunitTest implements SipLi
 							+ ";transport=" + transport + ";lr>")));
 						
 			// Create an event header for the subscription.
-			request.addHeader(headerFactory.createEventHeader("xcap-diff"));
+			EventHeader eventHeader = headerFactory.createEventHeader("xcap-diff");
+			eventHeader.setParameter("diff-processing", "aggregate");
+			request.addHeader(eventHeader);
 
 			// add content
-			request.setContent(getContent(), headerFactory.createContentTypeHeader("application", "resource-lists+xml"));
+			request.setContent(getTest1XcapContent(), headerFactory.createContentTypeHeader("application", "resource-lists+xml"));
 			
 			// create the client transaction.
 			ClientTransaction clientTransaction = sipProvider.getNewClientTransaction(request);
@@ -251,7 +295,7 @@ public class SubscribeDocumentTest extends AbstractXDMJunitTest implements SipLi
 			
 	}
 	
-	private DocumentType processNotify(RequestEvent requestEvent) throws ParseException, SipException, InvalidArgumentException, JAXBException {
+	protected XcapDiff processNotify(RequestEvent requestEvent) throws ParseException, SipException, InvalidArgumentException, JAXBException {
 		
 		Request notify = requestEvent.getRequest();
 		
@@ -272,74 +316,49 @@ public class SubscribeDocumentTest extends AbstractXDMJunitTest implements SipLi
 		assertTrue("unexpected xcap root in xcap diff",xcapDiff.getXcapRoot().equals("http://"+ServerConfiguration.SERVER_HOST+":"+ServerConfiguration.SERVER_PORT+ServerConfiguration.SERVER_XCAP_ROOT+"/"));
 		stringReader.close();
 		
-		assertTrue("not a single document element inside xcap diff document received", xcapDiff.getDocumentOrElementOrAttribute().size() == 1 && xcapDiff.getDocumentOrElementOrAttribute().get(0) instanceof DocumentType);
-		
-		return (DocumentType) xcapDiff.getDocumentOrElementOrAttribute().get(0);
-		
+		return xcapDiff;		
 	}
 	
 	/*
 	 * etag from xcap put response and notify must match.
 	 */
-	private void processTest1Notify(RequestEvent requestEvent) throws JAXBException, ParseException, SipException, InvalidArgumentException {
-		DocumentType documentType = processNotify(requestEvent);
+	protected void processTest1Notify(RequestEvent requestEvent) throws JAXBException, ParseException, SipException, InvalidArgumentException {
+		XcapDiff xcapDiff = processNotify(requestEvent);
+		assertTrue("not a single document element inside xcap diff document received", xcapDiff.getDocumentOrElementOrAttribute().size() == 1 && xcapDiff.getDocumentOrElementOrAttribute().get(0) instanceof DocumentType);
+		DocumentType documentType = (DocumentType) xcapDiff.getDocumentOrElementOrAttribute().get(0);
+		assertTrue("doc selector is not "+getDocumentSelector(), documentType.getSel() != null && documentType.getSel().equals(getDocumentSelector()));
 		assertTrue("previous etag is set", documentType.getPreviousEtag() == null || documentType.getPreviousEtag().equals(""));	
 		assertTrue("new etag ("+documentType.getNewEtag()+") doesn't match one received in XCAP PUT response ("+newEtag+")", documentType.getNewEtag() != null && documentType.getNewEtag().equals(newEtag));	
 	}
 
 	// ---- TEST 2
 	
-	private void doTest2() throws InterruptedException, HttpException, IOException {
-		
-		// set test state machine
+	private void doTest2() throws InterruptedException, HttpException, IOException, URISyntaxException {
 		testRunning = Tests.test2;
-		
-		String content =
-			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-			"<resource-lists xmlns=\"urn:ietf:params:xml:ns:resource-lists\">" +
-				"<list/>" +
-			"</resource-lists>";
-		
-		// send put request and get response
-		Response putResponse = client.put(getDocumentUriKey(),appUsage.getMimetype(),content,null);
-		
-		// check put response
-		assertTrue("Put response must exists",putResponse != null);
-		assertTrue("Put response code should be 200",putResponse.getCode() == 200);
-		
-		// set etags
-		previousEtag = newEtag;
-		newEtag = putResponse.getETag();
-		
+		sendTest2XcapRequest();		
 	}
 
-	private void processTest2Notify(RequestEvent requestEvent) throws ParseException, SipException, InvalidArgumentException, JAXBException {
-		DocumentType documentType = processNotify(requestEvent);
+	protected void processTest2Notify(RequestEvent requestEvent) throws ParseException, SipException, InvalidArgumentException, JAXBException {
+		XcapDiff xcapDiff = processNotify(requestEvent);
+		assertTrue("not a single document element inside xcap diff document received", xcapDiff.getDocumentOrElementOrAttribute().size() == 1 && xcapDiff.getDocumentOrElementOrAttribute().get(0) instanceof DocumentType);
+		DocumentType documentType = (DocumentType) xcapDiff.getDocumentOrElementOrAttribute().get(0);
+		assertTrue("doc selector is not "+getDocumentSelector(), documentType.getSel() != null && documentType.getSel().equals(getDocumentSelector()));
 		assertTrue("previous etag ("+documentType.getPreviousEtag()+") doesn't match one received in first XCAP PUT response ("+previousEtag+")", documentType.getPreviousEtag() != null && documentType.getPreviousEtag().equals(previousEtag));	
 		assertTrue("new etag ("+documentType.getNewEtag()+") doesn't match one received in XCAP PUT response ("+newEtag+")", documentType.getNewEtag() != null && documentType.getNewEtag().equals(newEtag));	
 	}
 	
 	// ---- TEST 3
 	
-	private void doTest3() throws InterruptedException, HttpException, IOException {
-		
-		// set test state machine
-		testRunning = Tests.test3;
-		
-		// send put request and get response
-		Response deleteResponse = client.delete(getDocumentUriKey(),null);
-		
-		// set previous etag
-		previousEtag = newEtag;
-		
-		// check put response
-		assertTrue("Delete response must exists",deleteResponse != null);
-		assertTrue("Delete response code should be 200",deleteResponse.getCode() == 200);
-		
+	private void doTest3() throws InterruptedException, HttpException, IOException, URISyntaxException {
+		testRunning = Tests.test3;		
+		sendTest3XcapRequest();		
 	}
 
-	private void processTest3Notify(RequestEvent requestEvent) throws ParseException, SipException, InvalidArgumentException, JAXBException {
-		DocumentType documentType = processNotify(requestEvent);
+	protected void processTest3Notify(RequestEvent requestEvent) throws ParseException, SipException, InvalidArgumentException, JAXBException {
+		XcapDiff xcapDiff = processNotify(requestEvent);
+		assertTrue("not a single document element inside xcap diff document received", xcapDiff.getDocumentOrElementOrAttribute().size() == 1 && xcapDiff.getDocumentOrElementOrAttribute().get(0) instanceof DocumentType);
+		DocumentType documentType = (DocumentType) xcapDiff.getDocumentOrElementOrAttribute().get(0);
+		assertTrue("doc selector is not "+getDocumentSelector(), documentType.getSel() != null && documentType.getSel().equals(getDocumentSelector()));
 		assertTrue("previous etag doesn't match one received in second XCAP PUT response", documentType.getPreviousEtag() != null && documentType.getPreviousEtag().equals(previousEtag));	
 		assertTrue("new etag is not null", documentType.getNewEtag() == null);			
 	}
@@ -348,8 +367,7 @@ public class SubscribeDocumentTest extends AbstractXDMJunitTest implements SipLi
 	
 	private void doTest4() throws ParseException, SipException, InvalidArgumentException {
 		testRunning = Tests.test4;
-		unsubscribe();
-		
+		unsubscribe();		
 	}
 
 	private void unsubscribe() throws ParseException, SipException, InvalidArgumentException {
@@ -365,7 +383,9 @@ public class SubscribeDocumentTest extends AbstractXDMJunitTest implements SipLi
 		request.setHeader(headerFactory
 				.createMaxForwardsHeader(70));
 		// Create an event header for the subscription.
-		request.addHeader(headerFactory.createEventHeader("xcap-diff"));
+		EventHeader eventHeader = headerFactory.createEventHeader("xcap-diff");
+		eventHeader.setParameter("diff-processing", "aggregate");
+		request.addHeader(eventHeader);
 		// add expires header
 		request.setExpires(headerFactory.createExpiresHeader(0));
 		// create client transaction
@@ -374,7 +394,7 @@ public class SubscribeDocumentTest extends AbstractXDMJunitTest implements SipLi
 		clientTransaction.sendRequest();
 	}
 	
-	private void processTest4Notify(RequestEvent requestEvent) throws ParseException, SipException, InvalidArgumentException, JAXBException {
+	protected void processTest4Notify(RequestEvent requestEvent) throws ParseException, SipException, InvalidArgumentException, JAXBException {
 		
 		Request notify = requestEvent.getRequest();
 		

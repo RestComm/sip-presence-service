@@ -22,8 +22,6 @@
 
 package org.mobicents.slee.sipevent.server.publication;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.slee.ActivityContextInterface;
 import javax.slee.CreateException;
 import javax.slee.RolledBackContext;
@@ -40,6 +38,7 @@ import javax.slee.nullactivity.NullActivityContextInterfaceFactory;
 import javax.slee.nullactivity.NullActivityFactory;
 
 import org.mobicents.slee.ChildRelationExt;
+import org.mobicents.slee.SbbContextExt;
 import org.mobicents.slee.sipevent.server.publication.data.Publication;
 
 /**
@@ -60,34 +59,21 @@ public abstract class PublicationControlSbb extends AbstractPublicationControl i
 	/**
 	 * SbbObject's sbb context
 	 */
-	protected SbbContext sbbContext;
-
-	protected Context jndiContext;
+	protected SbbContextExt sbbContext;
 	
 	/**
 	 * SbbObject's context setting
 	 */
 	public void setSbbContext(SbbContext sbbContext) {
-		this.sbbContext = sbbContext;
+		this.sbbContext = (SbbContextExt) sbbContext;
 		if(logger == null) {
-			logger = new SLEEPublicationControlLogger(sbbContext.getTracer(getClass().getSimpleName()));
+			logger = new SLEEPublicationControlLogger(sbbContext.getTracer("PublicationControlSbb"));
 		}
 		// retrieve factories, facilities & providers
-		try {
-			jndiContext = (Context) new InitialContext()
-					.lookup("java:comp/env");
-			timerFacility = (TimerFacility) jndiContext
-					.lookup("slee/facilities/timer");
-			nullACIFactory = (NullActivityContextInterfaceFactory) jndiContext
-					.lookup("slee/nullactivity/activitycontextinterfacefactory");
-			nullActivityFactory = (NullActivityFactory) jndiContext
-					.lookup("slee/nullactivity/factory");
-			activityContextNamingfacility = (ActivityContextNamingFacility) jndiContext
-					.lookup("slee/facilities/activitycontextnaming");
-		} catch (Exception e) {
-			getLogger().error(
-					"Unable to retrieve factories, facilities & providers", e);
-		}
+		timerFacility = this.sbbContext.getTimerFacility();
+		nullACIFactory = this.sbbContext.getNullActivityContextInterfaceFactory();
+		nullActivityFactory = this.sbbContext.getNullActivityFactory();
+		activityContextNamingfacility = this.sbbContext.getActivityContextNamingFacility();		
 	}
 
 	private static final TimerOptions timerOptions = createTimerOptions();
@@ -112,7 +98,6 @@ public abstract class PublicationControlSbb extends AbstractPublicationControl i
 				child = (ImplementedPublicationControlSbbLocalObject) childRelation.create(ChildRelationExt.DEFAULT_CHILD_NAME);
 			} catch (Exception e) {
 				getLogger().error("Failed to create child sbb",e);
-				return null;
 			}
 		}
 		return child;

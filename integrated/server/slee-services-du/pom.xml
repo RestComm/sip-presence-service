@@ -74,16 +74,6 @@
 		</dependency>			
 		<dependency>
 			<groupId>org.mobicents.servers.xdm</groupId>
-			<artifactId>xdms-appusages-xcap-caps-events</artifactId>	
-			<version>${pom.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.mobicents.servers.xdm</groupId>
-			<artifactId>xdms-appusages-xcap-caps-sbb</artifactId>	
-			<version>${pom.version}</version>
-		</dependency>				
-		<dependency>
-			<groupId>org.mobicents.servers.xdm</groupId>
 			<artifactId>xdms-core-internal-client-sbb</artifactId>
 			<version>${pom.version}</version>
 		</dependency>

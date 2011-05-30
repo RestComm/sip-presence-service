@@ -28,8 +28,6 @@ import org.openxdm.xcap.common.uri.DocumentSelector;
 
 public class XcapDirectoryAuthorizationPolicy implements AuthorizationPolicy {
 
-	private static final String PATH_SEPARATOR = "/";
-
 	/*
 	 * (non-Javadoc)
 	 * @see org.mobicents.xdm.server.appusage.AuthorizationPolicy#isAuthorized(java.lang.String, org.mobicents.xdm.server.appusage.AuthorizationPolicy.Operation, org.openxdm.xcap.common.uri.DocumentSelector, org.mobicents.xdm.server.appusage.AppUsageDataSource)
@@ -39,8 +37,7 @@ public class XcapDirectoryAuthorizationPolicy implements AuthorizationPolicy {
 			DocumentSelector documentSelector, AppUsageDataSource dataSource) throws NullPointerException {
 		if (operation == Operation.GET) {
 			if (documentSelector.isUserDocument()) {
-				final String[] documentParentParts = documentSelector.getDocumentParent().split(PATH_SEPARATOR);
-				if (user.equalsIgnoreCase(documentParentParts[1])) {
+				if (user.equals(documentSelector.getUser())) {
 					return true;
 				} else {
 					return false;

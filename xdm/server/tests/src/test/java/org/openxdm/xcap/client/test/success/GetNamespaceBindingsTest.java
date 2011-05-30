@@ -36,7 +36,7 @@ import junit.framework.JUnit4TestAdapter;
 import org.apache.commons.httpclient.HttpException;
 import org.junit.Test;
 import org.openxdm.xcap.client.Response;
-import org.openxdm.xcap.client.test.AbstractXDMJunitTest;
+import org.openxdm.xcap.client.test.AbstractXDMJunitOldClientTest;
 import org.openxdm.xcap.common.key.UserDocumentUriKey;
 import org.openxdm.xcap.common.key.UserNamespaceBindingsUriKey;
 import org.openxdm.xcap.common.key.XcapUriKey;
@@ -44,7 +44,7 @@ import org.openxdm.xcap.common.uri.ElementSelector;
 import org.openxdm.xcap.common.uri.ElementSelectorStep;
 import org.openxdm.xcap.common.xml.XMLValidator;
 
-public class GetNamespaceBindingsTest extends AbstractXDMJunitTest {
+public class GetNamespaceBindingsTest extends AbstractXDMJunitOldClientTest {
 	
 	public static junit.framework.Test suite() {
 		return new JUnit4TestAdapter(GetNamespaceBindingsTest.class);

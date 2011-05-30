@@ -73,8 +73,7 @@ public class OMAUserProfileAppUsage extends AppUsage {
 			return;
 		}
 		
-		// get xui from document selector by cutting first 6 chars -> users/
-		String xui = documentSelector.getDocumentParent().substring(6);
+		String xui = documentSelector.getUser();
 		
 		/*
 		 * The value of the �uri� attribute of the <user-profile> element SHALL

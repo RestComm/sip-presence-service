@@ -13,17 +13,22 @@
 	<dependencies>
 		<dependency>
 			<artifactId>commons</artifactId>
-			<groupId>${pom.groupId}</groupId>
-			<version>${pom.version}</version>
+			<groupId>${project.groupId}</groupId>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<artifactId>xdms-core-appusage-management</artifactId>
-			<groupId>${pom.groupId}</groupId>
-			<version>${pom.version}</version>	
+			<groupId>${project.groupId}</groupId>
+			<version>${project.version}</version>	
 		</dependency>
 		<dependency>
 			<artifactId>jain-slee</artifactId>
 			<groupId>javax.slee</groupId>
+		</dependency>
+		<dependency>
+			<artifactId>xdms-core-configuration-jar</artifactId>
+			<groupId>${project.groupId}</groupId>
+			<version>${project.version}</version>				
 		</dependency>
 	</dependencies>
 		

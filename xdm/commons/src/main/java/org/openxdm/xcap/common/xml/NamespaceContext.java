@@ -22,15 +22,29 @@
 
 package org.openxdm.xcap.common.xml;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.xml.*;
 
-public class NamespaceContext implements javax.xml.namespace.NamespaceContext {
+public class NamespaceContext implements javax.xml.namespace.NamespaceContext, Externalizable {
 
 	private Map<String,String> namespaces;
 	
+	public NamespaceContext() {
+		namespaces = new HashMap<String, String>();
+	}
+	
+	/**
+	 * 
+	 * @param namespaces a hash map to ensure deserialization produces same not thread safe map
+	 */
 	public NamespaceContext(Map<String,String> namespaces) {
 		this.namespaces = namespaces;
 	}
@@ -91,4 +105,58 @@ public class NamespaceContext implements javax.xml.namespace.NamespaceContext {
     	namespaces.put(XMLConstants.DEFAULT_NS_PREFIX,namespace);
     }
     
+    @Override
+    public void readExternal(ObjectInput in) throws IOException,
+    		ClassNotFoundException {
+    	for (MapEntry me : (MapEntry[]) in.readObject()) {
+    		namespaces.put(me.key, me.value);
+    	}
+    }
+    
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+    	MapEntry[] a = EMPTY_ARRAY;
+    	int size = namespaces.size();
+    	if (size > 0) {
+    		a = new MapEntry[size];
+    		int i = 0;
+    		for(Entry<String, String> e : namespaces.entrySet()) {
+    			a[i] = new MapEntry(e.getKey(), e.getValue()); 
+    		}
+    	}
+    	out.writeObject(a);
+    }
+    
+    private static final MapEntry[] EMPTY_ARRAY = {};
+    
+    private static class MapEntry implements Externalizable {
+    	
+    	String key;
+    	String value;    	
+    	
+    	@SuppressWarnings("unused")
+		public MapEntry() {
+			// needed by Externalizable
+		}
+    	
+    	public MapEntry(String key, String value) {
+			this.key = key;
+			this.value = value;
+		}
+
+		@Override
+    	public void readExternal(ObjectInput in) throws IOException,
+    			ClassNotFoundException {
+    		key = in.readUTF();
+    		value = in.readUTF();
+    	}
+    	
+    	@Override
+    	public void writeExternal(ObjectOutput out) throws IOException {
+    		out.writeUTF(key);
+    		out.writeUTF(value);
+    	}
+    	
+    }
+        
 }

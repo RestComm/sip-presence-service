@@ -33,9 +33,9 @@ import org.junit.Test;
 
 public class ResourceListServerSipTest {
 
-	private String[] publishers = {"sip:alice@"+ServerConfiguration.SERVER_HOST,"sip:bob@"+ServerConfiguration.SERVER_HOST};
-	private String subscriber = "sip:carol@"+ServerConfiguration.SERVER_HOST;
-	private String resourceList = "sip:carol_enemies@"+ServerConfiguration.SERVER_HOST;
+	private String[] publishers = {"sip:alice@localhost","sip:bob@localhost"};
+	private String subscriber = "sip:carol@localhost";
+	private String resourceList = "sip:carol_enemies@localhost";
 	
 	private RlsServicesManager rlsServicesManager = new RlsServicesManager(resourceList,publishers,this);
 	

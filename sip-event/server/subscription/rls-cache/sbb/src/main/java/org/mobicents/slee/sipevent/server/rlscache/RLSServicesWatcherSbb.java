@@ -38,7 +38,7 @@ import org.mobicents.slee.sipevent.server.rlscache.events.WatchRLSServicesEvent;
 import org.openxdm.xcap.common.datasource.Document;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
 import org.openxdm.xcap.common.uri.DocumentSelector;
-import org.openxdm.xcap.server.slee.resource.datasource.AppUsageActivity;
+import org.openxdm.xcap.server.slee.resource.datasource.CollectionActivity;
 import org.openxdm.xcap.server.slee.resource.datasource.AttributeUpdatedEvent;
 import org.openxdm.xcap.server.slee.resource.datasource.DataSourceActivityContextInterfaceFactory;
 import org.openxdm.xcap.server.slee.resource.datasource.DataSourceSbbInterface;
@@ -144,15 +144,15 @@ public abstract class RLSServicesWatcherSbb implements Sbb {
 			tracer.fine("onWatchRLSServicesEvent");
 		}
 		// lets attach to the app usage activity, to receive events related with updates on its docs
-		AppUsageActivity appUsageActivity = dataSourceRASbbInterface.createAppUsageActivity("rls-services");
+		CollectionActivity appUsageActivity = dataSourceRASbbInterface.createCollectionActivity("rls-services");
 		ActivityContextInterface appUsageActivityContextInterface = dataSourceRAActivityContextInterfaceFactory.getActivityContextInterface(appUsageActivity);
 		appUsageActivityContextInterface.attach(context.getSbbLocalObject());
 		// now fetch all existent docs
 		DocumentSelector documentSelector = null;
 		try {
-			Document[] documents = dataSourceRASbbInterface.getDocuments("rls-services");
+			Document[] documents = dataSourceRASbbInterface.getDocuments("rls-services/users",true);
 			for (Document document : documents) {
-				documentSelector = new DocumentSelector("rls-services", document.getDocumentParent(), document.getDocumentName());
+				documentSelector = new DocumentSelector(document.getCollection(), document.getDocumentName());
 				if (!documentSelector.isUserDocument()) {
 					// ignore global
 					continue;
@@ -181,7 +181,7 @@ public abstract class RLSServicesWatcherSbb implements Sbb {
 			// ignore global
 			return;
 		}
-		rlsCacheRASbbInterface.rlsServicesUpdated(event.getDocumentSelector(),event.getDocumentAsString());
+		rlsCacheRASbbInterface.rlsServicesUpdated(event.getDocumentSelector(),event.getNewDocumentString());
 	}
 
 	public void onDocumentUpdatedEvent(DocumentUpdatedEvent event,
@@ -190,7 +190,7 @@ public abstract class RLSServicesWatcherSbb implements Sbb {
 			// ignore global
 			return;
 		}
-		rlsCacheRASbbInterface.rlsServicesUpdated(event.getDocumentSelector(),event.getDocumentAsString());
+		rlsCacheRASbbInterface.rlsServicesUpdated(event.getDocumentSelector(),event.getNewDocumentString());
 	}
 
 	public void onElementUpdatedEvent(ElementUpdatedEvent event,
@@ -199,6 +199,6 @@ public abstract class RLSServicesWatcherSbb implements Sbb {
 			// ignore global
 			return;
 		}		
-		rlsCacheRASbbInterface.rlsServicesUpdated(event.getDocumentSelector(),event.getDocumentAsString());
+		rlsCacheRASbbInterface.rlsServicesUpdated(event.getDocumentSelector(),event.getNewDocumentString());
 	}
 }

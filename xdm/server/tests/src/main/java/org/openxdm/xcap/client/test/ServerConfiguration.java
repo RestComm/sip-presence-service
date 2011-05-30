@@ -51,7 +51,7 @@ public class ServerConfiguration {
 	}
 	
 	private static String getServerHost() {
-		return properties.getProperty("SERVER_HOST", "localhost");
+		return properties.getProperty("SERVER_HOST", "127.0.0.1");
 	}
 	
 	private static int getServerPort() {

@@ -34,7 +34,7 @@ import junit.framework.JUnit4TestAdapter;
 import org.apache.commons.httpclient.HttpException;
 import org.junit.Test;
 import org.openxdm.xcap.client.Response;
-import org.openxdm.xcap.client.test.AbstractXDMJunitTest;
+import org.openxdm.xcap.client.test.AbstractXDMJunitOldClientTest;
 import org.openxdm.xcap.common.error.NotXMLAttributeValueConflictException;
 import org.openxdm.xcap.common.key.UserAttributeUriKey;
 import org.openxdm.xcap.common.key.UserDocumentUriKey;
@@ -43,7 +43,7 @@ import org.openxdm.xcap.common.uri.AttributeSelector;
 import org.openxdm.xcap.common.uri.ElementSelector;
 import org.openxdm.xcap.common.uri.ElementSelectorStep;
 
-public class NotXMLAttributeValueTest extends AbstractXDMJunitTest {
+public class NotXMLAttributeValueTest extends AbstractXDMJunitOldClientTest {
 	
 	public static junit.framework.Test suite() {
 		return new JUnit4TestAdapter(NotXMLAttributeValueTest.class);

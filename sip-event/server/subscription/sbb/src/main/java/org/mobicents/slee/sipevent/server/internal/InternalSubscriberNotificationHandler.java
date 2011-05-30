@@ -31,11 +31,14 @@ import javax.slee.ActivityContextInterface;
 import javax.slee.facilities.Tracer;
 import javax.slee.nullactivity.NullActivity;
 import javax.xml.bind.JAXBException;
+import javax.xml.transform.TransformerException;
 
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionClientControlParentSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
+import org.openxdm.xcap.common.xml.TextWriter;
+import org.w3c.dom.Node;
 
 /**
  * Handles the notification of a SIP subscriber
@@ -67,13 +70,7 @@ public class InternalSubscriberNotificationHandler {
 			notifyContent = childSbb.getNotifyContent(subscription); 
 		}
 			
-		if (notifyContent != null) {
-			notifyInternalSubscriber(subscription, notifyContent
-					.getContent(), notifyContent.getContentTypeHeader(), aci,childSbb);
-		}
-		else {
-			notifyInternalSubscriber(subscription, null, null, aci,childSbb);
-		}
+		notifyInternalSubscriber(subscription, notifyContent, aci,childSbb);		
 		
 	}
 
@@ -113,22 +110,34 @@ public class InternalSubscriberNotificationHandler {
 	}
 
 	public void notifyInternalSubscriber(
-			Subscription subscription, Object content,
-			ContentTypeHeader contentTypeHeader,
+			Subscription subscription, NotifyContent notifyContent,
 			ActivityContextInterface aci,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 
 		try {
-			if (!subscription.getResourceList()) {
-				notifyInternalSubscriber(subscription,
-						(content != null ? getFilteredNotifyContent(subscription, content,
-								childSbb) : null), contentTypeHeader, aci);
+			Object content = null;
+			ContentTypeHeader contentTypeHeader = null;
+			if (notifyContent != null) {
+				content = notifyContent.getContent();
+				contentTypeHeader = notifyContent.getContentTypeHeader();
+				if (content != null) {
+					if (!subscription.getResourceList()) {
+						notifyInternalSubscriber(subscription,getFilteredNotifyContent(subscription, content,
+										childSbb), contentTypeHeader, aci);
+					}
+					else {
+						// resource list subscription, no filtering
+						notifyInternalSubscriber(subscription, (String)content, contentTypeHeader, aci);
+					}
+				}
+				else {
+					notifyInternalSubscriber(subscription,null, null, aci);
+				}				
 			}
 			else {
-				// resource list subscription, no filtering
-				notifyInternalSubscriber(subscription,
-						(content != null ? (String)content : null), contentTypeHeader, aci);
-			}
+				notifyInternalSubscriber(subscription,null, null, aci);
+				
+			}			
 		} catch (Exception e) {
 			tracer.severe("failed to notify internal subscriber", e);
 		}
@@ -143,11 +152,22 @@ public class InternalSubscriberNotificationHandler {
 		// filter content per notifier (subscriber rules)
 		// TODO
 		// marshall content to string
-		StringWriter stringWriter = new StringWriter();
-		childSbb.getMarshaller().marshal(filteredContent, stringWriter);
-		String result = stringWriter.toString();
-		stringWriter.close();
-
+		String result = null;
+		if (content instanceof Node) {
+			// dom
+			try {
+				result = TextWriter.toString((Node)content);
+			} catch (TransformerException e) {
+				throw new IOException("failed to marshall DOM content",e);
+			}
+		}
+		else {
+			// jaxb
+			StringWriter stringWriter = new StringWriter();
+			childSbb.getMarshaller().marshal(filteredContent, stringWriter);
+			result = stringWriter.toString();
+			stringWriter.close();
+		}
 		return result;
 	}
 }

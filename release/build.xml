@@ -45,7 +45,7 @@
 
 	<target name="build-core" description="">
 		<exec executable="${mvn.executable}" dir="${ant.file.mobicents.release}/../..">
-			<arg line="clean install -P maven-release,set-svn-revision" />
+			<arg line="clean install -P maven-release,set-svn-revision -Dsipevent.server.subscription.eventListSupportOn=${eventListSupportOn}" />
 		</exec>
 	</target>
 	
@@ -72,7 +72,9 @@
 
 	<target name="release-xdms">
 		<antcall target="build-mobicents-jain-slee" />
-		<antcall target="build-core" />
+		<antcall target="build-core">
+			<param name="eventListSupportOn" value="false"/>
+		</antcall>	
 		<antcall target="build-xdms" inheritall="false">
 			<param name="mvn.executable" value="${mvn.executable}" />
 			<param name="jboss.home" value="${jboss.home}" />
@@ -91,7 +93,9 @@
 
 	<target name="release-integrated">
 		<antcall target="build-mobicents-jain-slee" />
-		<antcall target="build-core" />
+		<antcall target="build-core">
+			<param name="eventListSupportOn" value="true"/>
+		</antcall>
 		<antcall target="build-integrated" inheritall="false">
 			<param name="mvn.executable" value="${mvn.executable}" />
 			<param name="jboss.home" value="${jboss.home}" />

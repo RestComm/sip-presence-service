@@ -156,7 +156,7 @@ public class ResourceSelector {
 		if (toString == null) {
 			StringBuilder sb = new StringBuilder(documentSelector);
 			if (nodeSelector != null) {
-				sb.append("/~~").append(nodeSelector);
+				sb.append("/~~/").append(nodeSelector);
 				if (namespaceContext != null && !namespaceContext.getNamespaces().isEmpty()) {
 					sb.append('?');
 					for (Iterator<String> i = namespaceContext.getNamespaces().keySet().iterator(); i

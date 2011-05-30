@@ -97,7 +97,7 @@ public class ListReferenceEndpointAddressParser {
 			}
 			ElementSelector elementSelector = null;
 			if (resourceSelector.getNodeSelector() != null) {
-				NodeSelector nodeSelector = Parser.parseNodeSelector(resourceSelector.getNodeSelector());
+				NodeSelector nodeSelector = Parser.parseNodeSelector(resourceSelector.getNodeSelector(),null);
 				elementSelector = Parser.parseElementSelector(nodeSelector.getElementSelector());
 				if (elementSelector.getStepsSize() < 2) {
 					tracer.warning("List reference element selector selects resource-list root element. Uri: "+uri);

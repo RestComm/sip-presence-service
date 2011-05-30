@@ -43,19 +43,11 @@ public interface AppUsageDataSource {
 	
 	/**
 	 * 
-	 * @param auid
-	 * @param documentParent
+	 * @param collection
+	 * @param includeChildCollections
 	 * @return
 	 * @throws InternalServerErrorException
 	 */
-	public Document[] getDocuments(String auid, String documentParent) throws InternalServerErrorException;
-	
-	/**
-	 * 
-	 * @param auid
-	 * @return
-	 * @throws InternalServerErrorException
-	 */
-	public Document[] getDocuments(String auid) throws InternalServerErrorException;
+	public Document[] getDocuments(String collection, boolean includeChildCollections) throws InternalServerErrorException;
 	
 }

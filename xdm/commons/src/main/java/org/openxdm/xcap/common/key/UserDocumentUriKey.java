@@ -33,7 +33,7 @@ public class UserDocumentUriKey extends DocumentUriKey {
 	private String user;	
 	
 	public UserDocumentUriKey(String auid, String user,String documentName) {
-		super(new DocumentSelector(auid,KeyUtils.getPercentEncodedDocumentParent(user),documentName));
+		super(new DocumentSelector(auid+"/"+KeyUtils.getPercentEncodedDocumentParent(user),documentName));
 		this.user = user;
 	}
 	

@@ -22,7 +22,12 @@
 
 package org.openxdm.xcap.common.uri;
 
-import java.util.Map;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
+import org.openxdm.xcap.common.xml.NamespaceContext;
 
 /**
  * A node selector selects an element, attribute or namespace bindings in a
@@ -32,7 +37,7 @@ import java.util.Map;
  * 
  * @author Eduardo Martins
  */
-public class NodeSelector {
+public class NodeSelector implements Externalizable {
 
 	private String elementSelector = null;
 
@@ -44,14 +49,20 @@ public class NodeSelector {
 
 	private String terminalSelector = null;
 
+	private NamespaceContext namespaceContext;
+	
+	public NodeSelector() {
+		// needed by externalizer
+	}
+	
 	/**
 	 * Creates a new NodeSelector instance pointing to an element.
 	 * 
 	 * @param elementSelector
 	 *            selects the element.
 	 */
-	public NodeSelector(String elementSelector) {
-		this(elementSelector, null);
+	public NodeSelector(String elementSelector, NamespaceContext namespaceContext) {
+		this(elementSelector, null, namespaceContext);
 	}
 
 	/**
@@ -64,9 +75,10 @@ public class NodeSelector {
 	 * @param terminalSelector
 	 *            an attribute or namespace selector.
 	 */
-	public NodeSelector(String elementSelector, String terminalSelector) {
+	public NodeSelector(String elementSelector, String terminalSelector, NamespaceContext namespaceContext) {
 		this.elementSelector = elementSelector;
 		this.terminalSelector = terminalSelector;
+		this.namespaceContext = namespaceContext;
 	}
 
 	/**
@@ -86,6 +98,17 @@ public class NodeSelector {
 	}
 
 	/**
+	 * 
+	 * @return
+	 */
+	public NamespaceContext getNamespaceContext() {
+		if (namespaceContext == null) {
+			namespaceContext = new NamespaceContext();
+		}
+		return namespaceContext;
+	}
+	
+	/**
 	 * Checks if the element selector has steps with unbinded namespaces
 	 * prefixes, considering the provided map of namespace bindings.
 	 * 
@@ -93,15 +116,15 @@ public class NodeSelector {
 	 *            the namespace bindings map.
 	 * @return
 	 */
-	public boolean elementSelectorHasUnbindedPrefixes(
-			Map<String, String> namespaceBindings) {
+	public boolean elementSelectorHasUnbindedPrefixes() {
+		
 		String[] elementSelectorParts = elementSelector.split("/");
 		for (int i = 0; i < elementSelectorParts.length; i++) {
 			// get index of :
 			int index = elementSelectorParts[i].indexOf(':');
 			if (index >= 0) {
 				String prefix = elementSelectorParts[i].substring(0, index);
-				if (!namespaceBindings.containsKey(prefix)) {
+				if (namespaceContext == null || !namespaceContext.getNamespaces().containsKey(prefix)) {
 					return true;
 				}
 			}
@@ -125,8 +148,10 @@ public class NodeSelector {
 	public static String getElementSelectorWithEmptyPrefix(String elementSelector) {
 		StringBuilder sb = new StringBuilder();
 		String[] elementSelectorParts = elementSelector.split("/");
-		// ignore the first part because its ""
-		for (int i = 1; i < elementSelectorParts.length; i++) {
+		for (int i = 0; i < elementSelectorParts.length; i++) {
+			if (elementSelectorParts[i].isEmpty()) {
+				continue;
+			}
 			if (elementSelectorParts[i].charAt(0) == '*') {
 				// wildcard, just copy
 				sb.append('/').append(elementSelectorParts[i]);
@@ -144,7 +169,7 @@ public class NodeSelector {
 			} else {
 				// insert empty prefix
 				sb.append("/:").append(elementSelectorParts[i]);
-			}
+			}			
 		}
 		return sb.toString();
 	}
@@ -193,4 +218,89 @@ public class NodeSelector {
 		}
 		return elementParentSelectorWithEmptyPrefix;
 	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeUTF(elementSelector);
+		if (terminalSelector != null) {
+			out.writeBoolean(true);
+			out.writeUTF(terminalSelector);
+		}
+		else {
+			out.writeBoolean(false);
+		}
+		out.writeObject(namespaceContext);
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		elementSelector = in.readUTF();
+		if (in.readBoolean()) {
+			terminalSelector = in.readUTF();
+		}
+		namespaceContext = (NamespaceContext) in.readObject();
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((elementSelector == null) ? 0 : elementSelector.hashCode());
+		result = prime
+				* result
+				+ ((terminalSelector == null) ? 0 : terminalSelector.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		NodeSelector other = (NodeSelector) obj;
+		if (elementSelector == null) {
+			if (other.elementSelector != null)
+				return false;
+		} else if (!elementSelector.equals(other.elementSelector))
+			return false;
+		if (terminalSelector == null) {
+			if (other.terminalSelector != null)
+				return false;
+		} else if (!terminalSelector.equals(other.terminalSelector))
+			return false;
+		return true;
+	}
+	
+	private transient String toString = null;
+	private transient String toStringWithEntryPrefix = null; 
+	
+	@Override
+	public String toString() {
+		if (toString == null) {
+			StringBuilder sb = new StringBuilder(elementSelector);
+			if (terminalSelector != null) {
+				sb.append('/').append(terminalSelector);
+			}
+			toString = sb.toString();
+		}
+		return toString;
+	}
+	
+	public String toStringWithEmptyPrefix() {
+		if (toStringWithEntryPrefix == null) {
+			StringBuilder sb = new StringBuilder(
+					getElementSelectorWithEmptyPrefix());
+			if (terminalSelector != null) {
+				sb.append('/').append(terminalSelector);
+			}
+			toStringWithEntryPrefix = sb.toString();
+		}
+		return toStringWithEntryPrefix;
+	}
+	
 }

@@ -22,7 +22,12 @@
 
 package org.openxdm.xcap.common.uri;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A document selector points to a document resource on
@@ -42,24 +47,37 @@ import java.io.Serializable;
  * @author Eduardo Martins
  *
  */
+public class DocumentSelector implements Externalizable {
 
-public class DocumentSelector implements Serializable {
+	private String collection;
+	private String documentName;
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-
-	private final String auid;
-	private final String documentParent;
-	private final String documentName;
-
-	private transient String completeDocumentParent = null;
+	private transient String auid = null;
+	private transient String user = null;
+	
 	private transient String toString = null;
+	private transient Set<String> parentCollections = null; 
+	
+	public DocumentSelector() {
+		// needed by externalizable
+	}
+	
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		collection = in.readUTF();
+		documentName = in.readUTF();		
+	}
+	
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeUTF(collection);		
+		out.writeUTF(documentName);
+	}
 	
 	/**
 	 * Builds a {@link DocumentSelector} from a {@link String} value. 
-	 * @param documentSelector the document selector string, it may start or not with a /
+	 * @param documentSelector the document selector string
 	 * @return
 	 * @throws ParseException
 	 */
@@ -68,12 +86,9 @@ public class DocumentSelector implements Serializable {
 			// get documentName & documentParent
 			int documentNameSeparator = documentSelector.lastIndexOf("/");
 			if (documentNameSeparator != -1) {				
-				final String documentParent = documentSelector.substring(0,documentNameSeparator);
+				final String collection = documentSelector.substring(0,documentNameSeparator);
 				final String documentName = documentSelector.substring(documentNameSeparator+1);				
-				final int auidBeginIndex = documentParent.charAt(0) == '/' ? 1 : 0;
-				final int auidEndIndex = documentParent.indexOf('/',auidBeginIndex);
-				final String auid = documentParent.substring(auidBeginIndex,auidEndIndex);				
-				return new DocumentSelector(auid,documentParent.substring(auidEndIndex+1),documentName);				
+				return new DocumentSelector(collection,documentName);				
 			} else {
 				throw new ParseException(null);
 			}			
@@ -84,16 +99,14 @@ public class DocumentSelector implements Serializable {
 	}
 
 	/**
-	 * Creates a new instance of a document selector, from the specified application usage id (auid), document parent and document name. 
-	 * @param auid the application usage id of the document resource.
-	 * @param documentParent the parent of the document.
+	 * Creates a new instance of a document selector, from the specified collection and document name. 
+	 * @param collection the collection of the document.
 	 * @param documentName the document name.
 	 */
-	public DocumentSelector(String auid, String documentParent,
+	public DocumentSelector(String collection,
 			String documentName) {
-		this.documentParent = documentParent;
+		this.collection = collection;
 		this.documentName = documentName;
-		this.auid = auid;
 	}
 
 	/**
@@ -101,9 +114,28 @@ public class DocumentSelector implements Serializable {
 	 * @return
 	 */
 	public String getAUID() {
+		if (auid == null) {
+			int i = collection.indexOf('/');
+			if (i > 0) {
+				auid = collection.substring(0,i);
+			}
+			else {
+				auid = "";
+			}
+		}
 		return auid;
 	}
 
+	public String getUser() {
+		if (user == null) {
+			String[] collectionParts = collection.split("/");
+			if (collectionParts.length > 2 && collectionParts[1].equals("users")) {
+				user = collectionParts[2];
+			}
+		}
+		return user;
+	}
+	
 	/**
 	 * Retreives the document's name of the document resource. 
 	 * @return
@@ -111,24 +143,21 @@ public class DocumentSelector implements Serializable {
 	public String getDocumentName() {
 		return documentName;
 	}
-
-	/**
-	 * Retreives the document's parent of the document resource, relative to the auid 
-	 * @return
-	 */
-	public String getDocumentParent() {
-		return documentParent;
+	
+	public void setDocumentName(String documentName) {
+		this.documentName = documentName;
 	}
 	
 	/**
 	 * Retreives the document's parent of the document resource, including the auid 
 	 * @return
 	 */
-	public String getCompleteDocumentParent() {
-		if (completeDocumentParent == null) {
-			completeDocumentParent = new StringBuilder(auid.length()+documentParent.length()+2).append('/').append(auid).append('/').append(documentParent).toString();
-		}
-		return completeDocumentParent;
+	public String getCollection() {
+		return collection;
+	}
+	
+	public void setCollection(String collection) {
+		this.collection = collection;
 	}
 	
 	/**
@@ -136,32 +165,54 @@ public class DocumentSelector implements Serializable {
 	 * @return
 	 */
 	public boolean isUserDocument() {
-		// no need to check for whole 'users word, document parent's first char
-		// can only be a 'g' or 'u'
-		return documentParent.charAt(0) == 'u' || documentParent.charAt(0) == 'U';
+		return getUser() != null ? true : false;
 	}
 	
 	@Override
 	public String toString() {
 		if (toString == null) {
-			toString = new StringBuilder(getCompleteDocumentParent()).append('/').append(documentName).toString(); 
+			toString = new StringBuilder(collection).append('/').append(documentName).toString(); 
 		}
 		return toString;
 	}
 	
 	@Override
 	public int hashCode() {
-		return (auid.hashCode()*31+documentParent.hashCode())*31+documentName.hashCode();
+		return (collection.hashCode())*31+documentName.hashCode();
 	}
 	
 	@Override
 	public boolean equals(Object obj) {
 		if (obj != null && obj.getClass() == this.getClass()) {
 			final DocumentSelector other = (DocumentSelector) obj;
-			return this.auid.equals(other.auid) && this.documentParent.equals(other.documentParent) && this.documentName.equals(other.documentName);
+			return this.collection.equals(other.collection) && this.documentName.equals(other.documentName);
 		}
 		else {
 			return false;
 		}
 	}
+	
+	public Set<String> getParentCollections() {
+		if (parentCollections == null) {
+			parentCollections = new HashSet<String>();
+			StringBuilder sb = new StringBuilder();
+			String[] docSelectorParentParts = collection.split("/");
+			String current = null;
+			boolean first = true;
+			for (String s : docSelectorParentParts) {
+				if (s.length() != 0) {
+					if (first) {
+						current = sb.append(s).toString();
+						first = false;
+					}
+					else {
+						current = sb.append('/').append(s).toString();
+					}
+					parentCollections.add(current);
+				}
+			}
+		}
+		return parentCollections;
+	}
+	
 }

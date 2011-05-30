@@ -61,9 +61,8 @@ public class RLSServicesAuthorizationPolicy implements AuthorizationPolicy {
 	@Override
 	public boolean isAuthorized(String user, AuthorizationPolicy.Operation operation, DocumentSelector documentSelector, AppUsageDataSource dataSource) throws NullPointerException {
 		if (documentSelector.isUserDocument()) {
-			final String[] documentParentParts = documentSelector.getDocumentParent().split("/");
-			if (user.equalsIgnoreCase(documentParentParts[1])) {
-				if (operation == Operation.PUT && !documentSelector.getDocumentName().equals(authorizedUserDocumentName) && documentParentParts.length != 2) {
+			if (user.equalsIgnoreCase(documentSelector.getUser())) {
+				if (operation == Operation.PUT && !documentSelector.getDocumentName().equals(authorizedUserDocumentName)) {
 					// doc name checked for puts 
 					return false;
 				}

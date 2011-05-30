@@ -36,6 +36,6 @@ public class GlobalAttributeUriKey extends AttributeUriKey {
 	private static final long serialVersionUID = 1L;
 
 	public GlobalAttributeUriKey(String auid, String documentName,ElementSelector elementSelector,AttributeSelector attributeSelector,Map<String,String> namespaces) {
-		super(new DocumentSelector(auid,"global",documentName),elementSelector,attributeSelector,namespaces);
+		super(new DocumentSelector(auid+"/global",documentName),elementSelector,attributeSelector,namespaces);
 	}
 }

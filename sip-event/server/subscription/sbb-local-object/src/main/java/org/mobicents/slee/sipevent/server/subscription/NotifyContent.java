@@ -22,31 +22,39 @@
 
 package org.mobicents.slee.sipevent.server.subscription;
 
+import java.util.Map;
+
 import javax.sip.header.ContentTypeHeader;
 
 /**
  * Container of content for a SIP notify request
- *
+ * 
  * @author eduardomartins
- *
+ * 
  */
 public class NotifyContent {
 
 	private Object content;
 	private ContentTypeHeader contentTypeHeader;
-	
-	public NotifyContent(Object content, ContentTypeHeader contentTypeHeader) {
-		super();
+	private Map<String, String> eventHeaderParams;
+
+	public NotifyContent(Object content, ContentTypeHeader contentTypeHeader,
+			Map<String, String> eventHeaderParams) {
 		this.content = content;
 		this.contentTypeHeader = contentTypeHeader;
+		this.eventHeaderParams = eventHeaderParams;
 	}
-	
+
 	public Object getContent() {
 		return content;
 	}
-	
+
+	public Map<String, String> getEventHeaderParams() {
+		return eventHeaderParams;
+	}
+
 	public ContentTypeHeader getContentTypeHeader() {
 		return contentTypeHeader;
 	}
-	
+
 }

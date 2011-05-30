@@ -38,22 +38,26 @@ import org.jboss.jmx.adaptor.rmi.RMIAdaptor;
 import org.junit.After;
 import org.junit.Before;
 import org.mobicents.slee.enabler.userprofile.jpa.jmx.UserProfileControlManagementMBean;
+import org.mobicents.xcap.client.XcapClient;
+import org.mobicents.xcap.client.XcapConstant;
+import org.mobicents.xcap.client.header.Header;
+import org.mobicents.xcap.client.header.HeaderFactory;
+import org.mobicents.xcap.client.impl.XcapClientImpl;
 import org.mobicents.xdm.server.appusage.AppUsage;
-import org.openxdm.xcap.client.XCAPClient;
 import org.openxdm.xcap.server.slee.appusage.resourcelists.ResourceListsAppUsage;
 
 public abstract class AbstractXDMJunitTest {
 
-	protected XCAPClient client = null;
+	protected XcapClient client;
 	protected AppUsage appUsage = new ResourceListsAppUsage(null,false);
-	protected String user = "+01234566789@mobicents.org";
+	protected String user = "sip:user@mobicents.org";
 	protected String documentName = "index";
-	protected String password = "password";
 	
 	private ObjectName userProfileMBeanObjectName;
 	private RMIAdaptor rmiAdaptor;
 	
 	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void initRmiAdaptor() throws NamingException, MalformedObjectNameException, NullPointerException {
 		// Set Some JNDI Properties
 		Hashtable env = new Hashtable();
@@ -67,13 +71,13 @@ public abstract class AbstractXDMJunitTest {
 		userProfileMBeanObjectName = new ObjectName(UserProfileControlManagementMBean.MBEAN_NAME);
 	}
 	
-	private void createUser(String user, String password) throws InstanceNotFoundException, MBeanException, ReflectionException, IOException {
+	protected void createUser(String user, String password) throws InstanceNotFoundException, MBeanException, ReflectionException, IOException {
 		String sigs[] = { String.class.getName(), String.class.getName() };
 		Object[] args = { user, password };
 		rmiAdaptor.invoke(userProfileMBeanObjectName, "addUser", args, sigs);	
 	}
 	
-	private void removeUser(String user) throws InstanceNotFoundException, MBeanException, ReflectionException, IOException {
+	protected void removeUser(String user) throws InstanceNotFoundException, MBeanException, ReflectionException, IOException {
 		String sigs[] = { String.class.getName()};
 		Object[] args = { user};
 		rmiAdaptor.invoke(userProfileMBeanObjectName, "removeUser", args, sigs);	
@@ -81,11 +85,9 @@ public abstract class AbstractXDMJunitTest {
 	
 	@Before
 	public void runBefore() throws IOException, InterruptedException, MalformedObjectNameException, NullPointerException, NamingException, InstanceNotFoundException, MBeanException, ReflectionException {
-		client = ServerConfiguration.getXCAPClientInstance();	
+		client = new XcapClientImpl();
 		initRmiAdaptor();
-		createUser(user, password);
-		client.setAuthenticationCredentials(user, password);
-		client.setDoAuthentication(true);
+		createUser(user, user);
 	}
 	
 	@After
@@ -100,4 +102,15 @@ public abstract class AbstractXDMJunitTest {
 		documentName = null;
 	}
 	
+	protected Header[] getAssertedUserIdHeaders(HeaderFactory headerFactory, String assertedUserId) {
+		Header[] headers = null;
+		if (assertedUserId != null) {
+			headers = new Header[1];
+			headers[0] = headerFactory
+					.getBasicHeader(
+							XcapConstant.HEADER_X_3GPP_Asserted_Identity,
+							assertedUserId);
+		}
+		return headers;
+	}
 }

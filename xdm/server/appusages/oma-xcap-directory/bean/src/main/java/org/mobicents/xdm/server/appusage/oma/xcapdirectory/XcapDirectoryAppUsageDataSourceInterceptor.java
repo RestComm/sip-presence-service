@@ -94,6 +94,15 @@ public class XcapDirectoryAppUsageDataSourceInterceptor implements
 				XcapDirectoryAppUsage.DEFAULT_DOC_NAMESPACE,
 				ROOT_DIRECTORY_ELEMENT_NAME);
 		document.appendChild(rootElement);
+		// lets prepare the collection suffix by removing the auid from doc selector
+		int i = documentSelector.getCollection().indexOf('/', 1);
+		String collectionSuffix = null;
+		if (i > 0) {
+			collectionSuffix = documentSelector.getCollection().substring(i);
+		}
+		else {
+			collectionSuffix = "";
+		}
 		for (String appUsageId : AppUsageManagement.getInstance()
 				.getAppUsages()) {
 			if (!appUsageId.equals(XcapDirectoryAppUsage.ID)) {
@@ -103,15 +112,13 @@ public class XcapDirectoryAppUsageDataSourceInterceptor implements
 				rootElement.appendChild(folderElement);
 				folderElement.setAttributeNS(null, AUID_ATTR_NAME, appUsageId);
 				for (org.openxdm.xcap.common.datasource.Document storedDoc : dataSource
-						.getDocuments(appUsageId, documentSelector
-								.getDocumentParent())) {
+						.getDocuments(appUsageId+collectionSuffix,false)) {
 					Element entryElement = document.createElementNS(
 							XcapDirectoryAppUsage.DEFAULT_DOC_NAMESPACE,
 							ENTRY_ELEMENT_NAME);
 					folderElement.appendChild(entryElement);
 					entryElement.setAttributeNS(null, URI_ATTR_NAME,
-							getDocumentURI(new DocumentSelector(appUsageId,
-									storedDoc.getDocumentParent(), storedDoc
+							getDocumentURI(new DocumentSelector(storedDoc.getCollection(), storedDoc
 											.getDocumentName())));
 					entryElement.setAttributeNS(null, ETAG_ATTRIBUTE_NAME,
 							storedDoc.getETag());
@@ -135,30 +142,19 @@ public class XcapDirectoryAppUsageDataSourceInterceptor implements
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.mobicents.xdm.server.appusage.AppUsageDataSourceInterceptor#getDocuments
-	 * (java.lang.String, org.mobicents.xdm.server.appusage.AppUsageDataSource)
-	 */
+	private static final InterceptedDocument[] EMPTY_RESULT = {};
+	@Override
+	public InterceptedDocument[] getDocuments(boolean includeChildCollections,
+			AppUsageDataSource dataSource) throws InternalServerErrorException {
+		// not supported
+		return EMPTY_RESULT;
+	}
+
 	@Override
 	public InterceptedDocument[] getDocuments(String documentParent,
-			AppUsageDataSource dataSource) throws InternalServerErrorException {
-		throw new UnsupportedOperationException();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.mobicents.xdm.server.appusage.AppUsageDataSourceInterceptor#getDocuments
-	 * (org.mobicents.xdm.server.appusage.AppUsageDataSource)
-	 */
-	@Override
-	public InterceptedDocument[] getDocuments(AppUsageDataSource dataSource)
+			boolean includeChildCollections, AppUsageDataSource dataSource)
 			throws InternalServerErrorException {
-		throw new UnsupportedOperationException();
+		// not supported
+		return EMPTY_RESULT;
 	}
-
 }

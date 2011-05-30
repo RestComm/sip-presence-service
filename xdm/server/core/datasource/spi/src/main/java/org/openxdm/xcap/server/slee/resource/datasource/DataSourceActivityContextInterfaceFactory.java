@@ -39,7 +39,7 @@ public interface DataSourceActivityContextInterfaceFactory {
             UnrecognizedActivityException, FactoryException;
     
     public ActivityContextInterface getActivityContextInterface(
-    		AppUsageActivity activity) throws NullPointerException,
+    		CollectionActivity activity) throws NullPointerException,
             UnrecognizedActivityException, FactoryException;
     
 }

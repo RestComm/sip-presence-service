@@ -31,6 +31,10 @@ import org.openxdm.xcap.common.xml.TextWriter;
 
 public class InterceptedDocument implements Document {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final DocumentSelector documentSelector;
 	private final org.w3c.dom.Document domDocument;
 	private String documentAsString;
@@ -41,10 +45,10 @@ public class InterceptedDocument implements Document {
 	}
 	
 	@Override
-	public String getAUID() {
-		return documentSelector.getAUID();
+	public String getCollection() {
+		return documentSelector.getCollection();
 	}
-
+	
 	@Override
 	public org.w3c.dom.Document getAsDOMDocument()
 			throws InternalServerErrorException {
@@ -66,11 +70,6 @@ public class InterceptedDocument implements Document {
 	@Override
 	public String getDocumentName() {
 		return documentSelector.getDocumentName();
-	}
-
-	@Override
-	public String getDocumentParent() {
-		return documentSelector.getDocumentParent();
 	}
 
 	@Override

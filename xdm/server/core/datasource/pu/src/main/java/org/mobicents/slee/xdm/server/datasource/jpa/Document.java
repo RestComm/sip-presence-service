@@ -45,10 +45,10 @@ import org.openxdm.xcap.common.xml.XMLValidator;
 @Entity
 @Table(name = "XDM_DATASOURCE_DOCUMENTS")
 @NamedQueries({
-	@NamedQuery(name=Document.JPA_QUERY_SELECT_DOCUMENTS_FROM_DOCUMENT_PARENT,query="SELECT x FROM Document x WHERE x.key.appUsage = :auid AND x.key.documentParent = :documentParent"),
-	@NamedQuery(name=Document.JPA_QUERY_SELECT_DOCUMENTS_FROM_APPUSAGE,query="SELECT x FROM Document x WHERE x.key.appUsage = :auid"),
-	@NamedQuery(name=Document.JPA_QUERY_UPDATE_DOCUMENTS_FROM_KEY,query="UPDATE Document x SET x.xml=:xml,x.eTag=:eTag WHERE x.key.appUsage = :auid AND x.key.documentParent = :documentParent AND x.key.documentName = :documentName"),
-	@NamedQuery(name=Document.JPA_QUERY_DELETE_DOCUMENTS_FROM_KEY,query="DELETE FROM Document x WHERE x.key.appUsage = :auid AND x.key.documentParent = :documentParent AND x.key.documentName = :documentName")
+	@NamedQuery(name=Document.JPA_QUERY_SELECT_DOCUMENTS_IN_COLLECTION,query="SELECT x FROM Document x WHERE x.key.collection = :collection"),
+	@NamedQuery(name=Document.JPA_QUERY_SELECT_DOCUMENTS_MATCH_COLLECTION,query="SELECT x FROM Document x WHERE x.key.collection LIKE :collection"),
+	@NamedQuery(name=Document.JPA_QUERY_UPDATE_DOCUMENTS_FROM_KEY,query="UPDATE Document x SET x.xml=:xml,x.eTag=:eTag WHERE x.key.collection = :collection AND x.key.documentName = :documentName"),
+	@NamedQuery(name=Document.JPA_QUERY_DELETE_DOCUMENTS_FROM_KEY,query="DELETE FROM Document x WHERE x.key.collection = :collection AND x.key.documentName = :documentName")
 	})
 public class Document implements org.openxdm.xcap.common.datasource.Document, Serializable {
 	
@@ -57,8 +57,8 @@ public class Document implements org.openxdm.xcap.common.datasource.Document, Se
 	 */
 	private static final long serialVersionUID = 3697052553779974529L;
 
-	public static final String JPA_QUERY_SELECT_DOCUMENTS_FROM_DOCUMENT_PARENT = "selectDocumentsFromDocumentParent";
-	public static final String JPA_QUERY_SELECT_DOCUMENTS_FROM_APPUSAGE = "selectDocumentsFromAppUsage";
+	public static final String JPA_QUERY_SELECT_DOCUMENTS_IN_COLLECTION = "selectDocumentsInCollection";
+	public static final String JPA_QUERY_SELECT_DOCUMENTS_MATCH_COLLECTION = "selectDocumentsMatchCollection";
 	public static final String JPA_QUERY_UPDATE_DOCUMENTS_FROM_KEY = "updateDocumentFromKey";
 	public static final String JPA_QUERY_DELETE_DOCUMENTS_FROM_KEY = "deleteDocumentFromKey";
 	
@@ -83,8 +83,8 @@ public class Document implements org.openxdm.xcap.common.datasource.Document, Se
 		// TODO Auto-generated constructor stub
 	}
 	
-	public Document(String auid, String documentParent, String documentName) {
-		setKey(new DocumentPrimaryKey(auid,documentParent,documentName));
+	public Document(String collection, String documentName) {
+		setKey(new DocumentPrimaryKey(collection,documentName));
 	}
 	
 	@Override
@@ -131,12 +131,8 @@ public class Document implements org.openxdm.xcap.common.datasource.Document, Se
 	
 	//
 	
-	public String getAUID() {
-		return key.getAppUsage();
-	}
-	
-	public String getDocumentParent() {
-		return key.getDocumentParent();
+	public String getCollection() {
+		return key.getCollection();
 	}
 	
 	public String getDocumentName() {

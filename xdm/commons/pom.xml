@@ -34,6 +34,14 @@
             <groupId>commons-httpclient</groupId>
             <artifactId>commons-httpclient</artifactId>
          </dependency>
+		<dependency>
+			<artifactId>mobicents-xcap-diff-api</artifactId>
+			<groupId>org.mobicents.protocols.xcap.diff</groupId>
+		</dependency>
+		<dependency>
+			<artifactId>mobicents-xcap-diff-dom</artifactId>
+			<groupId>org.mobicents.protocols.xcap.diff</groupId>
+		</dependency>
 	</dependencies>
 	
 </project>

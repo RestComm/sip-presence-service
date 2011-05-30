@@ -28,14 +28,16 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
+import org.openxdm.xcap.common.xml.NamespaceContext;
+
 
 
 public class Parser {
 
 	public static ResourceSelector parseResourceSelector(String xcapRoot, String resourceSelector,String queryComponent) throws ParseException {		
 		
-		if (resourceSelector == null) {
-			throw new ParseException(null);
+		if (resourceSelector == null || resourceSelector.isEmpty()) {
+			throw new ParseException(null);			
 		}
 		
 		// undecode uri		
@@ -53,17 +55,24 @@ public class Parser {
 				// xcap root is set and found, remove it
 				resourceSelector = resourceSelector.substring(xcapRoot.length());
 			}
-			// break on nodeSelectorSeparator, that is, ~~
-			int nodeSelectorSeparator = resourceSelector.indexOf("~~");
-			if (nodeSelectorSeparator != -1) {
-				// get document selector, but not the last char if its '/'			
-				if (resourceSelector.charAt(nodeSelectorSeparator-1) == '/') {
-					documentSelector = resourceSelector.substring(0,nodeSelectorSeparator-1);
-				} else {
-					documentSelector = resourceSelector.substring(0,nodeSelectorSeparator);
+			if (resourceSelector.isEmpty()) {
+				throw new ParseException(null);
+			}
+			// be a friend and remove any leading /
+			try {
+				while(resourceSelector.charAt(0) == '/') {
+					resourceSelector = resourceSelector.substring(1);
 				}
+			} catch (Exception e) {
+				throw new ParseException(null);				
+			}
+			// break on nodeSelectorSeparator, that is, /~~/
+			int nodeSelectorSeparator = resourceSelector.indexOf("/~~/");
+			if (nodeSelectorSeparator != -1) {
+				// get document selector
+				documentSelector = resourceSelector.substring(0,nodeSelectorSeparator);
 				// get node selector
-				nodeSelector = resourceSelector.substring(nodeSelectorSeparator+2);
+				nodeSelector = resourceSelector.substring(nodeSelectorSeparator+4);
 				// check for query component
 				if (queryComponent != null) {					
 					namespaces = parseQueryComponent(queryComponent,new ParseException(documentSelector));
@@ -72,13 +81,7 @@ public class Parser {
 				}
 			} else {
 				if (queryComponent == null) {
-					// node selector & query component does not exists
-					// get document selector (but not the last char if its '/')			
-					if (resourceSelector.charAt(resourceSelector.length()-1) == '/') {
-						documentSelector = resourceSelector.substring(0,resourceSelector.length()-1);
-					} else {
-						documentSelector = resourceSelector;
-					}
+					documentSelector = resourceSelector;					
 				}
 				else {
 					// node selector does not exists, query component must not exist too
@@ -170,7 +173,7 @@ public class Parser {
 		return namespaces;
 	}
 		
-	public static NodeSelector parseNodeSelector(String nodeSelector) throws ParseException {
+	public static NodeSelector parseNodeSelector(String nodeSelector, NamespaceContext namespaceContext) throws ParseException {
 				
 		String terminalSelector = null;
 		String elementSelector = null;
@@ -178,7 +181,7 @@ public class Parser {
 		int elementToTerminalSelectorSeparator =  nodeSelector.lastIndexOf('/');
 		if (elementToTerminalSelectorSeparator != -1 
 				&& elementToTerminalSelectorSeparator < (nodeSelector.length()-1)) {
-			// it can be breaked, check its last part is a just a element path or a terminal selector
+			// it can be broken, check its last part is a just a element path or a terminal selector
 			String elementSelectorCandidate = nodeSelector.substring(0,elementToTerminalSelectorSeparator);
 			String terminalSelectorCandidate = nodeSelector.substring(elementToTerminalSelectorSeparator+1);
 			//FIXME what about extension selector??
@@ -194,19 +197,12 @@ public class Parser {
 			throw new ParseException(null);
 		}
 	
-		return new NodeSelector(elementSelector,terminalSelector);
+		return new NodeSelector(elementSelector,terminalSelector,namespaceContext);
 	}
 	
 	public static ElementSelector parseElementSelector(String elementSelector) throws ParseException {		
 				
 		LinkedList<ElementSelectorStep> elementSelectorSteps = new LinkedList<ElementSelectorStep>();
-		
-		// remove head '/'
-		if (elementSelector.charAt(0) == '/') {
-			elementSelector = elementSelector.substring(1);
-		} else {
-			throw new ParseException(null);
-		}
 		
 		int nextSlashPos = -1;
 		String stepString = null;

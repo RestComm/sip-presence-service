@@ -26,7 +26,6 @@
 package org.mobicents.slee.sipevent.server.subscription;
 
 import javax.sip.ServerTransaction;
-import javax.sip.header.ContentTypeHeader;
 
 import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
@@ -72,17 +71,20 @@ public interface ImplementedSubscriptionControlParent {
 	/**
 	 * Through this method the subscription control sbb can be informed that the
 	 * state of the notifier has changed, allowing subscribers to be notified.
+	 * 
+	 * @param notifier
+	 * @param eventPackage
+	 * @param notifyContent
 	 */
 	public void notifySubscribers(String notifier, String eventPackage,
-			Object content, ContentTypeHeader contentTypeHeader);
+			NotifyContent notifyContent);
 
 	/**
 	 * Requests notification on a specific subscription, providing the content.
 	 * 
 	 * @param key
-	 * @param content
-	 * @param contentTypeHeader
+	 * @param notifyContent
 	 */
-	public void notifySubscriber(SubscriptionKey key, Object content,
-			ContentTypeHeader contentTypeHeader);
+	public void notifySubscriber(SubscriptionKey key, 
+			NotifyContent notifyContent);
 }

@@ -30,7 +30,6 @@ import javax.naming.NamingException;
 import javax.sip.ServerTransaction;
 import javax.sip.header.HeaderFactory;
 import javax.slee.ActivityContextInterface;
-import javax.slee.ChildRelation;
 import javax.slee.CreateException;
 import javax.slee.RolledBackContext;
 import javax.slee.Sbb;
@@ -341,17 +340,17 @@ public abstract class IntegratedSubscriptionControlSbb implements Sbb,
 	
 	public void onAttributeUpdatedEvent(AttributeUpdatedEvent event,
 			ActivityContextInterface aci) {
-		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event.getDocumentSelector(), event.getOldETag(), event.getNewETag(), event.getDocumentAsString(), this);		
+		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event, aci, this);		
 	}
 
 	public void onDocumentUpdatedEvent(DocumentUpdatedEvent event,
 			ActivityContextInterface aci) {
-		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event.getDocumentSelector(), event.getOldETag(), event.getNewETag(), event.getDocumentAsString(), this);
+		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event, aci, this);		
 	}
 
 	public void onElementUpdatedEvent(ElementUpdatedEvent event,
 			ActivityContextInterface aci) {
-		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event.getDocumentSelector(), event.getOldETag(), event.getNewETag(), event.getDocumentAsString(), this);
+		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event, aci, this);		
 	}
 
 	// ---------- PublishedSphereSource

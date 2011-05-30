@@ -22,6 +22,9 @@
 
 package org.mobicents.slee.xdm.server;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * 
  * @author martins
@@ -35,14 +38,18 @@ public class ServerConfiguration implements ServerConfigurationMBean {
 	
 	private String schemeAndAuthority = "http://"+serverHost+":"+serverPort;
 	
-	private String xcapRoot = "/mobicents";
-		
+	private String xcapRoot = "/mobicents/";
+	
+	private String fullXcapRoot;
+	
 	private String authenticationRealm;
 	
 	private boolean localXcapAuthentication;
 	
 	private boolean allowAssertedUserIDs;
 	
+	private Set<String> xcapDiffSuperUsers = new HashSet<String>(); 
+		
 	private static final ServerConfiguration INSTANCE = new ServerConfiguration();
 	
 	public static ServerConfiguration getInstance() {
@@ -94,6 +101,9 @@ public class ServerConfiguration implements ServerConfigurationMBean {
 	 */
 	public void setSchemeAndAuthority(String schemeAndAuthority) {
 		this.schemeAndAuthority = schemeAndAuthority;
+		if (schemeAndAuthority != null && xcapRoot != null) {
+			fullXcapRoot = new StringBuilder(schemeAndAuthority).append(xcapRoot).toString();
+		}
 	}
 
 	/**
@@ -108,6 +118,17 @@ public class ServerConfiguration implements ServerConfigurationMBean {
 	 */
 	public void setXcapRoot(String xcapRoot) {
 		this.xcapRoot = xcapRoot;
+		if (schemeAndAuthority != null && xcapRoot != null) {
+			fullXcapRoot = new StringBuilder(schemeAndAuthority).append(xcapRoot).toString();
+		}
+	}
+	
+	@Override
+	public String getFullXcapRoot() {
+		if (fullXcapRoot == null && schemeAndAuthority != null && xcapRoot != null) {
+			fullXcapRoot = new StringBuilder(schemeAndAuthority).append(xcapRoot).toString();
+		}
+		return fullXcapRoot;
 	}
 	
 	/* (non-Javadoc)
@@ -164,4 +185,13 @@ public class ServerConfiguration implements ServerConfigurationMBean {
 		this.allowAssertedUserIDs = allowAssertedUserIDs;
 	}
 	
+	@Override
+	public Set<String> getXcapDiffSuperUsers() {
+		return xcapDiffSuperUsers;
+	}
+	
+	@Override
+	public void setXcapDiffSuperUsers(Set<String> xcapDiffSuperUsers) {
+		this.xcapDiffSuperUsers = xcapDiffSuperUsers;		
+	}
 }

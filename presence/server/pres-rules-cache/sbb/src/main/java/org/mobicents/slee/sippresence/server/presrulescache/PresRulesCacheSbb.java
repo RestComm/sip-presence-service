@@ -37,7 +37,7 @@ import org.mobicents.slee.sippresence.server.jmx.SipPresenceServerManagement;
 import org.openxdm.xcap.common.datasource.Document;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
 import org.openxdm.xcap.common.uri.DocumentSelector;
-import org.openxdm.xcap.server.slee.resource.datasource.AppUsageActivity;
+import org.openxdm.xcap.server.slee.resource.datasource.CollectionActivity;
 import org.openxdm.xcap.server.slee.resource.datasource.AttributeUpdatedEvent;
 import org.openxdm.xcap.server.slee.resource.datasource.DataSourceActivityContextInterfaceFactory;
 import org.openxdm.xcap.server.slee.resource.datasource.DataSourceSbbInterface;
@@ -147,16 +147,16 @@ public abstract class PresRulesCacheSbb implements Sbb {
 
 		String presRulesAUID = SipPresenceServerManagement.getInstance().getPresRulesAUID();
 		// lets attach to the app usage activity, to receive events related with updates on its docs
-		AppUsageActivity appUsageActivity = dataSourceSbbInterface.createAppUsageActivity(presRulesAUID);
+		CollectionActivity appUsageActivity = dataSourceSbbInterface.createCollectionActivity(presRulesAUID);
 		ActivityContextInterface appUsageActivityContextInterface = dataSourceActivityContextInterfaceFactory.getActivityContextInterface(appUsageActivity);
 		appUsageActivityContextInterface.attach(context.getSbbLocalObject());
 		setPresRulesAppUsageACI(appUsageActivityContextInterface);
 		// now fetch all existent docs
 		DocumentSelector documentSelector = null;
 		try {
-			Document[] documents = dataSourceSbbInterface.getDocuments(presRulesAUID);
+			Document[] documents = dataSourceSbbInterface.getDocuments(presRulesAUID+"/users",true);
 			for (Document document : documents) {
-				documentSelector = new DocumentSelector(presRulesAUID, document.getDocumentParent(), document.getDocumentName());
+				documentSelector = new DocumentSelector(document.getCollection(), document.getDocumentName());
 				if (tracer.isFineEnabled()) {
 					tracer.fine("Retrieving document "+documentSelector);
 				}
@@ -177,18 +177,22 @@ public abstract class PresRulesCacheSbb implements Sbb {
 		aci.detach(sbbLocalObject);
 	}
 	
+	private String getDocumentETag(Document document) {
+		return document == null ? null : document.getETag();
+
+	}
 	public void onAttributeUpdatedEvent(AttributeUpdatedEvent event,
 			ActivityContextInterface aci) {
-		presRulesSbbInterface.rulesetUpdated(event.getDocumentSelector(), event.getOldETag(), event.getNewETag(), event.getDocumentAsString());
+		presRulesSbbInterface.rulesetUpdated(event.getDocumentSelector(), getDocumentETag(event.getOldDocument()), event.getNewETag(), event.getNewDocumentString());
 	}
 
 	public void onDocumentUpdatedEvent(DocumentUpdatedEvent event,
 			ActivityContextInterface aci) {
-		presRulesSbbInterface.rulesetUpdated(event.getDocumentSelector(), event.getOldETag(), event.getNewETag(), event.getDocumentAsString());
+		presRulesSbbInterface.rulesetUpdated(event.getDocumentSelector(), getDocumentETag(event.getOldDocument()), event.getNewETag(), event.getNewDocumentString());
 	}
 
 	public void onElementUpdatedEvent(ElementUpdatedEvent event,
 			ActivityContextInterface aci) {
-		presRulesSbbInterface.rulesetUpdated(event.getDocumentSelector(), event.getOldETag(), event.getNewETag(), event.getDocumentAsString());
+		presRulesSbbInterface.rulesetUpdated(event.getDocumentSelector(), getDocumentETag(event.getOldDocument()), event.getNewETag(), event.getNewDocumentString());
 	}
 }

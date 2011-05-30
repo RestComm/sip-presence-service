@@ -22,97 +22,107 @@
 
 package org.openxdm.xcap.server.slee.resource.datasource;
 
-import java.io.Serializable;
 import java.util.Map;
 
 import javax.slee.EventTypeID;
 
+import org.mobicents.protocols.xcap.diff.BuildPatchException;
+import org.mobicents.protocols.xcap.diff.dom.DOMDocumentPatchComponentBuilder;
+import org.mobicents.protocols.xcap.diff.dom.DOMXcapDiffPatchBuilder;
 import org.openxdm.xcap.common.uri.AttributeSelector;
 import org.openxdm.xcap.common.uri.DocumentSelector;
 import org.openxdm.xcap.common.uri.NodeSelector;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-public final class AttributeUpdatedEvent implements Serializable {
+public final class AttributeUpdatedEvent extends DocumentUpdatedEvent {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	
+
 	/**
 	 * IMPORTANT: must sync with the event descriptor data!!!!
 	 */
-	public static final EventTypeID EVENT_TYPE_ID = new EventTypeID("AttributeUpdatedEvent","org.openxdm","1.0");
-		
-	private final DocumentSelector documentSelector;
+	public static final EventTypeID EVENT_TYPE_ID = new EventTypeID(
+			"AttributeUpdatedEvent", "org.openxdm", "1.0");
+
 	private final NodeSelector nodeSelector;
 	private final AttributeSelector attributeSelector;
-	private final Map<String, String> namespaces;
-	private final String oldETag;
-	private final String newETag;
-	private final String documentAsString;
-	
-	private final String attributeValue;
-	
+	private final String oldAttributeValue;
+	private final String newAttributeValue;
+
 	public AttributeUpdatedEvent(DocumentSelector documentSelector,
+			String defaultDocNamespace,
+			org.openxdm.xcap.common.datasource.Document oldDocument,
+			Document newDocumentDOM, String newDocumentString, String newETag,
 			NodeSelector nodeSelector, AttributeSelector attributeSelector,
-			Map<String, String> namespaces, String oldETag, String newETag,
-			String documentAsString, String attributeValue) {
-		if (newETag == null) {
-			throw new IllegalArgumentException("newETag arg can't be null");
-		}
-		this.documentSelector = documentSelector;
+			String oldAttributeValue, String newAttributeValue) {
+		super(documentSelector, defaultDocNamespace, oldDocument,
+				newDocumentDOM, newDocumentString, newETag);
 		this.nodeSelector = nodeSelector;
 		this.attributeSelector = attributeSelector;
-		this.namespaces = namespaces;
-		this.oldETag = oldETag;
-		this.newETag = newETag;
-		this.documentAsString = documentAsString;
-		
-		this.attributeValue = attributeValue;
+		this.oldAttributeValue = oldAttributeValue;
+		this.newAttributeValue = newAttributeValue;
 	}
 
 	public AttributeSelector getAttributeSelector() {
 		return attributeSelector;
 	}
-	
-	public String getAttributeValue() {
-		return attributeValue;
+
+	public String getNewAttributeValue() {
+		return newAttributeValue;
 	}
-	
-	public String getDocumentAsString() {
-		return documentAsString;
+
+	public String getOldAttributeValue() {
+		return oldAttributeValue;
 	}
-	
-	public DocumentSelector getDocumentSelector() {
-		return documentSelector;
-	}
-	
-	public String getNewETag() {
-		return newETag;
-	}
-	
-	public Map<String, String> getNamespaces() {
-		return namespaces;
-	}
-	
+
 	public NodeSelector getNodeSelector() {
 		return nodeSelector;
 	}
-	
-	public String getOldETag() {
-		return oldETag;
-	}
-	
-	public boolean equals(Object o) {
-		if (o != null && o.getClass() == this.getClass()) {
-			return ((AttributeUpdatedEvent)o).newETag.equals(newETag);
+
+	@Override
+	protected Document createDocXcapDiff(boolean mayPatch) throws BuildPatchException {
+		
+		if (!mayPatch) {
+			// if xml patch ops may not be included, then just reuse the parent logic
+			return super.createDocXcapDiff(false);		
 		}
-		else {
-			return false;
-		}	
+		
+		Map<String, String> namespaceBindings = nodeSelector
+				.getNamespaceContext() != null ? nodeSelector
+				.getNamespaceContext().getNamespaces() : null;
+		DOMXcapDiffPatchBuilder patchBuilder = XCAP_DIFF_FACTORY
+				.getPatchBuilder();
+		DOMDocumentPatchComponentBuilder documentPatchComponentBuilder = patchBuilder
+				.getDocumentPatchComponentBuilder();
+		Element patchInstruction = null;
+		if (oldAttributeValue == null) {
+			patchInstruction = documentPatchComponentBuilder
+					.getXmlPatchOperationsBuilder().addAttribute(
+							nodeSelector.getElementSelector(),
+							attributeSelector.getAttName(), newAttributeValue,
+							namespaceBindings);
+		} else {
+			if (newAttributeValue == null) {
+				patchInstruction = documentPatchComponentBuilder
+						.getXmlPatchOperationsBuilder().removeAttribute(
+								nodeSelector.toString(), namespaceBindings);
+			} else {
+				patchInstruction = documentPatchComponentBuilder
+						.getXmlPatchOperationsBuilder().replaceAttribute(
+								nodeSelector.toString(), newAttributeValue,
+								namespaceBindings);
+			}
+		}
+		Element[] patchInstructions = { patchInstruction };
+		Element[] patchComponents = { documentPatchComponentBuilder
+				.buildPatchComponent(documentSelector.toString(),
+						getPreviousETag(), getNewETag(), patchInstructions) };
+		return patchBuilder.buildPatch(
+				XDM_SERVER_CONFIGURATION.getFullXcapRoot(), patchComponents);
 	}
-	
-	public int hashCode() {		
-		return newETag.hashCode();
-	}
+
 }

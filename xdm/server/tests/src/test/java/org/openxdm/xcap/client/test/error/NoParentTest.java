@@ -34,7 +34,7 @@ import junit.framework.JUnit4TestAdapter;
 import org.apache.commons.httpclient.HttpException;
 import org.junit.Test;
 import org.openxdm.xcap.client.Response;
-import org.openxdm.xcap.client.test.AbstractXDMJunitTest;
+import org.openxdm.xcap.client.test.AbstractXDMJunitOldClientTest;
 import org.openxdm.xcap.client.test.ServerConfiguration;
 import org.openxdm.xcap.common.datasource.DataSource;
 import org.openxdm.xcap.common.error.NoParentConflictException;
@@ -48,7 +48,7 @@ import org.openxdm.xcap.common.uri.ElementSelector;
 import org.openxdm.xcap.common.uri.ElementSelectorStep;
 import org.openxdm.xcap.common.uri.ElementSelectorStepByPos;
 
-public class NoParentTest extends AbstractXDMJunitTest {
+public class NoParentTest extends AbstractXDMJunitOldClientTest {
 	
 	public static junit.framework.Test suite() {
 		return new JUnit4TestAdapter(NoParentTest.class);
@@ -88,7 +88,7 @@ public class NoParentTest extends AbstractXDMJunitTest {
 	
 		// DOCUMENT PARENT NOT FOUND
 
-		NoParentConflictException exception = new NoParentConflictException(ServerConfiguration.SERVER_XCAP_ROOT);				
+		NoParentConflictException exception = new NoParentConflictException(ServerConfiguration.SERVER_XCAP_ROOT+'/');				
 		exception.setSchemeAndAuthorityURI("http://"+ServerConfiguration.SERVER_HOST+":"+ServerConfiguration.SERVER_PORT);
 		
 		// 1. put new document and document parent not found
@@ -117,8 +117,6 @@ public class NoParentTest extends AbstractXDMJunitTest {
 
 		// DOCUMENT NOT FOUND
 		
-		// FIXME clean data source still neeed?
-
 		exception = new NoParentConflictException(ServerConfiguration.SERVER_XCAP_ROOT+'/'+appUsage.getAUID()+"/users/"+user);				
 		exception.setSchemeAndAuthorityURI("http://"+ServerConfiguration.SERVER_HOST+":"+ServerConfiguration.SERVER_PORT);
 		
@@ -128,6 +126,7 @@ public class NoParentTest extends AbstractXDMJunitTest {
 		response = client.put(elementKey,ElementResource.MIMETYPE,elementContent,null);		
 		// check response
 		assertTrue("Response must exists",response != null);
+		System.out.println("Response Content: "+response.getContent());
 		assertTrue("Response content must be the expected one and response code should be "+exception.getResponseStatus(),response.getCode() == exception.getResponseStatus() && response.getContent().equals(exception.getResponseContent()));
 		
 		// 5. put new attribute and document not found

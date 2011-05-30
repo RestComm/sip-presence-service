@@ -24,6 +24,10 @@
 			<version>1.0.0.BETA5</version>
 		</dependency>
 		<dependency>
+			<groupId>org.mobicents</groupId>
+			<artifactId>xcap-client-api</artifactId>
+		</dependency>
+		<dependency>
 			<artifactId>xdms-core-xcap-control-sbb</artifactId>
 			<groupId>${pom.groupId}</groupId>
 			<version>${pom.version}</version>

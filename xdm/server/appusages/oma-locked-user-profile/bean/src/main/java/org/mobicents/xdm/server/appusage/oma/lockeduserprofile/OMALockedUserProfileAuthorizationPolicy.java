@@ -53,7 +53,7 @@ public class OMALockedUserProfileAuthorizationPolicy implements
 		 * SHALL have all permissions on the document. The Primary Principal
 		 * SHALL only have the read permission to this document.
 		 */
-		String xui = documentSelector.getDocumentParent().substring(6);
+		String xui = documentSelector.getUser();
 		if (operation == Operation.GET) {
 			if (user.equals(xui)) {
 				return true;

@@ -43,7 +43,6 @@ import org.openxdm.xcap.common.uri.AttributeSelector;
 import org.openxdm.xcap.common.uri.DocumentSelector;
 import org.openxdm.xcap.common.uri.ElementSelector;
 import org.openxdm.xcap.common.uri.NodeSelector;
-import org.openxdm.xcap.common.xml.NamespaceContext;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -68,9 +67,9 @@ public interface AppUsageRequestProcessor {
 
 	public boolean putElement(DocumentSelector documentSelector,
 			NodeSelector nodeSelector, ElementSelector elementSelector,
-			NamespaceContext namespaceContext, Element element,
-			AppUsage appUsage) throws InternalServerErrorException,
-			NoParentConflictException, SchemaValidationErrorConflictException,
+			Element element, AppUsage appUsage)
+			throws InternalServerErrorException, NoParentConflictException,
+			SchemaValidationErrorConflictException,
 			UniquenessFailureConflictException,
 			ConstraintFailureConflictException, CannotInsertConflictException,
 			NotValidXMLFragmentConflictException, NotUTF8ConflictException,
@@ -78,8 +77,7 @@ public interface AppUsageRequestProcessor {
 
 	public boolean putAttribute(DocumentSelector documentSelector,
 			NodeSelector nodeSelector, ElementSelector elementSelector,
-			AttributeSelector attributeSelector,
-			NamespaceContext namespaceContext, String attrValue,
+			AttributeSelector attributeSelector, String attrValue,
 			AppUsage appUsage) throws InternalServerErrorException,
 			NoParentConflictException, SchemaValidationErrorConflictException,
 			UniquenessFailureConflictException,
@@ -95,8 +93,7 @@ public interface AppUsageRequestProcessor {
 
 	public void deleteElement(DocumentSelector documentSelector,
 			NodeSelector nodeSelector, ElementSelector elementSelector,
-			NamespaceContext namespaceContext, AppUsage appUsage)
-			throws InternalServerErrorException,
+			AppUsage appUsage) throws InternalServerErrorException,
 			UniquenessFailureConflictException,
 			ConstraintFailureConflictException, NotFoundException,
 			CannotDeleteConflictException,
@@ -104,8 +101,7 @@ public interface AppUsageRequestProcessor {
 
 	public void deleteAttribute(DocumentSelector documentSelector,
 			NodeSelector nodeSelector, ElementSelector elementSelector,
-			AttributeSelector attributeSelector,
-			NamespaceContext namespaceContext, AppUsage appUsage)
+			AttributeSelector attributeSelector, AppUsage appUsage)
 			throws InternalServerErrorException, BadRequestException,
 			NotFoundException, SchemaValidationErrorConflictException,
 			UniquenessFailureConflictException,

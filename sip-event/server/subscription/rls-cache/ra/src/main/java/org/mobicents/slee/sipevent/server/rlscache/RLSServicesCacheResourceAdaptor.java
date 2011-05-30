@@ -82,7 +82,7 @@ public class RLSServicesCacheResourceAdaptor implements ResourceAdaptor, RLSServ
 	// dummy activity for watcher of the rls services docs
 	private final RLSServiceActivityImpl dummyRLSServicesDocActivity = new RLSServiceActivityImpl("",this);
 	private final RLSServiceActivityHandle dummyRLSServicesDocActivityHandle = new RLSServiceActivityHandle(dummyRLSServicesDocActivity.getServiceURI());
-	private final DocumentSelector globalRLSServicesDocumentSelector = new DocumentSelector("rls-services", "global", "index");
+	private final DocumentSelector globalRLSServicesDocumentSelector = new DocumentSelector("rls-services/global", "index");
 	private LinkedList<ElementSelectorStep> rlsServicesBaseElementSelectorSteps = initRlsServicesBaseElementSelectorSteps(); 
 	
 	// flags used to control when it's time to init the service which is responsible for providing rls services and resource lists

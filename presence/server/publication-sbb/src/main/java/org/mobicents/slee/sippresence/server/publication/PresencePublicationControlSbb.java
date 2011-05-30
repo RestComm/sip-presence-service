@@ -45,6 +45,7 @@ import org.mobicents.slee.sipevent.server.publication.ImplementedPublicationCont
 import org.mobicents.slee.sipevent.server.publication.StateComposer;
 import org.mobicents.slee.sipevent.server.publication.data.ComposedPublication;
 import org.mobicents.slee.sipevent.server.publication.data.Publication;
+import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbbLocalObject;
 import org.mobicents.slee.sippresence.pojo.pidf.Basic;
 import org.mobicents.slee.sippresence.pojo.pidf.Presence;
@@ -124,8 +125,8 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 			childSbb.notifySubscribers(composedPublication
 					.getComposedPublicationKey().getEntity(),
 					composedPublication.getComposedPublicationKey()
-							.getEventPackage(), composedPublication
-							.getUnmarshalledContent(), contentTypeHeader);
+							.getEventPackage(), new NotifyContent(composedPublication
+							.getUnmarshalledContent(), contentTypeHeader, null));
 		} catch (Exception e) {
 			logger.error("failed to notify subscribers for "
 					+ composedPublication.getComposedPublicationKey(), e);

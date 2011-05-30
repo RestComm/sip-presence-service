@@ -167,16 +167,16 @@ public abstract class ResourceListsWatcherSbb implements Sbb {
 	
 	public void onAttributeUpdatedEvent(AttributeUpdatedEvent event,
 			ActivityContextInterface aci) {
-		rlsCacheRASbbInterface.resourceListsUpdated(event.getDocumentSelector(),event.getDocumentAsString());
+		rlsCacheRASbbInterface.resourceListsUpdated(event.getDocumentSelector(),event.getNewDocumentString());
 	}
 
 	public void onDocumentUpdatedEvent(DocumentUpdatedEvent event,
 			ActivityContextInterface aci) {
-		rlsCacheRASbbInterface.resourceListsUpdated(event.getDocumentSelector(),event.getDocumentAsString());
+		rlsCacheRASbbInterface.resourceListsUpdated(event.getDocumentSelector(),event.getNewDocumentString());
 	}
 
 	public void onElementUpdatedEvent(ElementUpdatedEvent event,
 			ActivityContextInterface aci) {
-		rlsCacheRASbbInterface.resourceListsUpdated(event.getDocumentSelector(),event.getDocumentAsString());
+		rlsCacheRASbbInterface.resourceListsUpdated(event.getDocumentSelector(),event.getNewDocumentString());
 	}
 }

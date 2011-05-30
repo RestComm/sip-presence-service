@@ -33,11 +33,11 @@ import junit.framework.JUnit4TestAdapter;
 import org.apache.commons.httpclient.HttpException;
 import org.junit.Test;
 import org.openxdm.xcap.client.Response;
-import org.openxdm.xcap.client.test.AbstractXDMJunitTest;
+import org.openxdm.xcap.client.test.AbstractXDMJunitOldClientTest;
 import org.openxdm.xcap.common.error.NotWellFormedConflictException;
 import org.openxdm.xcap.common.key.UserDocumentUriKey;
 
-public class NotWellFormedTest extends AbstractXDMJunitTest {
+public class NotWellFormedTest extends AbstractXDMJunitOldClientTest {
 	
 	public static junit.framework.Test suite() {
 		return new JUnit4TestAdapter(NotWellFormedTest.class);

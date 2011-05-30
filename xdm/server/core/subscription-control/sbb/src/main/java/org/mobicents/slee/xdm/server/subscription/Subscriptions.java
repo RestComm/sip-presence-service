@@ -22,122 +22,207 @@
 
 package org.mobicents.slee.xdm.server.subscription;
 
+import java.io.Externalizable;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.openxdm.xcap.common.uri.DocumentSelector;
+import org.openxdm.xcap.server.slee.resource.datasource.NodeSubscription;
 
-public class Subscriptions implements Serializable {
+public class Subscriptions implements Externalizable {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+	private static final Set<String> EMPTY_COLLECTION_SUBSCRIPTIONS = Collections
+			.unmodifiableSet(new HashSet<String>());
+	private static final Set<DocumentSelector> EMPTY_DOCUMENT_SUBSCRIPTIONS = Collections
+			.unmodifiableSet(new HashSet<DocumentSelector>());
+	private static final Set<NodeSubscription> EMPTY_NODESUBSCRIPTIONS_SUBSCRIPTIONS = Collections
+			.unmodifiableSet(new HashSet<NodeSubscription>());
 
-	private final SubscriptionKey key;
-	private final String subscriber;
+	private SubscriptionKey key;
+	private String subscriber;
+	private DiffProcessing diffProcessing;
 	
-	private transient Set<String> appUsages;
-	private transient Set<DocumentSelector> documentSelectors;
-	
-	public Subscriptions(SubscriptionKey key, String subscriber, Set<String> appUsages,
-			Set<DocumentSelector> documentSelectors) {
+	private Set<String> collectionSubscriptions;
+	private Set<DocumentSelector> documentSubscriptions;
+	private Set<NodeSubscription> nodeSubscriptions;
+
+	public Subscriptions() {
+		// required by externalizable
+	}
+
+	public Subscriptions(SubscriptionKey key, String subscriber,
+			Set<String> collectionSubscriptions,
+			Set<DocumentSelector> documentSubscriptions,
+			Set<NodeSubscription> nodeSubscriptions, DiffProcessing diffProcessing) {
 		this.key = key;
 		this.subscriber = subscriber;
-		this.appUsages = appUsages;
-		this.documentSelectors = documentSelectors;
+		this.collectionSubscriptions = collectionSubscriptions != null ? collectionSubscriptions
+				: EMPTY_COLLECTION_SUBSCRIPTIONS;
+		this.documentSubscriptions = documentSubscriptions != null ? documentSubscriptions
+				: EMPTY_DOCUMENT_SUBSCRIPTIONS;
+		this.nodeSubscriptions = nodeSubscriptions != null ? nodeSubscriptions
+				: EMPTY_NODESUBSCRIPTIONS_SUBSCRIPTIONS;
+		this.diffProcessing = diffProcessing;
 		filter();
 	}
-	
+
 	/*
 	 * removes resources that are contained in other resources
 	 */
 	private void filter() {
-		for (Iterator<DocumentSelector> i=documentSelectors.iterator();i.hasNext();) {
-			DocumentSelector ds = (DocumentSelector) i.next();
-			if(appUsages.contains(ds.getAUID())) {
+		for (Iterator<NodeSubscription> i = nodeSubscriptions.iterator(); i
+				.hasNext();) {
+			DocumentSelector ds = (DocumentSelector) i.next()
+					.getDocumentSelector();
+			if (documentSubscriptions.contains(ds)) {
 				// we don't need this resource
 				i.remove();
+			} else {
+				for (String dsCollection : ds.getParentCollections()) {
+					if (collectionSubscriptions.contains(dsCollection)) {
+						// we don't need this resource
+						i.remove();
+					}
+				}
 			}
 		}
+		for (Iterator<DocumentSelector> i = documentSubscriptions.iterator(); i
+				.hasNext();) {
+			DocumentSelector ds = (DocumentSelector) i.next();
+			for (String dsCollection : ds.getParentCollections()) {
+				if (collectionSubscriptions.contains(dsCollection)) {
+					// we don't need this resource
+					i.remove();
+				}
+			}
+		}
+	}
+
+	public DiffProcessing getDiffProcessing() {
+		return diffProcessing;
 	}
 	
 	public SubscriptionKey getKey() {
 		return key;
 	}
-	
+
 	/**
 	 * @return the subscriber
 	 */
 	public String getSubscriber() {
 		return subscriber;
 	}
-	
-	public Set<String> getAppUsages() {
-		return appUsages;
+
+	public Set<String> getCollectionSubscriptions() {
+		return collectionSubscriptions;
 	}
-	
-	public Set<DocumentSelector> getDocumentSelectors() {
-		return documentSelectors;
+
+	public Set<DocumentSelector> getDocumentSubscriptions() {
+		return documentSubscriptions;
 	}
-	
+
+	public Set<NodeSubscription> getNodeSubscriptions() {
+		return nodeSubscriptions;
+	}
+
+	public Set<DocumentSelector> getAllDocumentsToSubscribe() {
+		if (documentSubscriptions.isEmpty() && nodeSubscriptions.isEmpty()) {
+			return Collections.emptySet();
+		} else {
+			HashSet<DocumentSelector> result = new HashSet<DocumentSelector>(
+					documentSubscriptions);
+			for (NodeSubscription nodeSubscription : nodeSubscriptions) {
+				result.add(nodeSubscription.getDocumentSelector());
+			}
+			return result;
+		}
+	}
+
 	// serialization
-	
-	private final static String[] EMPTY_STRING_ARRAY = {};
-	private final static DocumentSelector[] EMPTY_DOCUMENTSELECTOR_ARRAY = {};
 
-	private void writeObject(ObjectOutputStream stream) throws IOException {
-		
-		// write everything not static or transient
-		stream.defaultWriteObject();
-		
-		// write app usages as array
-		int arraySize = appUsages.size();
-		String[] appUsagesArray;
-		if (arraySize == 0) {
-			appUsagesArray = EMPTY_STRING_ARRAY;
-		}
-		else {
-			appUsagesArray = appUsages.toArray(new String[arraySize]);
-		}
-		stream.writeObject(appUsagesArray);
-		
-		// write document selectors as array
-		arraySize = documentSelectors.size();
-		DocumentSelector[] documentSelectorsArray;
-		if (arraySize == 0) {
-			documentSelectorsArray = EMPTY_DOCUMENTSELECTOR_ARRAY;
-		}
-		else {
-			documentSelectorsArray = documentSelectors.toArray(new DocumentSelector[arraySize]);
-		}
-		stream.writeObject(documentSelectorsArray);
-	}
-	
-	private void readObject(ObjectInputStream stream)  throws IOException, ClassNotFoundException {
-				
-		stream.defaultReadObject();
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
 
-		// read app usages from array
-		String[] appUsagesArray = (String[]) stream.readObject();
-		appUsages = new HashSet<String>();
-		for (String appUsage : appUsagesArray) {
-			appUsages.add(appUsage);
-		}
+		subscriber = in.readUTF();
+		key = (SubscriptionKey) in.readObject();
+		diffProcessing = DiffProcessing.fromString(in.readUTF()); 
 		
-		// read document selectors from array
-		DocumentSelector[] documentSelectorsArray = (DocumentSelector[]) stream.readObject();
-		documentSelectors = new HashSet<DocumentSelector>();
-		for (DocumentSelector documentSelector : documentSelectorsArray) {
-			documentSelectors.add(documentSelector);
+		// read collections
+		if (in.readBoolean()) {
+			collectionSubscriptions = new HashSet<String>();
+			for (String c : (String[]) in.readObject()) {
+				collectionSubscriptions.add(c);
+			}
+		} else {
+			collectionSubscriptions = EMPTY_COLLECTION_SUBSCRIPTIONS;
 		}
-		
+
+		// read docs
+		if (in.readBoolean()) {
+			documentSubscriptions = new HashSet<DocumentSelector>();
+			for (DocumentSelector ds : (DocumentSelector[]) in.readObject()) {
+				documentSubscriptions.add(ds);
+			}
+		} else {
+			documentSubscriptions = EMPTY_DOCUMENT_SUBSCRIPTIONS;
+		}
+
+		// read collections
+		if (in.readBoolean()) {
+			nodeSubscriptions = new HashSet<NodeSubscription>();
+			for (NodeSubscription ns : (NodeSubscription[]) in.readObject()) {
+				nodeSubscriptions.add(ns);
+			}
+		} else {
+			nodeSubscriptions = EMPTY_NODESUBSCRIPTIONS_SUBSCRIPTIONS;
+		}
+
 	}
-	
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+
+		out.writeUTF(subscriber);
+		out.writeObject(key);
+		out.writeUTF(diffProcessing.toString());
+
+		// write collections as array
+		int arraySize = collectionSubscriptions.size();
+		if (arraySize == 0) {
+			out.writeBoolean(false);
+		} else {
+			out.writeBoolean(true);
+			out.writeObject(collectionSubscriptions
+					.toArray(new String[arraySize]));
+		}
+
+		// write docs as array
+		arraySize = documentSubscriptions.size();
+		if (arraySize == 0) {
+			out.writeBoolean(false);
+		} else {
+			out.writeBoolean(true);
+			out.writeObject(documentSubscriptions
+					.toArray(new DocumentSelector[arraySize]));
+		}
+
+		// write nodes as array
+		arraySize = nodeSubscriptions.size();
+		if (arraySize == 0) {
+			out.writeBoolean(false);
+		} else {
+			out.writeBoolean(true);
+			out.writeObject(nodeSubscriptions
+					.toArray(new NodeSubscription[arraySize]));
+		}
+
+	}
+
 }

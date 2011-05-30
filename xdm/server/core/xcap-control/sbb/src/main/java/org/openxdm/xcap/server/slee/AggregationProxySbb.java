@@ -135,7 +135,7 @@ public abstract class AggregationProxySbb implements javax.slee.Sbb {
 	protected RequestProcessorSbbLocalObject getRequestProcessor() {
 		try {
 			return (RequestProcessorSbbLocalObject) getRequestProcessorChildRelation()
-			.create(ChildRelationExt.DEFAULT_CHILD_NAME);
+					.create(ChildRelationExt.DEFAULT_CHILD_NAME);
 		} catch (Exception e) {
 			logger.severe("Failed to create child sbb", e);
 			return null;
@@ -147,13 +147,13 @@ public abstract class AggregationProxySbb implements javax.slee.Sbb {
 	public abstract ChildRelationExt getAuthenticationProxyChildRelation();
 
 	protected AuthenticationProxySbbLocalObject getAuthenticationProxy() {
-			try {
-				return (AuthenticationProxySbbLocalObject) getAuthenticationProxyChildRelation()
-						.create(ChildRelationExt.DEFAULT_CHILD_NAME);
-			} catch (Exception e) {
-				logger.severe("Failed to create child sbb", e);
-				return null;
-			}
+		try {
+			return (AuthenticationProxySbbLocalObject) getAuthenticationProxyChildRelation()
+					.create(ChildRelationExt.DEFAULT_CHILD_NAME);
+		} catch (Exception e) {
+			logger.severe("Failed to create child sbb", e);
+			return null;
+		}
 	}
 
 	public void onDelete(HttpServletRequestEvent event,
@@ -172,21 +172,24 @@ public abstract class AggregationProxySbb implements javax.slee.Sbb {
 			try {
 
 				// get xcap root from config
-				String xcapRoot = ServerConfiguration.getInstance().getXcapRoot();
+				String xcapRoot = ServerConfiguration.getInstance()
+						.getXcapRoot();
 
 				// create resource selector from request's uri & query
 				// string
 				ResourceSelector resourceSelector = Parser
-						.parseResourceSelector(xcapRoot, request
-								.getRequestURI(), request.getQueryString());
+						.parseResourceSelector(xcapRoot,
+								request.getRequestURI(),
+								request.getQueryString());
 
 				// user authentication
-				String user = getAuthenticationProxy().authenticate(request, response);
+				String user = getAuthenticationProxy().authenticate(request,
+						response);
 				if (response.isCommitted()) {
 					// authentication proxy replied, stop processing request
 					return;
 				}
-				
+
 				// check conditional request headers
 				// get ifMatch eTag
 				ETagValidator eTagValidator = null;
@@ -204,42 +207,46 @@ public abstract class AggregationProxySbb implements javax.slee.Sbb {
 				if (logger.isInfoEnabled()) {
 					logger.info("delete(resourceSelector=" + resourceSelector
 							+ ",eTagValidator=" + eTagValidator + ",xcapRoot="
-							+ xcapRoot + ")");
+							+ xcapRoot + ",user=" + user + ")");
 				}
 				WriteResult result = getRequestProcessor().delete(
-						resourceSelector, eTagValidator, xcapRoot,user);
+						resourceSelector, eTagValidator, xcapRoot, user);
 				// set response status
 				response.setStatus(result.getResponseStatus());
 				// set response entity tag if provided
 				if (result.getResponseEntityTag() != null) {
-					response.setHeader(HttpConstant.HEADER_ETAG, result
-							.getResponseEntityTag());
+					response.setHeader(HttpConstant.HEADER_ETAG,
+							result.getResponseEntityTag());
 				}
 
 			} catch (ParseException e) {
 				NotFoundException ne = new NotFoundException();
 				if (logger.isFineEnabled())
-					logger.fine("invalid xcap uri, replying , replying "
-							+ ne.getResponseStatus(),e);
+					logger.fine(
+							"invalid xcap uri, replying , replying "
+									+ ne.getResponseStatus(), e);
 				response.setStatus(ne.getResponseStatus());
 
 			} catch (NotFoundException e) {
 				if (logger.isFineEnabled())
-					logger.fine("doc/elem/attrib not found, replying "
-							+ e.getResponseStatus(),e);
+					logger.fine(
+							"doc/elem/attrib not found, replying "
+									+ e.getResponseStatus(), e);
 				response.setStatus(e.getResponseStatus());
 
 			} catch (ConflictException e) {
 				if (logger.isFineEnabled())
-					logger.fine("conflict exception, replying "
-							+ e.getResponseStatus(),e);
+					logger.fine(
+							"conflict exception, replying "
+									+ e.getResponseStatus(), e);
 				response.setStatus(e.getResponseStatus());
 				responseWriter.print(e.getResponseContent());
 
 			} catch (MethodNotAllowedException e) {
 				if (logger.isFineEnabled())
-					logger.fine("method not allowed, replying "
-							+ e.getResponseStatus(),e);
+					logger.fine(
+							"method not allowed, replying "
+									+ e.getResponseStatus(), e);
 				response.setStatus(e.getResponseStatus());
 				// add all exception headers
 				Map<String, String> exceptionHeaders = e.getResponseHeaders();
@@ -252,28 +259,30 @@ public abstract class AggregationProxySbb implements javax.slee.Sbb {
 
 			} catch (PreconditionFailedException e) {
 				if (logger.isFineEnabled())
-					logger.fine("precondition failed on etags, replying "
-							+ e.getResponseStatus(),e);
+					logger.fine(
+							"precondition failed on etags, replying "
+									+ e.getResponseStatus(), e);
 				response.setStatus(e.getResponseStatus());
 
 			} catch (InternalServerErrorException e) {
 				logger.warning("internal server error: " + e.getMessage()
-						+ ", replying " + e.getResponseStatus(),e);
+						+ ", replying " + e.getResponseStatus(), e);
 				response.setStatus(e.getResponseStatus());
 
 			} catch (BadRequestException e) {
 				if (logger.isFineEnabled())
-					logger.fine("bad request, replying "
-							+ e.getResponseStatus(),e);
+					logger.fine(
+							"bad request, replying " + e.getResponseStatus(), e);
 				response.setStatus(e.getResponseStatus());
-			
+
 			} catch (NotAuthorizedRequestException e) {
 				if (logger.isFineEnabled())
-					logger.fine("not authorized, replying "
-							+ e.getResponseStatus(),e);
+					logger.fine(
+							"not authorized, replying " + e.getResponseStatus(),
+							e);
 				response.setStatus(e.getResponseStatus());
 			}
-			
+
 			// send to client
 			responseWriter.close();
 
@@ -301,64 +310,69 @@ public abstract class AggregationProxySbb implements javax.slee.Sbb {
 				// create jxcap resource selector from request's uri & query
 				// string
 				ResourceSelector resourceSelector = Parser
-						.parseResourceSelector(ServerConfiguration.getInstance().getXcapRoot(),
-								request.getRequestURI(), request
-										.getQueryString());
-				// read result from data source
-				if (logger.isInfoEnabled()) {
-					logger.info("get(resourceSelector=" + resourceSelector
-							+ ")");
-				}
-				
+						.parseResourceSelector(ServerConfiguration
+								.getInstance().getXcapRoot(), request
+								.getRequestURI(), request.getQueryString());
+
 				// user authentication
-				String user = getAuthenticationProxy().authenticate(request, response);
+				String user = getAuthenticationProxy().authenticate(request,
+						response);
 				if (response.isCommitted()) {
 					// authentication proxy replied, stop processing request
 					return;
 				}
-				
-				ReadResult result = getRequestProcessor().get(resourceSelector,user);
+
+				// read result from data source
+				if (logger.isInfoEnabled()) {
+					logger.info("get(resourceSelector=" + resourceSelector
+							+ ",user=" + user + ")");
+				}
+				ReadResult result = getRequestProcessor().get(resourceSelector,
+						user);
 				// get data object from result
 				Resource dataObject = result.getResponseDataObject();
 				// set response content type
 				response.setContentType(dataObject.getMimetype());
 				// set response entity tag
-				response.setHeader(HttpConstant.HEADER_ETAG, result
-						.getResponseEntityTag());
+				response.setHeader(HttpConstant.HEADER_ETAG,
+						result.getResponseEntityTag());
 				// add response content
 				responseWriter.println(dataObject.toXML());
 
 			} catch (ParseException e) {
 				NotFoundException ne = new NotFoundException();
-				logger.warning("invalid xcap uri, replying "
-						+ ne.getResponseStatus(),e);
+				logger.warning(
+						"invalid xcap uri, replying " + ne.getResponseStatus(),
+						e);
 				response.setStatus(ne.getResponseStatus());
 
 			} catch (NotFoundException e) {
 
 				if (logger.isFineEnabled())
-					logger.fine("doc/elem/attrib not found, replying "
-							+ e.getResponseStatus(),e);
+					logger.fine(
+							"doc/elem/attrib not found, replying "
+									+ e.getResponseStatus(), e);
 				response.setStatus(e.getResponseStatus());
 
 			} catch (InternalServerErrorException e) {
 				logger.warning("internal server error: " + e.getMessage()
-						+ ", replying " + e.getResponseStatus(),e);
+						+ ", replying " + e.getResponseStatus(), e);
 				response.setStatus(e.getResponseStatus());
 
 			} catch (BadRequestException e) {
 				if (logger.isFineEnabled())
-					logger.fine("bad request, replying "
-							+ e.getResponseStatus(),e);
+					logger.fine(
+							"bad request, replying " + e.getResponseStatus(), e);
 				response.setStatus(e.getResponseStatus());
-			
+
 			} catch (NotAuthorizedRequestException e) {
 				if (logger.isFineEnabled())
-					logger.fine("not authorized, replying "
-							+ e.getResponseStatus(),e);
+					logger.fine(
+							"not authorized, replying " + e.getResponseStatus(),
+							e);
 				response.setStatus(e.getResponseStatus());
 			}
-			
+
 			// send to client
 			responseWriter.close();
 
@@ -386,17 +400,18 @@ public abstract class AggregationProxySbb implements javax.slee.Sbb {
 				// create resource selector from request's uri & query
 				// string
 				ResourceSelector resourceSelector = Parser
-						.parseResourceSelector(ServerConfiguration.getInstance().getXcapRoot(),
-								request.getRequestURI(), request
-										.getQueryString());
+						.parseResourceSelector(ServerConfiguration
+								.getInstance().getXcapRoot(), request
+								.getRequestURI(), request.getQueryString());
 
 				// user authentication
-				String user = getAuthenticationProxy().authenticate(request, response);
+				String user = getAuthenticationProxy().authenticate(request,
+						response);
 				if (response.isCommitted()) {
 					// authentication proxy replied, stop processing request
 					return;
 				}
-				
+
 				// check conditional request headers
 				// get ifMatch eTag
 				ETagValidator eTagValidator = null;
@@ -415,58 +430,64 @@ public abstract class AggregationProxySbb implements javax.slee.Sbb {
 					logger.info("put(resourceSelector=" + resourceSelector
 							+ ",mimetype=" + mimetype + ",eTagValidator="
 							+ eTagValidator + ",xcapRoot="
-							+ ServerConfiguration.getInstance().getXcapRoot() + ")");
+							+ ServerConfiguration.getInstance().getXcapRoot()
+							+ ",user=" + user + ")");
 				}
 				// put object in data source
 				WriteResult result = getRequestProcessor().put(
 						resourceSelector, mimetype, request.getInputStream(),
-						eTagValidator, ServerConfiguration.getInstance().getXcapRoot(),user);
+						eTagValidator,
+						ServerConfiguration.getInstance().getXcapRoot(), user);
 				// set response status
 				response.setStatus(result.getResponseStatus());
 				// set response entity tag with new one on result
-				response.setHeader(HttpConstant.HEADER_ETAG, result
-						.getResponseEntityTag());
+				response.setHeader(HttpConstant.HEADER_ETAG,
+						result.getResponseEntityTag());
 
 			} catch (ParseException e) {
 				// invalid resource selector
 				BadRequestException bre = new BadRequestException();
 				if (logger.isFineEnabled())
-					logger.fine("invalid xcap uri, replying "
-							+ bre.getResponseStatus(),e);
+					logger.fine(
+							"invalid xcap uri, replying "
+									+ bre.getResponseStatus(), e);
 				response.setStatus(bre.getResponseStatus());
 
 			} catch (IOException e) {
 				InternalServerErrorException ie = new InternalServerErrorException(
-						e.getMessage(),e);
+						e.getMessage(), e);
 				logger.warning("internal server error: " + e.getMessage()
-						+ ", replying " + ie.getResponseStatus(),e);
+						+ ", replying " + ie.getResponseStatus(), e);
 				response.setStatus(ie.getResponseStatus());
 
 			} catch (NoParentConflictException e) {
 				// add base uri
-				e
-						.setSchemeAndAuthorityURI(ServerConfiguration.getInstance().getSchemeAndAuthority());
+				e.setSchemeAndAuthorityURI(ServerConfiguration.getInstance()
+						.getSchemeAndAuthority());
 				// add query string if exists
 				if (request.getQueryString() != null) {
 					e.setQueryComponent(request.getQueryString());
 				}
 				if (logger.isFineEnabled())
-					logger.fine("no parent conflict exception, replying "
-							+ e.getResponseStatus(),e);
+					logger.fine(
+							"no parent conflict exception, replying "
+									+ e.getResponseStatus(), e);
 				response.setStatus(e.getResponseStatus());
 				responseWriter.print(e.getResponseContent());
 
 			} catch (ConflictException e) {
 				if (logger.isFineEnabled())
-					logger.fine("conflict exception, replying "
-							+ e.getResponseStatus(),e);
+					logger.fine(
+							"conflict exception, replying "
+									+ e.getResponseStatus(), e);
 				response.setStatus(e.getResponseStatus());
 				responseWriter.print(e.getResponseContent());
 
 			} catch (MethodNotAllowedException e) {
 				if (logger.isFineEnabled())
-					logger.fine("method not allowed, replying "
-							+ e.getResponseStatus(),e);
+					logger.fine(
+							"method not allowed, replying "
+									+ e.getResponseStatus(), e);
 				response.setStatus(e.getResponseStatus());
 				// add all exception headers
 				Map<String, String> exceptionHeaders = e.getResponseHeaders();
@@ -479,34 +500,38 @@ public abstract class AggregationProxySbb implements javax.slee.Sbb {
 
 			} catch (UnsupportedMediaTypeException e) {
 				if (logger.isFineEnabled())
-					logger.fine("unsupported media exception, replying "
-							+ e.getResponseStatus(),e);
+					logger.fine(
+							"unsupported media exception, replying "
+									+ e.getResponseStatus(), e);
 				response.setStatus(e.getResponseStatus());
 
 			} catch (InternalServerErrorException e) {
 				logger.warning("internal server error: " + e.getMessage()
-						+ ", replying " + e.getResponseStatus(),e);
+						+ ", replying " + e.getResponseStatus(), e);
 				response.setStatus(e.getResponseStatus());
 
 			} catch (PreconditionFailedException e) {
 				if (logger.isFineEnabled())
-					logger.fine("precondition failed on etags, replying "
-							+ e.getResponseStatus(),e);
+					logger.fine(
+							"precondition failed on etags, replying "
+									+ e.getResponseStatus(), e);
 				response.setStatus(e.getResponseStatus());
 
 			} catch (BadRequestException e) {
 				if (logger.isFineEnabled())
-					logger.fine("invalid xcap uri, replying "
-							+ e.getResponseStatus(),e);
+					logger.fine(
+							"invalid xcap uri, replying "
+									+ e.getResponseStatus(), e);
 				response.setStatus(e.getResponseStatus());
-			
+
 			} catch (NotAuthorizedRequestException e) {
 				if (logger.isFineEnabled())
-					logger.fine("not authorized, replying "
-							+ e.getResponseStatus(),e);
+					logger.fine(
+							"not authorized, replying " + e.getResponseStatus(),
+							e);
 				response.setStatus(e.getResponseStatus());
-			}	
-						
+			}
+
 			// send to client
 			responseWriter.close();
 

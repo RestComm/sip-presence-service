@@ -66,7 +66,7 @@ public class PIDFManipulationAppUsage extends AppUsage {
 			NotAuthorizedRequestException {
 
 		// get xui from document selector by cutting first 6 chars -> users/
-		String xui = documentSelector.getDocumentParent().substring(6);
+		String xui = documentSelector.getUser();
 
 		/*
 		 * When handling (i.e. create, modify, delete, etc.) a Permanent

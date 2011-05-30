@@ -22,17 +22,17 @@
 
 package org.openxdm.xcap.common.datasource;
 
+import java.io.Serializable;
+
 import org.openxdm.xcap.common.error.InternalServerErrorException;
 
-public interface Document {
+public interface Document extends Serializable {
 
 	public org.w3c.dom.Document getAsDOMDocument() throws InternalServerErrorException;
 	
 	public String getAsString() throws InternalServerErrorException;
 	
-	public String getAUID();
-	
-	public String getDocumentParent();
+	public String getCollection();
 	
 	public String getDocumentName(); 
 	

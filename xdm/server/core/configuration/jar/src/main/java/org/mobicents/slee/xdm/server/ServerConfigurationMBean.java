@@ -25,6 +25,8 @@
  */
 package org.mobicents.slee.xdm.server;
 
+import java.util.Set;
+
 /**
  * @author martins
  *
@@ -47,6 +49,8 @@ public interface ServerConfigurationMBean {
 
 	public void setXcapRoot(String xcapRoot);
 	
+	public String getFullXcapRoot();
+	
 	public String getAuthenticationRealm();
 
 	public void setAuthenticationRealm(String realm);
@@ -58,5 +62,9 @@ public interface ServerConfigurationMBean {
 	public boolean getAllowAssertedUserIDs();
 	
 	public void setAllowAssertedUserIDs(boolean allowAssertedUserIDs);
+	
+	public Set<String> getXcapDiffSuperUsers();
+	
+	public void setXcapDiffSuperUsers(Set<String> xcapDiffSuperUsers);
 	
 }

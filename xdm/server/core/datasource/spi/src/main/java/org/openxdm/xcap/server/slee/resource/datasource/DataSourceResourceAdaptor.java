@@ -41,6 +41,6 @@ public interface DataSourceResourceAdaptor extends ResourceAdaptor {
 
 	public DocumentActivity createDocumentActivity(DocumentSelector documentSelector);
 
-	public AppUsageActivity createAppUsageActivity(String auid);
+	public CollectionActivity createCollectionActivity(String collection);
 	
 }

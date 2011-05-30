@@ -154,7 +154,7 @@ public class Subscriber implements SipListener {
 			addressFactory = sipFactory.createAddressFactory();
 			messageFactory = sipFactory.createMessageFactory();
 			
-			this.listeningPoint = sipStack.createListeningPoint(ServerConfiguration.SERVER_HOST, listeningPort,
+			this.listeningPoint = sipStack.createListeningPoint("localhost", listeningPort,
 					transport);
 			sipProvider = sipStack.createSipProvider(listeningPoint);
 			sipProvider.addSipListener(this);
@@ -176,7 +176,7 @@ public class Subscriber implements SipListener {
 		// Create ViaHeaders
 		ArrayList<ViaHeader> viaHeaders = new ArrayList<ViaHeader>();
 		int port = sipProvider.getListeningPoint(transport).getPort();
-		ViaHeader viaHeader = headerFactory.createViaHeader(ServerConfiguration.SERVER_HOST,
+		ViaHeader viaHeader = headerFactory.createViaHeader("localhost",
 				port, transport, null);
 		viaHeaders.add(viaHeader);
 
@@ -209,7 +209,7 @@ public class Subscriber implements SipListener {
 
 		// add route
 		request.addHeader(headerFactory.createRouteHeader(addressFactory
-				.createAddress("<sip:"+ServerConfiguration.SERVER_HOST+":" + notifierPort
+				.createAddress("<sip:localhost:" + notifierPort
 						+ ";transport=" + transport + ";lr>")));
 					
 		// Create an event header for the subscription.

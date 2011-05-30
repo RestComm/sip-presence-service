@@ -32,6 +32,6 @@ public class GlobalDocumentUriKey extends DocumentUriKey {
 	private static final long serialVersionUID = 1L;
 
 	public GlobalDocumentUriKey(String auid, String documentName) {
-		super(new DocumentSelector(auid,"global",documentName));
+		super(new DocumentSelector(auid+"/global",documentName));
 	}
 }

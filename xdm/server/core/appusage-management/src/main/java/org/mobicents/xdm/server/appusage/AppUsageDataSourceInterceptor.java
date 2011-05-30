@@ -47,20 +47,22 @@ public interface AppUsageDataSourceInterceptor {
 	/**
 	 * 
 	 * @param documentParent
+	 * @param includeChildCollections
 	 * @param dataSource
 	 * @return
 	 * @throws InternalServerErrorException
 	 */
-	public InterceptedDocument[] getDocuments(String documentParent,
+	public InterceptedDocument[] getDocuments(String documentParent, boolean includeChildCollections,
 			AppUsageDataSource dataSource) throws InternalServerErrorException;
 
 	/**
 	 * 
+	 * @param includeChildCollections
 	 * @param dataSource
 	 * @return
 	 * @throws InternalServerErrorException
 	 */
-	public InterceptedDocument[] getDocuments(AppUsageDataSource dataSource)
+	public InterceptedDocument[] getDocuments(boolean includeChildCollections,AppUsageDataSource dataSource)
 			throws InternalServerErrorException;
 
 }

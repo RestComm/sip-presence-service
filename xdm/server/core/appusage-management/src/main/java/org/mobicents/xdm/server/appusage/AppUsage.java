@@ -36,7 +36,6 @@ import org.openxdm.xcap.common.uri.AttributeSelector;
 import org.openxdm.xcap.common.uri.DocumentSelector;
 import org.openxdm.xcap.common.uri.ElementSelector;
 import org.openxdm.xcap.common.uri.NodeSelector;
-import org.openxdm.xcap.common.xml.NamespaceContext;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -263,8 +262,11 @@ public abstract class AppUsage {
 	 * @param newElement
 	 * @param document
 	 * @param documentSelector
+	 * @param newETag
+	 * @param nodeSelector
 	 * @param elementSelector
 	 * @param requestProcessor
+	 * @param dataSource
 	 * @throws SchemaValidationErrorConflictException
 	 * @throws UniquenessFailureConflictException
 	 * @throws InternalServerErrorException
@@ -274,7 +276,6 @@ public abstract class AppUsage {
 			Element oldElement, Element newElement, Document document,
 			DocumentSelector documentSelector, String newETag,
 			NodeSelector nodeSelector, ElementSelector elementSelector,
-			NamespaceContext namespaceContext,
 			AppUsageRequestProcessor requestProcessor,
 			AppUsageDataSource dataSource)
 			throws SchemaValidationErrorConflictException,
@@ -292,9 +293,12 @@ public abstract class AppUsage {
 	 * @param oldAttrValue
 	 * @param newAttrValue
 	 * @param documentSelector
+	 * @param newETag
+	 * @param nodeSelector
 	 * @param elementSelector
 	 * @param attributeSelector
 	 * @param requestProcessor
+	 * @param dataSource
 	 * @throws SchemaValidationErrorConflictException
 	 * @throws UniquenessFailureConflictException
 	 * @throws InternalServerErrorException
@@ -304,8 +308,7 @@ public abstract class AppUsage {
 			String oldAttrValue, String newAttrValue,
 			DocumentSelector documentSelector, String newETag,
 			NodeSelector nodeSelector, ElementSelector elementSelector,
-			AttributeSelector attributeSelector,
-			NamespaceContext namespaceContext,
+			AttributeSelector attributeSelector,			
 			AppUsageRequestProcessor requestProcessor,
 			AppUsageDataSource dataSource)
 			throws SchemaValidationErrorConflictException,
@@ -371,8 +374,11 @@ public abstract class AppUsage {
 	 * 
 	 * @param deletedElement
 	 * @param documentSelector
+	 * @param newETag
+	 * @param nodeSelector
 	 * @param elementSelector
 	 * @param requestProcessor
+	 * @param dataSource
 	 * @throws SchemaValidationErrorConflictException
 	 * @throws UniquenessFailureConflictException
 	 * @throws InternalServerErrorException
@@ -381,7 +387,7 @@ public abstract class AppUsage {
 	public void processResourceInterdependenciesOnDeleteElement(
 			Node deletedElement, DocumentSelector documentSelector,
 			String newETag, NodeSelector nodeSelector,
-			ElementSelector elementSelector, NamespaceContext namespaceContext,
+			ElementSelector elementSelector, 
 			AppUsageRequestProcessor requestProcessor,
 			AppUsageDataSource dataSource)
 			throws SchemaValidationErrorConflictException,
@@ -397,9 +403,12 @@ public abstract class AppUsage {
 	 * requests.
 	 * 
 	 * @param documentSelector
+	 * @param newETag
+	 * @param nodeSelector
 	 * @param elementSelector
 	 * @param attributeSelector
 	 * @param requestProcessor
+	 * @param dataSource
 	 * @throws SchemaValidationErrorConflictException
 	 * @throws UniquenessFailureConflictException
 	 * @throws InternalServerErrorException
@@ -409,7 +418,6 @@ public abstract class AppUsage {
 			DocumentSelector documentSelector, String newETag,
 			NodeSelector nodeSelector, ElementSelector elementSelector,
 			AttributeSelector attributeSelector,
-			NamespaceContext namespaceContext,
 			AppUsageRequestProcessor requestProcessor,
 			AppUsageDataSource dataSource)
 			throws SchemaValidationErrorConflictException,

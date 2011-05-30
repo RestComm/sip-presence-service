@@ -52,6 +52,7 @@ import javax.slee.facilities.Tracer;
 import javax.slee.nullactivity.NullActivity;
 import javax.slee.nullactivity.NullActivityContextInterfaceFactory;
 import javax.slee.nullactivity.NullActivityFactory;
+import javax.slee.serviceactivity.ServiceStartedEvent;
 
 import net.java.slee.resource.sip.DialogActivity;
 import net.java.slee.resource.sip.SipActivityContextInterfaceFactory;
@@ -419,22 +420,29 @@ public abstract class SubscriptionControlSbb implements Sbb,
 			return;
 		}
 		
-		notifySubscriber(subscription, event.getContent(), event.getContentTypeHeader(), aci);
+		notifySubscriber(subscription, event.getNotifyContent(), aci);
 	}
 	
-	private void notifySubscriber(Subscription subscription, Object content, ContentTypeHeader contentTypeHeader, ActivityContextInterface aci) {
+	public void onServiceStartedEvent(ServiceStartedEvent event, ActivityContextInterface aci) {
+		tracer.info("Mobicents SIP Event Subscription Control service activated.");
+		// FIXME forcing load of classes of childs,  till deadlocks on slee class loaders nailed
+		getImplementedControlChildSbb();		
+		aci.detach(sbbContext.getSbbLocalObject());
+	}
+	
+	private void notifySubscriber(Subscription subscription, NotifyContent notifyContent, ActivityContextInterface aci) {
 		
 		if (subscription.getKey().isInternalSubscription()) {
 			// internal subscription
 			internalSubscriptionHandler
 					.getInternalSubscriberNotificationHandler()
-					.notifyInternalSubscriber(subscription, content, contentTypeHeader, aci,
+					.notifyInternalSubscriber(subscription, notifyContent, aci,
 							getImplementedControlChildSbb());
 		} else {
 			// sip subscription
 			sipSubscriptionHandler
 					.getSipSubscriberNotificationHandler()
-					.notifySipSubscriber(content, contentTypeHeader,
+					.notifySipSubscriber(notifyContent,
 							subscription, aci, getImplementedControlChildSbb());
 		}	
 	}
@@ -467,7 +475,7 @@ public abstract class SubscriptionControlSbb implements Sbb,
 		subscription.store();
 		
 		// notify
-		notifySubscriber(subscription, content, contentTypeHeader, aci);
+		notifySubscriber(subscription, new NotifyContent(content, contentTypeHeader, null), aci);
 	}
 	
 	// ----------- SBB LOCAL OBJECT
@@ -539,8 +547,9 @@ public abstract class SubscriptionControlSbb implements Sbb,
 		}
 	}
 
+	@Override
 	public void notifySubscribers(String notifier, String eventPackage,
-			Object content, ContentTypeHeader contentTypeHeader) {
+			NotifyContent notifyContent) {
 		
 		final SubscriptionControlDataSource dataSource = getConfiguration().getDataSource();
 
@@ -550,7 +559,7 @@ public abstract class SubscriptionControlSbb implements Sbb,
 			if (subscription.getStatus().equals(Subscription.Status.active)) {
 				aci = activityContextNamingfacility.lookup(subscription.getKey().toString());
 				if (aci != null) {
-					fireNotifyEvent(new NotifyEvent(subscription.getKey(), content, contentTypeHeader), aci, null);
+					fireNotifyEvent(new NotifyEvent(subscription.getKey(), notifyContent), aci, null);
 				}
 				else {
 					if (tracer.isFineEnabled()) {
@@ -562,11 +571,11 @@ public abstract class SubscriptionControlSbb implements Sbb,
 		
 	}
 
-	public void notifySubscriber(SubscriptionKey key, Object content,
-			ContentTypeHeader contentTypeHeader) {
+	@Override
+	public void notifySubscriber(SubscriptionKey key, NotifyContent notifyContent) {
 		ActivityContextInterface aci = activityContextNamingfacility.lookup(key.toString());
 		if (aci != null) {
-			fireNotifyEvent(new NotifyEvent(key, content, contentTypeHeader), aci, null);
+			fireNotifyEvent(new NotifyEvent(key, notifyContent), aci, null);
 		}
 		else {
 			if (tracer.isFineEnabled()) {
@@ -754,13 +763,14 @@ public abstract class SubscriptionControlSbb implements Sbb,
 
 	// --- EVENT LIST CALLBACKS
 	
+	@Override
 	public void notifyEventListSubscriber(SubscriptionKey key, MultiPart multiPart) {
 		// notification for subscription on a single resource is no different than resource list
 		try {
 			ContentTypeHeader contentTypeHeader = headerFactory.createContentTypeHeader(MultiPart.MULTIPART_CONTENT_TYPE, MultiPart.MULTIPART_CONTENT_SUBTYPE);
 			contentTypeHeader.setParameter("type", multiPart.getType());			
 			contentTypeHeader.setParameter("boundary", multiPart.getBoundary());
-			notifySubscriber(key, multiPart.toString(),contentTypeHeader);
+			notifySubscriber(key, new NotifyContent(multiPart.toString(),contentTypeHeader, null));
 		} catch (ParseException e) {
 			tracer.severe("failed to create content type header for event list notification", e);
 		}

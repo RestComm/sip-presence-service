@@ -94,7 +94,7 @@ public class PutDocumentTest extends AbstractT {
 		
 		XcapClient client = new XcapClientImpl();
 				
-		// create uri to put rls-services doc		
+		// create uri to put doc		
 		String documentSelector = DocumentSelectorBuilder.getUserDocumentSelectorBuilder(PIDFManipulationAppUsage.ID,user,documentName).toPercentEncodedString();
 		UriBuilder uriBuilder = new UriBuilder()
 			.setSchemeAndAuthority("http://localhost:8080")

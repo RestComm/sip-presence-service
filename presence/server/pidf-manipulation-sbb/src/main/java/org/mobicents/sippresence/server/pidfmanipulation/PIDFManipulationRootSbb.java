@@ -40,7 +40,8 @@ import javax.slee.serviceactivity.ServiceStartedEvent;
 import org.mobicents.slee.ChildRelationExt;
 import org.openxdm.xcap.common.datasource.Document;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
-import org.openxdm.xcap.server.slee.resource.datasource.AppUsageActivity;
+import org.openxdm.xcap.common.uri.DocumentSelector;
+import org.openxdm.xcap.server.slee.resource.datasource.CollectionActivity;
 import org.openxdm.xcap.server.slee.resource.datasource.AttributeUpdatedEvent;
 import org.openxdm.xcap.server.slee.resource.datasource.DataSourceActivityContextInterfaceFactory;
 import org.openxdm.xcap.server.slee.resource.datasource.DataSourceSbbInterface;
@@ -102,24 +103,28 @@ public abstract class PIDFManipulationRootSbb implements Sbb {
 
 		long start = System.currentTimeMillis();
 
-		// lets attach to the app usage activity, to receive events related with
+		// lets attach to the pidf manipulation app usage users collection
+		// activity, to receive events related with
 		// updates on its docs
-		AppUsageActivity appUsageActivity = dataSourceSbbInterface
-				.createAppUsageActivity("pidf-manipulation");
+		CollectionActivity collectionActivity = dataSourceSbbInterface
+				.createCollectionActivity("pidf-manipulation/users");
 		ActivityContextInterface appUsageActivityContextInterface = dataSourceActivityContextInterfaceFactory
-				.getActivityContextInterface(appUsageActivity);
+				.getActivityContextInterface(collectionActivity);
 		appUsageActivityContextInterface.attach(context.getSbbLocalObject());
 		// now fetch all existent docs and simulation doc creation
 		try {
-			Document[] documents = dataSourceSbbInterface
-					.getDocuments(appUsageActivity.getAUID());
+			Document[] documents = dataSourceSbbInterface.getDocuments(
+					collectionActivity.getCollection(), true);
 			for (Document document : documents) {
 				try {
-					documentCreated(getEntity(document.getDocumentParent()),
+					documentCreated(
+							new DocumentSelector(document.getCollection(),
+									document.getDocumentName()).getUser(),
 							document.getDocumentName(), document.getAsString());
 				} catch (InternalServerErrorException e) {
 					tracer.severe("unable to start publication for entity "
-							+ getEntity(document.getDocumentParent()), e);
+							+ new DocumentSelector(document.getCollection(),
+									document.getDocumentName()).getUser(), e);
 				}
 			}
 		} catch (InternalServerErrorException e) {
@@ -156,9 +161,9 @@ public abstract class PIDFManipulationRootSbb implements Sbb {
 	 */
 	public void onAttributeUpdatedEvent(AttributeUpdatedEvent event,
 			ActivityContextInterface aci) {
-		documentUpdated(getEntity(event.getDocumentSelector()
-				.getDocumentParent()), event.getDocumentSelector()
-				.getDocumentName(), event.getDocumentAsString());
+		documentUpdated(event.getDocumentSelector().getUser(), event
+				.getDocumentSelector().getDocumentName(),
+				event.getNewDocumentString());
 	}
 
 	/**
@@ -169,21 +174,20 @@ public abstract class PIDFManipulationRootSbb implements Sbb {
 	 */
 	public void onDocumentUpdatedEvent(DocumentUpdatedEvent event,
 			ActivityContextInterface aci) {
-		if (event.getOldETag() == null) {
+		if (event.getOldDocument() == null) {
 			// new doc
-			documentCreated(getEntity(event.getDocumentSelector()
-					.getDocumentParent()), event.getDocumentSelector()
-					.getDocumentName(), event.getDocumentAsString());
+			documentCreated(event.getDocumentSelector().getUser(), event
+					.getDocumentSelector().getDocumentName(),
+					event.getNewDocumentString());
 		} else if (event.getNewETag() == null) {
 			// doc removed
-			documentRemoved(getEntity(event.getDocumentSelector()
-					.getDocumentParent()), event.getDocumentSelector()
-					.getDocumentName());
+			documentRemoved(event.getDocumentSelector().getUser(), event
+					.getDocumentSelector().getDocumentName());
 		} else {
 			// doc update
-			documentUpdated(getEntity(event.getDocumentSelector()
-					.getDocumentParent()), event.getDocumentSelector()
-					.getDocumentName(), event.getDocumentAsString());
+			documentUpdated(event.getDocumentSelector().getUser(), event
+					.getDocumentSelector().getDocumentName(),
+					event.getNewDocumentString());
 		}
 	}
 
@@ -195,9 +199,9 @@ public abstract class PIDFManipulationRootSbb implements Sbb {
 	 */
 	public void onElementUpdatedEvent(ElementUpdatedEvent event,
 			ActivityContextInterface aci) {
-		documentUpdated(getEntity(event.getDocumentSelector()
-				.getDocumentParent()), event.getDocumentSelector()
-				.getDocumentName(), event.getDocumentAsString());
+		documentUpdated(event.getDocumentSelector().getUser(), event
+				.getDocumentSelector().getDocumentName(),
+				event.getNewDocumentString());
 	}
 
 	// ----- aux
@@ -207,7 +211,8 @@ public abstract class PIDFManipulationRootSbb implements Sbb {
 		String childName = getChildName(entity, documentName);
 		PIDFManipulationChildSbbLocalObject child = null;
 		try {
-			child = (PIDFManipulationChildSbbLocalObject) getChildRelation().create(childName);
+			child = (PIDFManipulationChildSbbLocalObject) getChildRelation()
+					.create(childName);
 		} catch (Throwable e) {
 			tracer.severe("Failed to create child sbb");
 			return;
@@ -241,11 +246,6 @@ public abstract class PIDFManipulationRootSbb implements Sbb {
 			child.removePublication();
 			child.remove();
 		}
-	}
-
-	private String getEntity(String documentParent) {
-		// document parent is users/ + entity
-		return documentParent.substring(6);
 	}
 
 	// unused sbb life cycle methods
