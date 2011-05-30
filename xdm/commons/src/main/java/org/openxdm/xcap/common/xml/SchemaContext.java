@@ -55,7 +55,7 @@ public class SchemaContext {
 	private SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 	
 	/**
-	 * Retreives an instance from all schema files in a dir. The schema files must have the xsd file extension 
+	 * Retrieves an instance from all schema files in a dir. The schema files must have the xsd file extension 
 	 * @return
 	 * @throws IOException 
 	 * @throws SAXException 

@@ -55,7 +55,6 @@ import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.mobicents.slee.xdm.server.ServerConfiguration;
 import org.mobicents.xdm.server.appusage.AppUsage;
 import org.mobicents.xdm.server.appusage.AppUsageManagement;
-import org.mobicents.xdm.server.appusage.AppUsagePool;
 import org.openxdm.xcap.client.appusage.resourcelists.jaxb.EntryType;
 import org.openxdm.xcap.client.appusage.resourcelists.jaxb.ListType;
 import org.openxdm.xcap.client.appusage.resourcelists.jaxb.ResourceLists;
@@ -545,23 +544,16 @@ public class XcapDiffSubscriptionControl {
 					logger.error(e.getMessage(), e);
 					continue;
 				}
-				AppUsagePool appUsagePool = APP_USAGE_MANAGEMENT
-						.getAppUsagePool(nodeSubscription.getDocumentSelector()
+				AppUsage appUsage = APP_USAGE_MANAGEMENT
+						.getAppUsage(nodeSubscription.getDocumentSelector()
 								.getAUID());
-				if (appUsagePool == null) {
+				if (appUsage == null) {
 					logger.error("app usage not available, unable to process node subscription "
 							+ nodeSubscription);
 					continue;
 				}
-				try {
-					AppUsage appUsage = appUsagePool.borrowInstance();
-					nodeSelector.getNamespaceContext().setDefaultDocNamespace(
-							appUsage.getDefaultDocumentNamespace());
-					appUsagePool.returnInstance(appUsage);
-				} catch (InternalServerErrorException e) {
-					logger.warn("failed to obtain default doc namespace for node subscription "
-							+ nodeSubscription);
-				}
+				nodeSelector.getNamespaceContext().setDefaultDocNamespace(
+							appUsage.getDefaultDocumentNamespace());				
 				final XPath xpath = XPathFactory.newInstance().newXPath();
 				xpath.setNamespaceContext(nodeSelector.getNamespaceContext());
 				try {

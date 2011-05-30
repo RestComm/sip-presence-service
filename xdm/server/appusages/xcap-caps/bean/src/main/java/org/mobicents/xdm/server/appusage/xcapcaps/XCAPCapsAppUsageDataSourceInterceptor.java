@@ -33,7 +33,6 @@ import org.mobicents.xdm.server.appusage.AppUsage;
 import org.mobicents.xdm.server.appusage.AppUsageDataSource;
 import org.mobicents.xdm.server.appusage.AppUsageDataSourceInterceptor;
 import org.mobicents.xdm.server.appusage.AppUsageManagement;
-import org.mobicents.xdm.server.appusage.AppUsagePool;
 import org.mobicents.xdm.server.appusage.InterceptedDocument;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
 import org.openxdm.xcap.common.uri.DocumentSelector;
@@ -97,15 +96,12 @@ public class XCAPCapsAppUsageDataSourceInterceptor implements
 		rootElement.appendChild(namespacesElement);
 
 		// fill auids and namespaces
-		AppUsagePool appUsagePool = null;
 		AppUsage appUsage = null;
 		Element element = null;
 		Set<String> namespaces = new HashSet<String>();
 		for (String auid : appUsageManagement.getAppUsages()) {
-			appUsagePool = appUsageManagement.getAppUsagePool(auid);
-			if (appUsagePool != null) {
-				// borrow one app usage object
-				appUsage = appUsagePool.borrowInstance();
+			appUsage = appUsageManagement.getAppUsage(auid);
+			if (appUsage != null) {
 				// add auid
 				element = domDocument.createElement("auid");
 				element.setNodeValue(auid);
@@ -116,8 +112,6 @@ public class XCAPCapsAppUsageDataSourceInterceptor implements
 					element.setNodeValue(appUsage.getDefaultDocumentNamespace());
 					namespacesElement.appendChild(element);
 				}
-				// release app usage object
-				appUsagePool.returnInstance(appUsage);
 			}
 		}
 
