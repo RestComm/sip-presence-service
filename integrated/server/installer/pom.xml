@@ -95,18 +95,22 @@
 										<artifactItem>					
 											<artifactId>mobicents-xcap-diff-api</artifactId>
 											<groupId>org.mobicents.protocols.xcap.diff</groupId>		
-											<version>${pom.version}</version>
 											<overWrite>true</overWrite>
 											<outputDirectory>${deploy.dir}/${libs.dir.name}</outputDirectory>
 										</artifactItem>
 										<artifactItem>
 											<artifactId>mobicents-xcap-diff-dom</artifactId>
 											<groupId>org.mobicents.protocols.xcap.diff</groupId>
-											<version>${pom.version}</version>
 											<overWrite>true</overWrite>
 											<outputDirectory>${deploy.dir}/${libs.dir.name}</outputDirectory>
 										</artifactItem>
-							
+										<artifactItem>
+											<artifactId>rome</artifactId>
+											<groupId>rome</groupId>		
+											<overWrite>true</overWrite>
+											<outputDirectory>${deploy.dir}/${libs.dir.name}</outputDirectory>
+										</artifactItem>
+																	
 										<artifactItem>
 											<groupId>org.mobicents.servers.xdm</groupId>
 											<artifactId>commons</artifactId>

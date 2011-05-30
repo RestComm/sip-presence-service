@@ -42,6 +42,10 @@
 			<artifactId>mobicents-xcap-diff-dom</artifactId>
 			<groupId>org.mobicents.protocols.xcap.diff</groupId>
 		</dependency>
+		<dependency>
+			<artifactId>rome</artifactId>
+			<groupId>rome</groupId>
+		</dependency>		 
 	</dependencies>
 	
 </project>

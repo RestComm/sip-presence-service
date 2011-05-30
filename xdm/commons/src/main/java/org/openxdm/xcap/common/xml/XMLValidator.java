@@ -52,7 +52,16 @@ import org.xml.sax.SAXException;
 
 import com.sun.syndication.io.XmlReader;
 
+
 public class XMLValidator {
+
+	private static final DocumentBuilderFactory DOCUMENT_BUILDER_FACTORY = initDocumentBuilderFactory();
+	
+	private static DocumentBuilderFactory initDocumentBuilderFactory() {
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setNamespaceAware(true);		
+		return factory;
+	}
 
 	/**
 	 * 
@@ -224,11 +233,8 @@ public class XMLValidator {
 
 	public static Document getWellFormedDocument(Reader reader)
 			throws NotWellFormedConflictException, InternalServerErrorException {
-		try {
-			DocumentBuilderFactory factory = DocumentBuilderFactory
-					.newInstance();
-			factory.setNamespaceAware(true);
-			DocumentBuilder parser = factory.newDocumentBuilder();
+		try {			
+			DocumentBuilder parser = DOCUMENT_BUILDER_FACTORY.newDocumentBuilder();
 			return parser.parse(new InputSource(reader));
 		} catch (SAXException e) {
 			throw new NotWellFormedConflictException();
@@ -243,10 +249,7 @@ public class XMLValidator {
 			throws NotValidXMLFragmentConflictException,
 			InternalServerErrorException {
 		try {
-			DocumentBuilderFactory factory = DocumentBuilderFactory
-					.newInstance();
-			factory.setNamespaceAware(true);
-			DocumentBuilder parser = factory.newDocumentBuilder();
+			DocumentBuilder parser = DOCUMENT_BUILDER_FACTORY.newDocumentBuilder();
 			Document dummyDocument = parser.parse(new InputSource(reader));
 			return dummyDocument.getDocumentElement();
 		} catch (SAXException e) {
