@@ -97,7 +97,9 @@ public class SchemaContext {
 			return null;
 		}
 		// create and return new schema context
-		return new SchemaContext(schemaDocuments);
+		SchemaContext schemaContext = new SchemaContext(schemaDocuments);
+		schemaContext.getFactory().setResourceResolver(new LocalLSResourceResolver(dirURI));
+		return schemaContext;
 	}
 	
 	/**
@@ -114,6 +116,15 @@ public class SchemaContext {
 		}		
 	}
 	
+	public SchemaFactory getFactory() {
+		return factory;
+	}
+	
+	/**
+	 * Retrieves a schema which combines all schemas in the directory referenced from the specified target namespace.
+	 * @param rootTargetNamespace
+	 * @return
+	 */
 	public Schema getCombinedSchema(String rootTargetNamespace) {
 		
 		// create temp list that will hold all schema docs sources to combine
@@ -146,6 +157,26 @@ public class SchemaContext {
 		}
 		// create a schema by combining all selected
 		try {
+			return factory.newSchema(sourcesToCombine.toArray(new DOMSource[sourcesToCombine.size()]));
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	/**
+	 * Retrieves a schema which combines all schemas in the directory used to create the context.
+	 * @return
+	 */
+	public Schema getCombinedSchema() {		
+		// create temp list that will hold all schema docs sources to combine
+		LinkedList<DOMSource> sourcesToCombine = new LinkedList<DOMSource>();
+		for(Document document : documentMap.values()) {
+			sourcesToCombine.addFirst(new DOMSource(document));
+		}
+		// create a schema by combining all selected
+		try {			
 			return factory.newSchema(sourcesToCombine.toArray(new DOMSource[sourcesToCombine.size()]));
 		}
 		catch (Exception e) {

@@ -38,6 +38,8 @@ import org.w3c.dom.Node;
 
 public class TextWriter {
 
+	private static final TransformerFactory TRANSFORMER_FACTORY = TransformerFactory.newInstance();
+
 	public static String toString(Node node) throws TransformerException {
 		
 		if (node == null) {
@@ -47,8 +49,7 @@ public class TextWriter {
 		Source source = new DOMSource(node);			
 		StringWriter stringWriter = new StringWriter();
 		Result result = new StreamResult(stringWriter);
-		TransformerFactory factory = TransformerFactory.newInstance();
-		Transformer transformer = factory.newTransformer();
+		Transformer transformer = TRANSFORMER_FACTORY.newTransformer();
 		if (node instanceof Element) {
 			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION,"yes");						
 		}
