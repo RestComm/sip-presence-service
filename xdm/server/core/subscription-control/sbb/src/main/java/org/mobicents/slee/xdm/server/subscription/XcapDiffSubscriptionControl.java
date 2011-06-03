@@ -66,6 +66,7 @@ import org.openxdm.xcap.server.slee.resource.datasource.DataSourceSbbInterface;
 import org.openxdm.xcap.server.slee.resource.datasource.DocumentActivity;
 import org.openxdm.xcap.server.slee.resource.datasource.DocumentUpdatedEvent;
 import org.openxdm.xcap.server.slee.resource.datasource.NodeSubscription;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -561,6 +562,7 @@ public class XcapDiffSubscriptionControl {
 						appUsage.getDefaultDocumentNamespace());
 				final XPath xpath = DomUtils.XPATH_FACTORY.newXPath();
 				xpath.setNamespaceContext(nodeSelector.getNamespaceContext());
+				Node node = null;
 				try {
 					// exec query to get element
 					final NodeList nodeList = (NodeList) xpath.evaluate(
@@ -576,11 +578,12 @@ public class XcapDiffSubscriptionControl {
 										+ " in doc: \n"
 										+ TextWriter.toString(documentDOM));
 							} catch (TransformerException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
+								logger.error(e);
 							}
 						}
 						exists = false;
+					} else {
+						node = nodeList.item(0);
 					}
 				} catch (XPathExpressionException e) {
 					logger.error(
@@ -591,21 +594,41 @@ public class XcapDiffSubscriptionControl {
 				try {
 					if (nodeSubscription.getNodeSelector()
 							.getTerminalSelector() != null) {
-						patchComponents.add(XCAP_DIFF_PATCH_BUILDER
-								.getAttributePatchComponentBuilder()
-								.buildPatchComponent(
-										nodeSubscription.getSel(),
-										exists,
-										nodeSelector.getNamespaceContext()
-												.getNamespaces()));
+						if (exists) {
+							patchComponents.add(XCAP_DIFF_PATCH_BUILDER
+									.getAttributePatchComponentBuilder()
+									.buildPatchComponent(
+											nodeSubscription.getSel(),
+											((Attr) node).getValue(),
+											nodeSelector.getNamespaceContext()
+													.getNamespaces()));
+						} else {
+							patchComponents.add(XCAP_DIFF_PATCH_BUILDER
+									.getAttributePatchComponentBuilder()
+									.buildPatchComponent(
+											nodeSubscription.getSel(),
+											nodeSelector.getNamespaceContext()
+													.getNamespaces()));
+						}
 					} else {
-						patchComponents.add(XCAP_DIFF_PATCH_BUILDER
-								.getElementPatchComponentBuilder()
-								.buildPatchComponent(
-										nodeSubscription.getSel(),
-										exists,
-										nodeSelector.getNamespaceContext()
-												.getNamespaces()));
+						if (exists) {
+							patchComponents.add(XCAP_DIFF_PATCH_BUILDER
+									.getElementPatchComponentBuilder()
+									.buildPatchComponent(
+											nodeSubscription.getSel(),
+											node,
+											nodeSelector.getNamespaceContext()
+													.getNamespaces()));
+						} else {
+							patchComponents.add(XCAP_DIFF_PATCH_BUILDER
+									.getElementPatchComponentBuilder()
+									.buildPatchComponent(
+											nodeSubscription.getSel(),
+											false,
+											nodeSelector.getNamespaceContext()
+													.getNamespaces()));
+						}
+
 					}
 				} catch (BuildPatchException e) {
 					logger.error(e.getMessage(), e);

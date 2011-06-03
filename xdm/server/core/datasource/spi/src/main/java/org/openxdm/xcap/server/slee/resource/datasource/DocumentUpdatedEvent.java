@@ -246,8 +246,7 @@ public class DocumentUpdatedEvent implements Serializable {
 						.getPatchBuilder()
 						.getAttributePatchComponentBuilder()
 						.buildPatchComponent(
-								nodeSubscription.getSel(),
-								false,
+								nodeSubscription.getSel(),								
 								nodeSelector.getNamespaceContext()
 										.getNamespaces());
 			} else {
