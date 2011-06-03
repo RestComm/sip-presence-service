@@ -24,12 +24,11 @@ package org.mobicents.xdm.server.appusage.oma.xcapdirectory;
 
 import java.net.URISyntaxException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
 import org.mobicents.slee.xdm.server.ServerConfiguration;
+import org.mobicents.xdm.common.util.dom.DomUtils;
 import org.mobicents.xdm.server.appusage.AppUsageDataSource;
 import org.mobicents.xdm.server.appusage.AppUsageDataSourceInterceptor;
 import org.mobicents.xdm.server.appusage.AppUsageManagement;
@@ -63,14 +62,17 @@ public class XcapDirectoryAppUsageDataSourceInterceptor implements
 	private static final ServerConfiguration XDM_SERVER_CONFIGURATION = ServerConfiguration
 			.getInstance();
 
-	private static final DocumentBuilder DOCUMENT_BUILDER = createDocumentBuilder();
+	@Override
+	public boolean interceptsCollection(String collection,
+			boolean includeChildCollections) {
+		// intercepts all collections
+		return true;
+	}
 
-	private static DocumentBuilder createDocumentBuilder() {
-		try {
-			return DocumentBuilderFactory.newInstance().newDocumentBuilder();
-		} catch (ParserConfigurationException e) {
-			throw new RuntimeException(e);
-		}
+	@Override
+	public boolean interceptsDocument(DocumentSelector documentSelector) {
+		// intercepts all docs
+		return true;
 	}
 
 	/*
@@ -89,18 +91,24 @@ public class XcapDirectoryAppUsageDataSourceInterceptor implements
 					+ " on request");
 		}
 
-		Document document = DOCUMENT_BUILDER.newDocument();
+		Document document = null;
+		try {
+			document = DomUtils.DOCUMENT_BUILDER_NS_AWARE_FACTORY
+					.newDocumentBuilder().newDocument();
+		} catch (ParserConfigurationException e) {
+			throw new InternalServerErrorException(e.getMessage(), e);
+		}
 		Element rootElement = document.createElementNS(
 				XcapDirectoryAppUsage.DEFAULT_DOC_NAMESPACE,
 				ROOT_DIRECTORY_ELEMENT_NAME);
 		document.appendChild(rootElement);
-		// lets prepare the collection suffix by removing the auid from doc selector
+		// lets prepare the collection suffix by removing the auid from doc
+		// selector
 		int i = documentSelector.getCollection().indexOf('/', 1);
 		String collectionSuffix = null;
 		if (i > 0) {
 			collectionSuffix = documentSelector.getCollection().substring(i);
-		}
-		else {
+		} else {
 			collectionSuffix = "";
 		}
 		for (String appUsageId : AppUsageManagement.getInstance()
@@ -112,14 +120,17 @@ public class XcapDirectoryAppUsageDataSourceInterceptor implements
 				rootElement.appendChild(folderElement);
 				folderElement.setAttributeNS(null, AUID_ATTR_NAME, appUsageId);
 				for (org.openxdm.xcap.common.datasource.Document storedDoc : dataSource
-						.getDocuments(appUsageId+collectionSuffix,false)) {
+						.getDocuments(appUsageId + collectionSuffix, false)) {
 					Element entryElement = document.createElementNS(
 							XcapDirectoryAppUsage.DEFAULT_DOC_NAMESPACE,
 							ENTRY_ELEMENT_NAME);
 					folderElement.appendChild(entryElement);
-					entryElement.setAttributeNS(null, URI_ATTR_NAME,
-							getDocumentURI(new DocumentSelector(storedDoc.getCollection(), storedDoc
-											.getDocumentName())));
+					entryElement.setAttributeNS(
+							null,
+							URI_ATTR_NAME,
+							getDocumentURI(new DocumentSelector(storedDoc
+									.getCollection(), storedDoc
+									.getDocumentName())));
 					entryElement.setAttributeNS(null, ETAG_ATTRIBUTE_NAME,
 							storedDoc.getETag());
 				}
@@ -131,7 +142,8 @@ public class XcapDirectoryAppUsageDataSourceInterceptor implements
 	private String getDocumentURI(DocumentSelector documentSelector)
 			throws InternalServerErrorException {
 		UriBuilder uriBuilder = new UriBuilder();
-		uriBuilder.setDocumentSelector(UriComponentEncoder.encodePath(documentSelector.toString()));
+		uriBuilder.setDocumentSelector(UriComponentEncoder
+				.encodePath(documentSelector.toString()));
 		uriBuilder.setXcapRoot(XDM_SERVER_CONFIGURATION.getXcapRoot());
 		uriBuilder.setSchemeAndAuthority(XDM_SERVER_CONFIGURATION
 				.getSchemeAndAuthority());
@@ -143,12 +155,6 @@ public class XcapDirectoryAppUsageDataSourceInterceptor implements
 	}
 
 	private static final InterceptedDocument[] EMPTY_RESULT = {};
-	@Override
-	public InterceptedDocument[] getDocuments(boolean includeChildCollections,
-			AppUsageDataSource dataSource) throws InternalServerErrorException {
-		// not supported
-		return EMPTY_RESULT;
-	}
 
 	@Override
 	public InterceptedDocument[] getDocuments(String documentParent,

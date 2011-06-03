@@ -26,7 +26,6 @@
 package org.mobicents.slee.xdm.server.subscription;
 
 import javax.sip.header.HeaderFactory;
-import javax.xml.bind.Unmarshaller;
 
 import org.mobicents.slee.SbbContextExt;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControl;
@@ -51,8 +50,6 @@ public interface XcapDiffSubscriptionControlSbbInterface extends ImplementedSubs
 	public SbbContextExt getSbbContext();
 	
 	public SubscriptionsMap getSubscriptionsMap();
-
-	public Unmarshaller getUnmarshaller();
 
 	public void setSubscriptionsMap(SubscriptionsMap rules);
 }

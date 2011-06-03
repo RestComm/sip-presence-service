@@ -29,7 +29,6 @@ import java.util.HashMap;
 
 import javax.sip.header.HeaderFactory;
 import javax.slee.SbbLocalObject;
-import javax.xml.bind.Unmarshaller;
 
 import org.mobicents.slee.sipevent.server.publication.PublicationControlSbbLocalObject;
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControl;
@@ -60,8 +59,6 @@ public interface PresenceSubscriptionControlSbbInterface extends ImplementedSubs
 
 	public SbbLocalObject getSbbLocalObject();
 	
-	public HeaderFactory getHeaderFactory();
-
-	public Unmarshaller getUnmarshaller();
+	public HeaderFactory getHeaderFactory();	
 	
 }

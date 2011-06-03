@@ -99,7 +99,7 @@ public class NotUniqueListTest extends AbstractT {
 		
 		UriBuilder uriBuilder = new UriBuilder()
 			.setSchemeAndAuthority("http://localhost:8080")
-			.setXcapRoot("/mobicents")
+			.setXcapRoot("/mobicents/")
 			.setDocumentSelector(documentSelector1);
 		URI documentURI1 = uriBuilder.toURI();
 		uriBuilder.setDocumentSelector(documentSelector2);

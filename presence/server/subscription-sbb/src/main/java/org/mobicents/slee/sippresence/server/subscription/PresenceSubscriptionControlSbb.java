@@ -36,10 +36,6 @@ import javax.slee.Sbb;
 import javax.slee.SbbContext;
 import javax.slee.SbbLocalObject;
 import javax.slee.facilities.Tracer;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 
 import net.java.slee.resource.sip.SleeSipProvider;
 
@@ -163,15 +159,6 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 		presenceSubscriptionControl.rulesetUpdated(event.getDocumentSelector(),event.getRuleset(),this);
 	}
 	
-	public Marshaller getMarshaller() {
-		try {
-			return jaxbContext.createMarshaller();
-		} catch (JAXBException e) {
-			tracer.severe("failed to create marshaller", e);
-			return null;
-		}
-	}
-	
 	public PresRulesActivityContextInterfaceFactory getPresRulesACIF() {
 		return presRulesACIF;
 	}
@@ -216,38 +203,12 @@ public abstract class PresenceSubscriptionControlSbb implements Sbb,
 		return headerFactory;
 	}
 
-	public Unmarshaller getUnmarshaller() {
-		try {
-			return jaxbContext.createUnmarshaller();
-		} catch (JAXBException e) {
-			tracer.severe("failed to create unmarshaller", e);
-			return null;
-		}
-	}
-
 	// ---------- PublishedSphereSource
 	/**
 	 * interface used by rules processor to get sphere for a notifier
 	 */
 	public String getSphere(String notifier) {
 		return presenceSubscriptionControl.getSphere(notifier,this);
-	}
-
-	// --------- JAXB
-
-	/*
-	 * JAXB context is thread safe
-	 */
-	private static final JAXBContext jaxbContext = initJAXBContext();
-
-	private static JAXBContext initJAXBContext() {
-		try {
-			return JAXBContext
-					.newInstance(configuration.getJaxbPackageNames());
-		} catch (JAXBException e) {
-			tracer.severe("failed to create jaxb context");
-			return null;
-		}
 	}
 
 	// ----------- SBB OBJECT's LIFE CYCLE

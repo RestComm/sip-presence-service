@@ -26,9 +26,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.mobicents.xdm.common.util.dom.DomUtils;
 import org.mobicents.xdm.server.appusage.AppUsage;
 import org.mobicents.xdm.server.appusage.AppUsageDataSource;
 import org.mobicents.xdm.server.appusage.AppUsageDataSourceInterceptor;
@@ -50,30 +50,34 @@ public class XCAPCapsAppUsageDataSourceInterceptor implements
 
 	private static final DocumentSelector GLOBAL_INDEX_DOCUMENT_SELECTOR = new DocumentSelector(
 			"xcap-caps/global", "index");
-	private static final InterceptedDocument[] NO_DOCS_RESULT = {};
 
-	private final DocumentBuilderFactory documentBuilderFactory;
 	private final AppUsageManagement appUsageManagement;
 
 	public XCAPCapsAppUsageDataSourceInterceptor() {
-		this.documentBuilderFactory = DocumentBuilderFactory.newInstance();
-		this.documentBuilderFactory.setNamespaceAware(true);
 		this.appUsageManagement = AppUsageManagement.getInstance();
+	}
+
+	@Override
+	public boolean interceptsCollection(String collection,
+			boolean includeChildCollections) {
+		// no point in providing the global doc in a collection
+		return false;
+	}
+
+	@Override
+	public boolean interceptsDocument(DocumentSelector documentSelector) {
+		return documentSelector.equals(GLOBAL_INDEX_DOCUMENT_SELECTOR);
 	}
 
 	@Override
 	public InterceptedDocument getDocument(DocumentSelector documentSelector,
 			AppUsageDataSource dataSource) throws InternalServerErrorException {
 
-		// global/index doc is the only one which exists in the app usage
-		if (!documentSelector.equals(GLOBAL_INDEX_DOCUMENT_SELECTOR)) {
-			return null;
-		}
-
 		// create doc
 		DocumentBuilder documentBuilder = null;
 		try {
-			documentBuilder = documentBuilderFactory.newDocumentBuilder();
+			documentBuilder = DomUtils.DOCUMENT_BUILDER_NS_AWARE_FACTORY
+					.newDocumentBuilder();
 		} catch (ParserConfigurationException e) {
 			throw new InternalServerErrorException(e.getMessage(), e);
 		}
@@ -122,15 +126,7 @@ public class XCAPCapsAppUsageDataSourceInterceptor implements
 	public InterceptedDocument[] getDocuments(String documentParent,
 			boolean includeChildCollections, AppUsageDataSource dataSource)
 			throws InternalServerErrorException {
-		// not supported
-		return NO_DOCS_RESULT;
-	}
-
-	@Override
-	public InterceptedDocument[] getDocuments(boolean includeChildCollections,
-			AppUsageDataSource dataSource) throws InternalServerErrorException {
-		// not supported
-		return NO_DOCS_RESULT;
+		throw new UnsupportedOperationException();
 	}
 
 }

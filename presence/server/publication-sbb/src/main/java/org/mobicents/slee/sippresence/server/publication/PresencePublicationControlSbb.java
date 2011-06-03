@@ -33,9 +33,7 @@ import javax.slee.CreateException;
 import javax.slee.RolledBackContext;
 import javax.slee.Sbb;
 import javax.slee.SbbContext;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
+import javax.xml.validation.Schema;
 
 import net.java.slee.resource.sip.SleeSipProvider;
 
@@ -47,11 +45,12 @@ import org.mobicents.slee.sipevent.server.publication.data.ComposedPublication;
 import org.mobicents.slee.sipevent.server.publication.data.Publication;
 import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
 import org.mobicents.slee.sipevent.server.subscription.SubscriptionControlSbbLocalObject;
-import org.mobicents.slee.sippresence.pojo.pidf.Basic;
-import org.mobicents.slee.sippresence.pojo.pidf.Presence;
-import org.mobicents.slee.sippresence.pojo.pidf.Status;
-import org.mobicents.slee.sippresence.pojo.pidf.Tuple;
 import org.mobicents.slee.sippresence.server.jmx.SipPresenceServerManagement;
+import org.mobicents.xdm.common.util.dom.DomUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Publication control implementation child sbb that transforms the sip event
@@ -126,7 +125,7 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 					.getComposedPublicationKey().getEntity(),
 					composedPublication.getComposedPublicationKey()
 							.getEventPackage(), new NotifyContent(composedPublication
-							.getUnmarshalledContent(), contentTypeHeader, null));
+							.getDocumentAsDOM(), contentTypeHeader, null));
 		} catch (Exception e) {
 			logger.error("failed to notify subscribers for "
 					+ composedPublication.getComposedPublicationKey(), e);
@@ -135,15 +134,14 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.mobicents.slee.sipevent.server.publication.ImplementedPublicationControl#authorizePublication(java.lang.String, javax.xml.bind.JAXBElement)
+	 * @see org.mobicents.slee.sipevent.server.publication.ImplementedPublicationControl#authorizePublication(java.lang.String, org.w3c.dom.Document)
 	 */
-	@SuppressWarnings("unchecked")
 	public boolean authorizePublication(String requestEntity,
-			JAXBElement<?> unmarshalledContent) {
+			Document unmarshalledContent) {
 		// returns true if request uri matches entity (stripped from pres:
 		// prefix if found) inside pidf doc
-		String entity = ((JAXBElement<Presence>) unmarshalledContent)
-				.getValue().getEntity();
+		Element pidfElement = unmarshalledContent.getDocumentElement();
+		String entity = pidfElement.getAttribute("entity");
 		if (entity != null) {
 			if (entity.startsWith("pres:") && entity.length() > 5) {
 				entity = entity.substring(5);
@@ -180,33 +178,11 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 		return null;
 	}
 
-	
-	/*
-	 * JAXB context is thread safe
-	 */
-	private static JAXBContext jaxbContext = null;
-
-	private static JAXBContext initJAXBContext() {
-		try {
-			return JAXBContext
-					.newInstance(SipPresenceServerManagement.getInstance().getJaxbPackageNames());
-		} catch (JAXBException e) {
-			logger.error("failed to create jaxb context",e);
-			return null;
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.mobicents.slee.sipevent.server.publication.ImplementedPublicationControl#getJaxbContext()
-	 */
 	@Override
-	public JAXBContext getJaxbContext() {
-		if (jaxbContext == null) {
-			jaxbContext = initJAXBContext();
-		}
-		return jaxbContext;
+	public Schema getSchema() {
+		return SipPresenceServerManagement.getInstance().getCombinedSchema();
 	}
-
+	
 	private static final PresenceCompositionPolicy presenceCompositionPolicy = new PresenceCompositionPolicy();
 	
 	/* (non-Javadoc)
@@ -219,19 +195,36 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 
 	public Publication getAlternativeValueForExpiredPublication(
 			Publication publication) {
-		final Presence presence = (Presence)  publication.getUnmarshalledContent().getValue();
-		for (Tuple tuple : presence.getTuple()) {
-			tuple.getAny().clear();
-			tuple.getNote().clear();
-			tuple.setTimestamp(null);
-			Status status = new Status();
-			status.setBasic(Basic.CLOSED);
-			tuple.setStatus(status);
+		Document document = publication.getDocumentAsDOM();
+		Element presence = document.getDocumentElement();
+		NodeList presenceChilds = presence.getChildNodes();
+		Node presenceChild = null;
+		for(int i=0;i<presenceChilds.getLength();i++) {
+			presenceChild = presenceChilds.item(i);
+			if (DomUtils.isElementNamed(presenceChild, "tuple")) {
+				// remove all child element nodes
+				NodeList tupleChilds = presenceChild.getChildNodes();
+				Node tupleChild = null;
+				for (int j=0; j<tupleChilds.getLength(); j++) {
+					tupleChild = tupleChilds.item(j);
+					if (tupleChild.getNodeType() == Node.ELEMENT_NODE) {
+						presenceChild.removeChild(tupleChild);
+					}
+				}
+				// add a closed status element
+				Element status = document.createElement("status");
+				tupleChild.appendChild(status);
+				Element basic = document.createElement("basic");
+				basic.setTextContent("closed");
+				status.appendChild(basic);				
+			}
+			else if (presenceChild.getNodeType() == Node.ELEMENT_NODE) {
+				// remove any other child element
+				presence.removeChild(presenceChild);
+			}
 		}
-		presence.getAny().clear();
-		presence.getNote().clear();
-		publication.setDocument(null);
-		return publication;		
+		publication.setDocumentAsString(null);
+		return publication;
 	}
 
 	public boolean isResponsibleForResource(URI uri) {

@@ -342,6 +342,9 @@
 										<copy overwrite="true" todir="${deploy.dir}/${beans.dir.name}/appusages/xsd">
 											<fileset dir="../../../xdm/server/appusages/xsd" />
 										</copy>
+										<copy overwrite="true" todir="${deploy.dir}/${beans.dir.name}/configuration/sip-presence/xsd">
+											<fileset dir="../../../presence/server/configuration/xsd" />
+										</copy>
 									</tasks>
 								</configuration>
 							</execution>

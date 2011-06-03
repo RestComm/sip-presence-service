@@ -36,10 +36,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.xerces.util.XML11Char;
+import org.mobicents.xdm.common.util.dom.DomUtils;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
 import org.openxdm.xcap.common.error.NotUTF8ConflictException;
 import org.openxdm.xcap.common.error.NotValidXMLFragmentConflictException;
@@ -52,16 +52,7 @@ import org.xml.sax.SAXException;
 
 import com.sun.syndication.io.XmlReader;
 
-
 public class XMLValidator {
-
-	private static final DocumentBuilderFactory DOCUMENT_BUILDER_FACTORY = initDocumentBuilderFactory();
-	
-	private static DocumentBuilderFactory initDocumentBuilderFactory() {
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-		factory.setNamespaceAware(true);		
-		return factory;
-	}
 
 	/**
 	 * 
@@ -78,17 +69,17 @@ public class XMLValidator {
 		return false;
 	}
 
-	/** 
-	 * Validates if the specifiedc string is a valid xml attribute value.
-	 * Specs say that an attr value is validated by the following regex:
+	/**
+	 * Validates if the specifiedc string is a valid xml attribute value. Specs
+	 * say that an attr value is validated by the following regex:
 	 * 
-	 * AttValue	   	::=	'"' ([^<&"] | Reference)* '"' |  "'" ([^<&'] | Reference)* "'"
-	 * Reference 	::= EntityRef | CharRef
-	 * EntityRef 	::= '&' Name ';' 
-	 * CharRef		::= '&#' [0-9]+ ';' | '&#x' [0-9a-fA-F]+ ';'
+	 * AttValue ::= '"' ([^<&"] | Reference)* '"' | "'" ([^<&'] | Reference)*
+	 * "'" Reference ::= EntityRef | CharRef EntityRef ::= '&' Name ';' CharRef
+	 * ::= '&#' [0-9]+ ';' | '&#x' [0-9a-fA-F]+ ';'
 	 * 
-	 *  
-	 * NOTE: The specified string doesn't come with surroundings " or ' so we can't accept both chars!!!!
+	 * 
+	 * NOTE: The specified string doesn't come with surroundings " or ' so we
+	 * can't accept both chars!!!!
 	 * 
 	 * @param value
 	 * @return
@@ -100,7 +91,7 @@ public class XMLValidator {
 
 			StringBuilder sb = new StringBuilder(value);
 
-			// check and remove char refs 
+			// check and remove char refs
 
 			// &#x [0-9a-fA-F]+ ;
 
@@ -162,7 +153,7 @@ public class XMLValidator {
 				}
 			}
 
-			// check and remove entity refs 			
+			// check and remove entity refs
 			// & name ;
 
 			set = new HashSet<String>();
@@ -233,8 +224,9 @@ public class XMLValidator {
 
 	public static Document getWellFormedDocument(Reader reader)
 			throws NotWellFormedConflictException, InternalServerErrorException {
-		try {			
-			DocumentBuilder parser = DOCUMENT_BUILDER_FACTORY.newDocumentBuilder();
+		try {
+			DocumentBuilder parser = DomUtils.DOCUMENT_BUILDER_NS_AWARE_FACTORY
+					.newDocumentBuilder();
 			return parser.parse(new InputSource(reader));
 		} catch (SAXException e) {
 			throw new NotWellFormedConflictException();
@@ -249,7 +241,8 @@ public class XMLValidator {
 			throws NotValidXMLFragmentConflictException,
 			InternalServerErrorException {
 		try {
-			DocumentBuilder parser = DOCUMENT_BUILDER_FACTORY.newDocumentBuilder();
+			DocumentBuilder parser = DomUtils.DOCUMENT_BUILDER_NS_AWARE_FACTORY
+					.newDocumentBuilder();
 			Document dummyDocument = parser.parse(new InputSource(reader));
 			return dummyDocument.getDocumentElement();
 		} catch (SAXException e) {
@@ -271,7 +264,8 @@ public class XMLValidator {
 				return reader;
 			}
 		} catch (Exception e) {
-			// no comments, this is to not change XMLReader so we can update it if needed
+			// no comments, this is to not change XMLReader so we can update it
+			// if needed
 			if (e.getMessage().startsWith("Invalid encoding")) {
 				throw new NotUTF8ConflictException();
 			} else {

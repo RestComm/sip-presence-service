@@ -151,6 +151,10 @@
 					<cl:POBOX>Private Box 15</cl:POBOX>
 				</cl:civicAddress>
 			</gp:location-info>
+			<gp:usage-rules>
+        		<gp:retransmission-allowed>no</gp:retransmission-allowed>
+        		<gp:retention-expiry>2003-06-23T04:57:29Z</gp:retention-expiry>
+      		</gp:usage-rules>
 		</gp:geopriv>
 		<rpid:class>forfriends</rpid:class>
 		<pdm:note xml:lang="en">I am in a boring meeting!!</pdm:note>

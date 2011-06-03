@@ -28,11 +28,11 @@ package org.mobicents.slee.sipevent.server.publication;
 import javax.sip.address.URI;
 import javax.sip.header.ContentTypeHeader;
 import javax.sip.header.Header;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
+import javax.xml.validation.Schema;
 
 import org.mobicents.slee.sipevent.server.publication.data.ComposedPublication;
 import org.mobicents.slee.sipevent.server.publication.data.Publication;
+import org.w3c.dom.Document;
 
 /**
  * @author martins
@@ -75,11 +75,11 @@ public interface ImplementedPublicationControl {
 	public void notifySubscribers(ComposedPublication composedPublication);
 
 	/**
-	 * Retrieves the associated JAXB Context, needed to work with publication content.
+	 * Retrieves the schema needed to validate a publication content.
 	 * 
 	 * @return
 	 */
-	public JAXBContext getJaxbContext();
+	public Schema getSchema();
 
 	/**
 	 * Retrieves the {@link StateComposer} concrete impl, used to combine publications.
@@ -98,11 +98,11 @@ public interface ImplementedPublicationControl {
 	 * verifies if entity is authorized to publish the content
 	 * 
 	 * @param entity
-	 * @param unmarshalledContent
+	 * @param content
 	 * @return
 	 */
 	public boolean authorizePublication(String entity,
-			JAXBElement<?> unmarshalledContent);
+			Document content);
 
 	/**
 	 * 

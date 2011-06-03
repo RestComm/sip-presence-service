@@ -29,9 +29,15 @@ import org.mobicents.xdm.server.appusage.AppUsageFactory;
 
 public class RLSServicesAppUsageDeployer extends AppUsageDeployer {
 
+	private final boolean validateUniquenessContraints;
+	
+	public RLSServicesAppUsageDeployer(boolean validateUniquenessContraints) {
+		this.validateUniquenessContraints = validateUniquenessContraints;
+	}
+	
 	@Override
 	public AppUsageFactory createAppUsageFactory(Schema schema) {
-		return new RLSServicesAppUsageFactory(schema);
+		return new RLSServicesAppUsageFactory(schema,validateUniquenessContraints);
 	}
 
 	@Override

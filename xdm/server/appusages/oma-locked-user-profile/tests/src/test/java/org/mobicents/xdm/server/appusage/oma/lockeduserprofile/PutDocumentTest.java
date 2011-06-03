@@ -96,7 +96,7 @@ public class PutDocumentTest extends AbstractT {
 		String documentSelector = DocumentSelectorBuilder.getUserDocumentSelectorBuilder(OMALockedUserProfileAppUsage.ID,user,documentName).toPercentEncodedString();
 		UriBuilder uriBuilder = new UriBuilder()
 			.setSchemeAndAuthority("http://localhost:8080")
-			.setXcapRoot("/mobicents")
+			.setXcapRoot("/mobicents/")
 			.setDocumentSelector(documentSelector);
 		URI documentURI = uriBuilder.toURI();
 		

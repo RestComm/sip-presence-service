@@ -109,4 +109,5 @@ public class PublicationControlManagement implements PublicationControlManagemen
 	public PublicationControlDataSource getDataSource() {
 		return dataSource;
 	}
+	
 }

@@ -40,10 +40,10 @@ import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 
 import org.mobicents.slee.xdm.server.ServerConfiguration;
 import org.mobicents.xdm.common.util.dom.DocumentCloner;
+import org.mobicents.xdm.common.util.dom.DomUtils;
 import org.mobicents.xdm.server.appusage.AppUsage;
 import org.mobicents.xdm.server.appusage.AppUsageManagement;
 import org.mobicents.xdm.server.appusage.AuthorizationPolicy;
@@ -112,9 +112,6 @@ public abstract class RequestProcessorSbb implements RequestProcessor,
 
 	private static final AppUsageManagement APPUSAGE_MANAGEMENT = AppUsageManagement
 			.getInstance();
-
-	private static final XPathFactory XPATH_FACTORY = XPathFactory
-			.newInstance();
 
 	/**
 	 * Called when an sbb object is instantied and enters the pooled state.
@@ -729,7 +726,7 @@ public abstract class RequestProcessorSbb implements RequestProcessor,
 				if (logger.isFineEnabled())
 					logger.fine("node selector found and parsed");
 				// create xpath
-				XPath xpath = XPATH_FACTORY.newXPath();
+				XPath xpath = DomUtils.XPATH_FACTORY.newXPath();
 				// add a namespace context to xpath to resolve bindings
 				// config namespace context
 				final NamespaceContext nsContext = resourceSelector
@@ -774,7 +771,7 @@ public abstract class RequestProcessorSbb implements RequestProcessor,
 						if (logger.isFineEnabled())
 							logger.fine("terminal selector is a namespace selector");
 						return new ReadResult(eTag, getNamespaceBindings(
-								element, element.getLocalName(),
+								element, DomUtils.getElementName(element),
 								nsContext.getNamespaces()));
 					}
 				} else {
@@ -1196,7 +1193,7 @@ public abstract class RequestProcessorSbb implements RequestProcessor,
 			if (elementParent == null) {
 				if (logger.isFineEnabled())
 					logger.fine("element parent not found, returning no parent conflict");
-				XPath xpath = XPATH_FACTORY.newXPath();
+				XPath xpath = DomUtils.XPATH_FACTORY.newXPath();
 				xpath.setNamespaceContext(nodeSelector.getNamespaceContext());
 				throw new NoParentConflictException(getElementExistentAncestor(
 						CONFIGURATION.getXcapRoot(),
@@ -1545,7 +1542,7 @@ public abstract class RequestProcessorSbb implements RequestProcessor,
 			// throw no parent exception since there is
 			// no element but we have a terminal
 			// selector
-			XPath xpath = XPATH_FACTORY.newXPath();
+			XPath xpath = DomUtils.XPATH_FACTORY.newXPath();
 			xpath.setNamespaceContext(nodeSelector.getNamespaceContext());
 			throw new NoParentConflictException(getElementExistentAncestor(
 					CONFIGURATION.getXcapRoot(), documentSelector.toString(),
@@ -1949,7 +1946,7 @@ public abstract class RequestProcessorSbb implements RequestProcessor,
 					+ elementSelectorWithEmptyPrefixes);
 
 		// lets use xpath
-		final XPath xpath = XPATH_FACTORY.newXPath();
+		final XPath xpath = DomUtils.XPATH_FACTORY.newXPath();
 		// set context to resolve namespace bindings
 		xpath.setNamespaceContext(namespaceContext);
 		try {
@@ -2037,7 +2034,7 @@ public abstract class RequestProcessorSbb implements RequestProcessor,
 					logger.fine("element selector doesn't have prefixe(s) bound, bad request");
 				throw new BadRequestException();
 			} else {
-				XPath xpath = XPATH_FACTORY.newXPath();
+				XPath xpath = DomUtils.XPATH_FACTORY.newXPath();
 				xpath.setNamespaceContext(nodeSelector.getNamespaceContext());
 				throw new NoParentConflictException(getElementExistentAncestor(
 						CONFIGURATION.getXcapRoot(),

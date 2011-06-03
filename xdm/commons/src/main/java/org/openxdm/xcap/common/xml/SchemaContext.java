@@ -35,12 +35,12 @@ import java.util.Map;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import org.mobicents.xdm.common.util.dom.DomUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -51,135 +51,147 @@ public class SchemaContext {
 	/**
 	 * Map with schemas as DOM documents, indexed by schema's target namespace
 	 */
-	private Map<String,Document> documentMap = new HashMap<String,Document>();
-	private SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-	
+	private Map<String, Document> documentMap = new HashMap<String, Document>();
+	private SchemaFactory factory = SchemaFactory
+			.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+
 	/**
-	 * Retrieves an instance from all schema files in a dir. The schema files must have the xsd file extension 
+	 * Retrieves an instance from all schema files in a dir. The schema files
+	 * must have the xsd file extension
+	 * 
 	 * @return
-	 * @throws IOException 
-	 * @throws SAXException 
-	 * @throws ParserConfigurationException 
+	 * @throws IOException
+	 * @throws SAXException
+	 * @throws ParserConfigurationException
 	 */
-	public static SchemaContext fromDir(URI dirURI) throws SAXException, IOException, ParserConfigurationException {
+	public static SchemaContext fromDir(URI dirURI) throws SAXException,
+			IOException, ParserConfigurationException {
 		// init dom resources
-		List<Document> schemaDocuments = new ArrayList<Document>(); 
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance(); 
-		dbf.setNamespaceAware(true); 				
-		DocumentBuilder documentBuilder = dbf.newDocumentBuilder();
-		// read files and parse to dom resources				
+		List<Document> schemaDocuments = new ArrayList<Document>();
+		DocumentBuilder documentBuilder = DomUtils.DOCUMENT_BUILDER_NS_AWARE_FACTORY
+				.newDocumentBuilder();
+		// read files and parse to dom resources
 		File schemaDir = new File(dirURI);
-		if(schemaDir.isDirectory()) {				
-			// create filter to select only files with name that ends with .xsd 
-			FileFilter fileFilter = new FileFilter() {					
+		if (schemaDir.isDirectory()) {
+			// create filter to select only files with name that ends with .xsd
+			FileFilter fileFilter = new FileFilter() {
 				public boolean accept(File f) {
-					if(f.isDirectory()) {
+					if (f.isDirectory()) {
 						return false;
-					}
-					else {
-						if(f.getName().endsWith(".xsd")){
+					} else {
+						if (f.getName().endsWith(".xsd")) {
 							return true;
-						}
-						else {
+						} else {
 							return false;
 						}
 					}
-				}									
+				}
 			};
-			// get schema files from schema dir 
+			// get schema files from schema dir
 			File[] schemaFiles = schemaDir.listFiles(fileFilter);
-			for(File schemaFile : schemaFiles) {
+			for (File schemaFile : schemaFiles) {
 				// parse each one to dom document and add to schema docs list
-				schemaDocuments.add(documentBuilder.parse(schemaFile));				
+				schemaDocuments.add(documentBuilder.parse(schemaFile));
 			}
-		}
-		else {
+		} else {
 			return null;
 		}
 		// create and return new schema context
 		SchemaContext schemaContext = new SchemaContext(schemaDocuments);
-		schemaContext.getFactory().setResourceResolver(new LocalLSResourceResolver(dirURI));
+		schemaContext.getFactory().setResourceResolver(
+				new LocalLSResourceResolver(dirURI));
 		return schemaContext;
 	}
-	
+
 	/**
-	 * Creates a new instance to provide schemas that can combine the ones specified as DOM documents.
-	 * @param documents the list os schemas that can be combined by the provider
+	 * Creates a new instance to provide schemas that can combine the ones
+	 * specified as DOM documents.
+	 * 
+	 * @param documents
+	 *            the list os schemas that can be combined by the provider
 	 */
-	public SchemaContext(List<Document> documents) {		
-		for(Iterator<Document> i=documents.iterator();i.hasNext();) {
-			Document document = i.next();			
-			String targetNamespace = (document.getDocumentElement()).getAttribute("targetNamespace");
+	public SchemaContext(List<Document> documents) {
+		for (Iterator<Document> i = documents.iterator(); i.hasNext();) {
+			Document document = i.next();
+			String targetNamespace = (document.getDocumentElement())
+					.getAttribute("targetNamespace");
 			if (targetNamespace != null) {
-				documentMap.put(targetNamespace,document);
+				documentMap.put(targetNamespace, document);
 			}
-		}		
+		}
 	}
-	
+
 	public SchemaFactory getFactory() {
 		return factory;
 	}
-	
+
 	/**
-	 * Retrieves a schema which combines all schemas in the directory referenced from the specified target namespace.
+	 * Retrieves a schema which combines all schemas in the directory referenced
+	 * from the specified target namespace.
+	 * 
 	 * @param rootTargetNamespace
 	 * @return
 	 */
 	public Schema getCombinedSchema(String rootTargetNamespace) {
-		
+
 		// create temp list that will hold all schema docs sources to combine
 		LinkedList<DOMSource> sourcesToCombine = new LinkedList<DOMSource>();
 		// create temp list that will hold all schema docs to process
 		LinkedList<String> documentsToProcessByTargetNamepsace = new LinkedList<String>();
-		// get root document and kick off the process to find other needed schemas		
+		// get root document and kick off the process to find other needed
+		// schemas
 		documentsToProcessByTargetNamepsace.addLast(rootTargetNamespace);
-		// add others by looking at each document for others needed to import		
-		while(!documentsToProcessByTargetNamepsace.isEmpty()) {
+		// add others by looking at each document for others needed to import
+		while (!documentsToProcessByTargetNamepsace.isEmpty()) {
 			// get head target namespace
-			String targetNamespace = documentsToProcessByTargetNamepsace.removeFirst();
+			String targetNamespace = documentsToProcessByTargetNamepsace
+					.removeFirst();
 			// get the related schema document
 			Document document = documentMap.get(targetNamespace);
-			if(document != null) {
+			if (document != null) {
 				// document exists, add source to combination list
 				sourcesToCombine.addFirst(new DOMSource(document));
 				// and find other docs to import
-				NodeList nl = document.getElementsByTagNameNS("http://www.w3.org/2001/XMLSchema","import");
-				for (int i=0;i<nl.getLength();i++){
-					Element elem = (Element)nl.item(i);
+				NodeList nl = document.getElementsByTagNameNS(
+						"http://www.w3.org/2001/XMLSchema", "import");
+				for (int i = 0; i < nl.getLength(); i++) {
+					Element elem = (Element) nl.item(i);
 					// found one, add target namespace to process list
-					documentsToProcessByTargetNamepsace.addLast(elem.getAttribute("namespace"));
+					documentsToProcessByTargetNamepsace.addLast(elem
+							.getAttribute("namespace"));
 				}
-			}
-			else {
+			} else {
 				// document needed is not here, abort
 				return null;
 			}
 		}
 		// create a schema by combining all selected
 		try {
-			return factory.newSchema(sourcesToCombine.toArray(new DOMSource[sourcesToCombine.size()]));
-		}
-		catch (Exception e) {
+			return factory.newSchema(sourcesToCombine
+					.toArray(new DOMSource[sourcesToCombine.size()]));
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
 	}
-	
+
 	/**
-	 * Retrieves a schema which combines all schemas in the directory used to create the context.
+	 * Retrieves a schema which combines all schemas in the directory used to
+	 * create the context.
+	 * 
 	 * @return
 	 */
-	public Schema getCombinedSchema() {		
+	public Schema getCombinedSchema() {
 		// create temp list that will hold all schema docs sources to combine
 		LinkedList<DOMSource> sourcesToCombine = new LinkedList<DOMSource>();
-		for(Document document : documentMap.values()) {
+		for (Document document : documentMap.values()) {
 			sourcesToCombine.addFirst(new DOMSource(document));
 		}
 		// create a schema by combining all selected
-		try {			
-			return factory.newSchema(sourcesToCombine.toArray(new DOMSource[sourcesToCombine.size()]));
-		}
-		catch (Exception e) {
+		try {
+			return factory.newSchema(sourcesToCombine
+					.toArray(new DOMSource[sourcesToCombine.size()]));
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}

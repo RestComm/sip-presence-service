@@ -31,21 +31,23 @@ import org.mobicents.xdm.server.appusage.AppUsageFactory;
 public class RLSServicesAppUsageFactory implements AppUsageFactory {
 
 	private final Schema schema;
-	
-	public RLSServicesAppUsageFactory(Schema schema) {
-		this.schema = schema;		
+	private final boolean validateUniquenessContraints;
+
+	public RLSServicesAppUsageFactory(Schema schema, boolean validateUniquenessContraints) {
+		this.schema = schema;
+		this.validateUniquenessContraints = validateUniquenessContraints;
 	}
-	
+
 	public AppUsage getAppUsageInstance() {
-		return new RLSServicesAppUsage(schema.newValidator());
+		return new RLSServicesAppUsage(schema.newValidator(), validateUniquenessContraints);
 	}
-	
+
 	public String getAppUsageId() {
 		return RLSServicesAppUsage.ID;
 	}
-	
+
 	@Override
 	public AppUsageDataSourceInterceptor getDataSourceInterceptor() {
-		return null;
+		return new RLSServicesAppUsageDataSourceInterceptor();
 	}
 }

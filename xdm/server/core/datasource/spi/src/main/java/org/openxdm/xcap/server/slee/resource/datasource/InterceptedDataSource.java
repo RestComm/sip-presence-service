@@ -51,7 +51,7 @@ public class InterceptedDataSource implements DataSource, AppUsageDataSource {
 			throws InternalServerErrorException {
 		final AppUsageDataSourceInterceptor interceptor = APP_USAGE_MANAGEMENT
 				.getDataSourceInterceptor(documentSelector.getAUID());
-		if (interceptor != null) {
+		if (interceptor != null && interceptor.interceptsDocument(documentSelector)) {
 			return interceptor.getDocument(documentSelector, this);
 		} else {
 			return dataSource.getDocument(documentSelector);
@@ -73,14 +73,8 @@ public class InterceptedDataSource implements DataSource, AppUsageDataSource {
 		}
 		final AppUsageDataSourceInterceptor interceptor = APP_USAGE_MANAGEMENT
 				.getDataSourceInterceptor(auid);
-		if (interceptor != null) {
-			if (i < 0) {
-				return interceptor.getDocuments(includeChildCollections, this);
-			}
-			else {
-				return interceptor.getDocuments(collection.substring(i+1),includeChildCollections, this);
-
-			}			
+		if (interceptor != null && interceptor.interceptsCollection(collection, includeChildCollections)) {
+			return interceptor.getDocuments(collection,includeChildCollections, this);
 		} else {
 			return dataSource.getDocuments(collection,includeChildCollections);
 		}

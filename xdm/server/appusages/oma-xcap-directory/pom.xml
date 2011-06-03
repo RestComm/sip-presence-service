@@ -21,5 +21,11 @@
 				<module>tests</module>
 			</modules>			
 		</profile>
+		<profile>
+			<id>tests</id>
+			<modules>
+				<module>tests</module>
+			</modules>			
+		</profile>
 	</profiles>
 </project>

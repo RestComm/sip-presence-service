@@ -25,6 +25,8 @@
  */
 package org.mobicents.slee.sipevent.server.publication;
 
+import org.w3c.dom.Document;
+
 /**
  * @author martins
  *
@@ -32,12 +34,12 @@ package org.mobicents.slee.sipevent.server.publication;
 public interface StateComposer {
 
 	/**
-	 * Combines 2 states, represent by unmarshalled JAXB element values.
+	 * Combines 2 states, represent by DOM documents
 	 * 
 	 * @param state1
 	 * @param state2
 	 * @return
 	 */
-	public Object compose(Object state1, Object state2);
+	public Document compose(Document state1, Document state2);
 	
 }

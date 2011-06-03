@@ -22,108 +22,88 @@
 
 package org.mobicents.slee.sippresence.server.publication;
 
-import gov.nist.javax.sip.Utils;
-
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
-import javax.xml.bind.JAXBElement;
-import javax.xml.namespace.QName;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.mobicents.slee.sipevent.server.publication.StateComposer;
-import org.mobicents.slee.sippresence.pojo.commonschema.NoteT;
-import org.mobicents.slee.sippresence.pojo.datamodel.Device;
-import org.mobicents.slee.sippresence.pojo.datamodel.Person;
-import org.mobicents.slee.sippresence.pojo.pidf.Contact;
-import org.mobicents.slee.sippresence.pojo.pidf.Note;
-import org.mobicents.slee.sippresence.pojo.pidf.Presence;
-import org.mobicents.slee.sippresence.pojo.pidf.Status;
-import org.mobicents.slee.sippresence.pojo.pidf.Tuple;
-import org.mobicents.slee.sippresence.pojo.pidf.oma.ServiceDescription;
+import org.mobicents.xdm.common.util.dom.DomUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class PresenceCompositionPolicy implements StateComposer {
+	
+	private static final Random RANDOM = new Random();
 
+	private static String generateNCName() {
+		// note: any hex string is a valid NCName if does not starts with a number
+		return new StringBuilder("a").append(Integer.toHexString(RANDOM.nextInt())).toString();
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.mobicents.slee.sipevent.server.publication.StateComposer#compose(java.lang.Object, java.lang.Object)
 	 */
 	@Override
-	public Object compose(Object state1, Object state2) {
-		if (state1 == null) {
-			return state2;
+	public Document compose(Document document, Document otherDocument) {
+		if (document == null) {
+			return otherDocument;
 		}
-		if (state2 == null) {
-			return state1;
+		if (otherDocument == null) {
+			return document;
 		}
-		return compose((Presence)state1, (Presence)state2);
-	}
-	
-	/**
-	 * 
-	 * @param presence the new state to add to the composition
-	 * @param otherPresence the current presence composition state 
-	 * @return
-	 */
-	public Presence compose(Presence presence, Presence otherPresence) {
 		
-		Presence result = new Presence();
-		result.setEntity(presence.getEntity());
+		final PresenceElementData presenceData = new PresenceElementData(document.getDocumentElement());
+		final PresenceElementData otherPresenceData = new PresenceElementData(otherDocument.getDocumentElement());
 		
-		// process tuples
-		result.getTuple().addAll(composeTuples(presence.getTuple(), otherPresence.getTuple()));
-				
-		// extract devices and persons from anys
-		List<Object> presenceAny = presence.getAny();
-		List<Device> presenceDevices = new ArrayList<Device>();
-		List<Person> presencePersons = new ArrayList<Person>();
-		for (Iterator<?> it = presenceAny.iterator(); it.hasNext();) {
-			Object obj = it.next();
-			if (obj instanceof Device) {
-				presenceDevices.add((Device)obj);
-				it.remove();
-			}
-			else if (obj instanceof Person) {
-				presencePersons.add((Person)obj);
-				it.remove();
-			}
+		Document newDocument = null;
+		try {
+			newDocument = DomUtils.DOCUMENT_BUILDER_NS_AWARE_FACTORY.newDocumentBuilder().newDocument();
+		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
+			return null;
 		}
-		List<Object> otherPresenceAny = otherPresence.getAny();
-		List<Device> otherPresenceDevices = new ArrayList<Device>();
-		List<Person> otherPresencePersons = new ArrayList<Person>();
-		for (Iterator<?> it = otherPresenceAny.iterator(); it.hasNext();) {
-			Object obj = it.next();
-			if (obj instanceof Device) {
-				otherPresenceDevices.add((Device)obj);
-				it.remove();
-			}
-			else if (obj instanceof Person) {
-				otherPresencePersons.add((Person)obj);
-				it.remove();
-			}
+		Element newPresence = newDocument.createElementNS("urn:ietf:params:xml:ns:pidf", "presence");
+		newDocument.appendChild(newPresence);
+		newPresence.setAttribute("entity", presenceData.entity);
+		
+		for (Node n : composeTuples(presenceData.tuples, otherPresenceData.tuples, newDocument)) {
+			newPresence.appendChild(n);
 		}
-		// process devices
-		result.getAny().addAll(composeDevices(presenceDevices, otherPresenceDevices));
+		for (Node n : composeDevices(presenceData.devices, otherPresenceData.devices, newDocument)) {
+			newPresence.appendChild(n);
+		}
+		for (Node n : composePersons(presenceData.persons, otherPresenceData.persons, newDocument)) {
+			newPresence.appendChild(n);
+		}
+		for (Node n : composeAny(presenceData.any, otherPresenceData.any, true,false,false, newDocument)) {
+			newPresence.appendChild(n);
+		}
+		for (Node n : composeNotes(presenceData.notes, otherPresenceData.notes, newDocument)) {
+			newPresence.appendChild(n);
+		}
 		
-		// process persons
-		result.getAny().addAll(composePersons(presencePersons, otherPresencePersons));
-		
-		// process anys
-		result.getAny().addAll(compose(presenceAny, otherPresenceAny,true,false,false));
-		
-		// process notes
-		result.getNote().addAll(composeNotes(presence.getNote(), presence.getNote()));
-		return result;
+		return newDocument;
 	}
 
-	private List<Tuple> composeTuples(List<Tuple> tuples,List<Tuple> otherTuples) {
+	private List<Element> composeTuples(List<Element> tuples, List<Element> otherTuples, Document newDocument) {
 		
-		ArrayList<Tuple> result = new ArrayList<Tuple>();
+		List<Element> result = new ArrayList<Element>();
+		
 		// process all from tuples trying to match each with other tuples
-		for (Iterator<Tuple> tuplesIt = tuples.iterator(); tuplesIt.hasNext(); ) {
-			Tuple tuple = tuplesIt.next();
-			for (Iterator<Tuple> otherTuplesIt = otherTuples.iterator(); otherTuplesIt.hasNext(); ) {
-				Tuple otherTuple = otherTuplesIt.next();
-				Tuple compositionTuple = compose(tuple, otherTuple);
+		for (Iterator<Element> tuplesIt = tuples.iterator(); tuplesIt.hasNext(); ) {
+			Element tuple = tuplesIt.next();
+			for (Iterator<Element> otherTuplesIt = otherTuples.iterator(); otherTuplesIt.hasNext(); ) {
+				Element otherTuple = otherTuplesIt.next();
+				Element compositionTuple = composeTuple(tuple, otherTuple, newDocument);
 				if (compositionTuple != null) {
 					// the composition has a result
 					result.add(compositionTuple);
@@ -134,23 +114,30 @@ public class PresenceCompositionPolicy implements StateComposer {
 				}
 			}
 		}
+		
 		// now add the ones left but replacing the ids
-		for (Tuple tuple : tuples) {
-			tuple.setId(Utils.getInstance().generateTag());
-			result.add(tuple);
+		Element e = null;
+		for (Element tuple : tuples) {
+			e = (Element) newDocument.importNode(tuple, true);
+			e.setAttribute("id", generateNCName());
+			result.add(e);
 		}
-		for (Tuple tuple : otherTuples) {
-			tuple.setId(Utils.getInstance().generateTag());
-			result.add(tuple);
-		}
+		for (Element tuple : otherTuples) {
+			e = (Element) newDocument.importNode(tuple, true);
+			e.setAttribute("id", generateNCName());
+			result.add(e);
+		}		
+		
 		return result;
 	}
-
-	private Tuple compose(Tuple tuple, Tuple otherTuple) {
+	
+	private Element composeTuple(Element tuple, Element otherTuple, Document newDocument) {
 		
-		Tuple result = new Tuple();
-		result.setId(Utils.getInstance().generateTag());
-
+		Element result = newDocument.createElement("tuple");
+		
+		final TupleElementData tupleElementData = new TupleElementData(tuple);
+		final TupleElementData otherTupleElementData = new TupleElementData(otherTuple);
+		
 		/*
 		 * 
 		 * Service elements (defined in section 10.1.2) If the following
@@ -160,22 +147,22 @@ public class PresenceCompositionPolicy implements StateComposer {
 		 * defined in [RFC3863], other <tuple> elements include an
 		 * identical <contact> element; and
 		 */
-		if (tuple.getContact() == null) {
-			if (otherTuple.getContact() != null) {
+		if (tupleElementData.contact == null) {
+			if (otherTupleElementData.contact != null) {
 				// different contacts
 				return null;
 			}
 			// else ignore no contacts
 		}
 		else {
-			if (otherTuple.getContact() == null) {
+			if (otherTupleElementData.contact == null) {
 				// different contacts
 				return null;
 			}
 			else {
-				Contact composedContact = this.compose(tuple.getContact(), otherTuple.getContact());
+				Element composedContact = this.composeContact(tupleElementData.contact, otherTupleElementData.contact,newDocument);
 				if (composedContact != null) {
-					result.setContact(composedContact);
+					result.appendChild(composedContact);
 				}
 				else {
 					return null;
@@ -188,8 +175,31 @@ public class PresenceCompositionPolicy implements StateComposer {
 		 * include an identical <service-description> element. Two
 		 * <service-description> elements are identical if they contain
 		 * identical <service-id> and <version> elements; and
-		 * 
-		 * c. If one <tuple> element includes a <class> element, as
+		 */
+		if (tupleElementData.serviceDescription == null) {
+			if (otherTupleElementData.serviceDescription != null) {
+				// different serviceDescription
+				return null;
+			}
+			// else ignore no serviceDescription
+		}
+		else {
+			if (otherTupleElementData.serviceDescription == null) {
+				// different serviceDescription
+				return null;
+			}
+			else {
+				Node composedServiceDescription = this.composeServiceDescription(tupleElementData.serviceDescription, otherTupleElementData.serviceDescription,newDocument);
+				if (composedServiceDescription != null) {
+					result.appendChild(composedServiceDescription);
+				}
+				else {
+					return null;
+				}
+			}
+		}		
+		
+		/* c. If one <tuple> element includes a <class> element, as
 		 * defined in section 10.5.1, other <tuple> elements include an
 		 * identical <class> element; and
 		 * 
@@ -205,9 +215,9 @@ public class PresenceCompositionPolicy implements StateComposer {
 		 * element. Identical elements with the same value and
 		 * attributes SHALL not be duplicated; and
 		 * 
-		 * b. Set the �priority� attribute of the <contact> element in
+		 * b. Set the <priority> attribute of the <contact> element in
 		 * the aggregated <tuple> element to the highest one among those
-		 * in the input <tuple> elements, if any �priority� attribute is
+		 * in the input <tuple> elements, if any <priority> attribute is
 		 * present; and
 		 * 
 		 * c. Set the <timestamp> of the aggregated <tuple> to the most
@@ -221,22 +231,22 @@ public class PresenceCompositionPolicy implements StateComposer {
 		 */
 
 		// process status
-		if (tuple.getStatus() == null) {
-			if (otherTuple.getStatus() != null) {
+		if (tupleElementData.status == null) {
+			if (otherTupleElementData.status != null) {
 				// different status
 				return null;
 			}
 			// else ignore no status
 		}
 		else {
-			if (otherTuple.getStatus() == null) {
+			if (otherTupleElementData.status == null) {
 				// different status
 				return null;
 			}
 			else {
-				Status status = this.compose(tuple.getStatus(), otherTuple.getStatus());
+				Element status = this.composeStatus(tupleElementData.status, otherTupleElementData.status, newDocument);
 				if (status != null) {
-					result.setStatus(status);
+					result.appendChild(status);
 				}
 				else {
 					return null;
@@ -245,278 +255,309 @@ public class PresenceCompositionPolicy implements StateComposer {
 		}
 
 		// process anys
-		List<Object> anys = compose(tuple.getAny(), otherTuple.getAny(),false,false,false);
+		List<Node> anys = composeAny(tupleElementData.any, otherTupleElementData.any, false,false,false, newDocument);
 		if (anys != null) {
-			result.getAny().addAll(anys);
+			for (Node any : anys) {
+				result.appendChild(any);
+			}			
 		}
 		else {
 			return null;
 		}
 
 		// process notes
-		result.getNote().addAll(composeNotes(tuple.getNote(), otherTuple.getNote()));
+		List<Node> notes = composeNotes(tupleElementData.notes, otherTupleElementData.notes, newDocument);
+		if (notes != null) {
+			for (Node note : notes) {
+				result.appendChild(note);
+			}			
+		}
 				
 		// process timestamp
-		if (tuple.getTimestamp() == null) {
-			result.setTimestamp(otherTuple.getTimestamp());
+		if (tupleElementData.timestamp == null) {
+			if (otherTupleElementData.timestamp != null) {
+				result.appendChild(newDocument.importNode(otherTupleElementData.timestamp, true));
+			}			
 		}
 		else {
-			if (otherTuple.getTimestamp() == null) {
-				result.setTimestamp(tuple.getTimestamp());
+			if (otherTupleElementData.timestamp == null) {
+				result.appendChild(newDocument.importNode(tupleElementData.timestamp, true));
 			}
 			else {
-				if (tuple.getTimestamp().compare(otherTuple.getTimestamp()) > 0) {
-					result.setTimestamp(tuple.getTimestamp());
+				XMLGregorianCalendar timestamp = null;
+				XMLGregorianCalendar otherTimestamp = null;
+				try {
+					timestamp = DatatypeFactory.newInstance().newXMLGregorianCalendar(tupleElementData.timestamp.getTextContent());
+					otherTimestamp = DatatypeFactory.newInstance().newXMLGregorianCalendar(otherTupleElementData.timestamp.getTextContent());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}				
+				// need to compare
+				if (timestamp.compare(otherTimestamp) > 0) {
+					result.appendChild(newDocument.importNode(tupleElementData.timestamp, true));
 				}
 				else {
-					result.setTimestamp(otherTuple.getTimestamp());
+					result.appendChild(newDocument.importNode(otherTupleElementData.timestamp, true));
 				}
 			}
 		}
  
+		result.setAttribute("id", generateNCName());
 		return result;
 	}
 	
+	private Node composeServiceDescription(Element serviceDescription,
+			Element otherServiceDescription, Document newDocument) {
+		
+		String elementServiceId = null;
+		String elementVersion = null; 
+		NodeList nodeList = serviceDescription.getChildNodes();
+		Node node = null;
+		for (int i=0; i<nodeList.getLength();i++) {
+			node = nodeList.item(i);
+			if (DomUtils.isElementNamed(node, "service-id")) {
+				elementServiceId = ((Element)node).getTextContent();
+			}
+			else if (DomUtils.isElementNamed(node, "version")) {
+				elementVersion = ((Element)node).getTextContent();
+			}
+		}
+		String otherElementServiceId = null;
+		String otherElementVersion = null;
+		nodeList = otherServiceDescription.getChildNodes();
+		for (int i=0; i<nodeList.getLength();i++) {
+			node = nodeList.item(i);
+			if (DomUtils.isElementNamed(node, "service-id")) {
+				otherElementServiceId = ((Element)node).getTextContent();
+			}
+			else if (DomUtils.isElementNamed(node, "version")) {
+				otherElementVersion = ((Element)node).getTextContent();
+			}
+		} 
+		
+		if (elementServiceId == null) {
+			if (otherElementServiceId != null)
+				return null;
+		} else if (!elementServiceId.equals(otherElementServiceId))
+			return null;
+		
+		if (elementVersion == null) {
+			if (otherElementVersion != null)
+				return null;
+		} else if (!elementVersion.equals(otherElementVersion))
+			return null;
+		
+		// service id and version matches, use one of the nodes 
+		return newDocument.importNode(serviceDescription, true);
+		
+	}
+
 	/**
-	 * Compose a {@link Contact} object from two non null ones.
+	 * Compose a contact element from two non null ones.
 	 * @param contact
 	 * @param otherContact
 	 * @return
 	 */
-	private Contact compose(Contact contact, Contact otherContact) {
-		Contact result = new Contact();
+	private Element composeContact(Element contact, Element otherContact, Document newDocument) {
+		
+		Element result = newDocument.createElement("contact");
+		
 		// compare values
-		if (contact.getValue().equals(otherContact.getValue())) {
-			result.setValue(contact.getValue());
+		if (contact.getTextContent().equals(otherContact.getTextContent())) {
+			result.setTextContent(contact.getTextContent());			
 		}
 		else {
 			return null;
 		}
+		
 		// process priority
-		if (contact.getPriority() != null) {
-			if (otherContact.getPriority() == null || otherContact.getPriority().compareTo(contact.getPriority()) < 0) {
-				result.setPriority(contact.getPriority());				
+		BigDecimal contactPriority = null;
+		String s = contact.getAttribute("priority");
+		if (s != null) {
+			s = s.trim();
+			if (!s.equals("")) {
+				contactPriority = new BigDecimal(s);
+			}
+		}
+		BigDecimal otherContactPriority = null;
+		s = otherContact.getAttribute("priority");
+		if (s != null) {
+			s = s.trim();
+			if (!s.equals("")) {
+				otherContactPriority = new BigDecimal(s);
+			}
+		}
+		if (contactPriority != null) {
+			if (otherContactPriority == null || otherContactPriority.compareTo(contactPriority) < 0) {
+				result.appendChild(newDocument.importNode(contact, true));				
 			}			
+			else {
+				result.appendChild(newDocument.importNode(otherContact, true));
+			}
 		}
-		if (result.getPriority() == null) {
-			result.setPriority(otherContact.getPriority());
-		}
+		else {
+			if (otherContactPriority != null) {
+				result.appendChild(newDocument.importNode(otherContact, true));
+			}
+		}		
 		return result;
 	}
 	
-	private Status compose(Status status, Status otherStatus) {
-		final Status result = new Status();
+	private Element composeStatus(Element status, Element otherStatus, Document newDocument) {
+		
+		Element result =  newDocument.createElement("status");
+		
+		final StatusElementData statusElementData = new StatusElementData(status);
+		final StatusElementData otherStatusElementData = new StatusElementData(otherStatus);
+		
 		// check basic
-		if (status.getBasic() != null && status.getBasic().equals(otherStatus.getBasic())) {
-			result.setBasic(status.getBasic());
-		}
-		else {
-			if (otherStatus.getBasic() != null) {
+		if (statusElementData.basic != null) {
+			if (otherStatusElementData.basic != null) {
+				if (statusElementData.basic.getTextContent().equals(otherStatusElementData.basic.getTextContent())) {
+					result.appendChild(newDocument.importNode(statusElementData.basic,true));
+				}
+				else {
+					// no match
+					return null;
+				}
+			}
+			else {
+				// no match
 				return null;
 			}
-			// else ignore
 		}
+		else {
+			if (otherStatusElementData.basic != null) {
+				// no match
+				return null;
+			}
+			else {
+				// ignore
+			}
+		}
+			
 		// lets process the anys
-		List<Object> anys = compose(status.getAny(), otherStatus.getAny(),false,false,false);
+		List<Node> anys = composeAny(statusElementData.any, otherStatusElementData.any, false,false,false, newDocument);
 		if (anys != null) {
-			result.getAny().addAll(anys);
-			return result; 
+			if (result == null) {
+				result = newDocument.createElement("status");
+			}
+			for (Node any : anys) {
+				result.appendChild(any);
+			}
 		}
 		else {
 			return null;
 		}
+
+		return result;
 	}
 	
-	private List<Object> compose(List<Object> anys, List<Object> otherAnys, boolean allowConflicts, boolean keepRecentInConflict, boolean anysIsOlder) {
-		
-		ArrayList<Object> result = new ArrayList<Object>();
-		for (Iterator<?> anysIt = anys.iterator(); anysIt.hasNext(); ) {
-			Object anysObject = anysIt.next();
-			for (Iterator<?> otherAnysIt = otherAnys.iterator(); otherAnysIt.hasNext(); ) {
-				Object otherAnysObject = otherAnysIt.next();
-				if (anysObject instanceof JAXBElement<?>) {
-					JAXBElement<?> anysElement = (JAXBElement<?>) anysObject;
-					if (otherAnysObject instanceof JAXBElement<?>) {
-						JAXBElement<?> otherAnysElement = (JAXBElement<?>) otherAnysObject;
-						if (anysElement.getName().equals(otherAnysElement.getName())) {
-							// same element type, check for conflict
-							if (isConflict(anysElement.getValue(), otherAnysElement.getValue())) {
-								if (allowConflicts) {
-									if (keepRecentInConflict) {
-										if (anysIsOlder) {
-											result.add(otherAnysElement);											
-										}
-										else {
-											result.add(anysElement);											
-										}
-										anysIt.remove();
-										otherAnysIt.remove();
-										break;
-									}									
-								}
-								else {
-									return null;
-								}
-							}							
+	private List<Node> composeAny(List<Element> anys, List<Element> otherAnys, boolean allowConflicts, boolean keepRecentInConflict, boolean anysIsOlder, Document newDocument) {
+
+		ArrayList<Node> result = new ArrayList<Node>();
+		for (Iterator<Element> anysIt = anys.iterator(); anysIt.hasNext(); ) {
+			Element anysElement = anysIt.next();
+			for (Iterator<Element> otherAnysIt = otherAnys.iterator(); otherAnysIt.hasNext(); ) {
+				Element otherAnysElement = otherAnysIt.next();
+				if (DomUtils.getElementName(anysElement).equals(DomUtils.getElementName(otherAnysElement))) {
+					// same element name
+					if (anysElement.getNamespaceURI() != null) {
+						if (!anysElement.getNamespaceURI().equals(otherAnysElement.getNamespaceURI())) {
+							continue;
 						}
 					}
-				}
-				else {
-					if (anysObject.getClass() == otherAnysObject.getClass()) {
-						// same element type, check for conflict
-						if (isConflict(anysObject, otherAnysObject)) {
-							if (allowConflicts) {
-								if (keepRecentInConflict) {
-									if (anysIsOlder) {
-										result.add(otherAnysObject);										
-									}
-									else {
-										result.add(anysObject);										
-									}
-									anysIt.remove();
-									otherAnysIt.remove();
-									break;
-								}
-							}
-							else {
-								return null;
-							}
+					else {
+						if (otherAnysElement.getNamespaceURI() != null) {
+							continue;
 						}
-						else {
-							Object composedObject = composeObject(anysObject, otherAnysObject);
-							if (composedObject != null) {
-								result.add(composedObject);
+					}
+					// same namespace
+					// check for conflict
+					if (isConflict(anysElement, otherAnysElement)) {
+						if (allowConflicts) {
+							if (keepRecentInConflict) {
+								if (anysIsOlder) {
+									result.add(newDocument.importNode(otherAnysElement,true));											
+								}
+								else {
+									result.add(newDocument.importNode(anysElement,true));											
+								}
 								anysIt.remove();
 								otherAnysIt.remove();
 								break;
-							}							
+							}									
+						}
+						else {
+							return null;
 						}
 					}
-				}
-			}
-		}
-		// now add the ones left 
-		result.addAll(anys);
-		result.addAll(otherAnys);
-		return result;
-		
-	}
-
-	/**
-	 * Here we compose 2 objects of same class
-	 * @param anysObject
-	 * @param otherAnysObject
-	 * @return
-	 */
-	private Object composeObject(Object anysObject, Object otherAnysObject) {
-		if (anysObject instanceof ServiceDescription) {
-			ServiceDescription anysServiceDescription = (ServiceDescription) anysObject;
-			ServiceDescription otherAnysServiceDescription = (ServiceDescription) otherAnysObject;
-			ServiceDescription result = new ServiceDescription();
-			result.setServiceId(anysServiceDescription.getServiceId());
-			result.setVersion(anysServiceDescription.getVersion());
-			result.setDescription(anysServiceDescription.getDescription());
-			result.getAny().addAll(compose(anysServiceDescription.getAny(), otherAnysServiceDescription.getAny(), true, false, false));
-			// merge other attributes, leaving 
-			for (QName attributeName : anysServiceDescription.getOtherAttributes().keySet()) {
-				result.getOtherAttributes().put(attributeName, anysServiceDescription.getOtherAttributes().get(attributeName));
-			}
-			for (QName attributeName : otherAnysServiceDescription.getOtherAttributes().keySet()) {
-				String attributeValue = result.getOtherAttributes().get(attributeName);
-				if (attributeValue != null) {
-					if (!attributeValue.equals(otherAnysServiceDescription.getOtherAttributes().get(attributeName))) {
-						// attribute conflict
-						result.getOtherAttributes().remove(attributeName);
+					else {
+						if (anysIsOlder) {
+							result.add(newDocument.importNode(otherAnysElement,true));											
+						}
+						else {
+							result.add(newDocument.importNode(anysElement,true));											
+						}
+						anysIt.remove();
+						otherAnysIt.remove();
+						break;
 					}
 				}
-				else {
-					result.getOtherAttributes().put(attributeName, otherAnysServiceDescription.getOtherAttributes().get(attributeName));
-				}
 			}
-			return result;
 		}
-		else {
-			return null;
+
+		// now add the ones left 
+		for (Element e : anys) {
+			result.add(newDocument.importNode(e,true));											
 		}
+		for (Element e : otherAnys) {
+			result.add(newDocument.importNode(e,true));											
+		}
+		
+		return result;
 	}
 
-	private boolean isConflict(Object object, Object otherObject) {
-		// well known objects
-		if (object.getClass() == ServiceDescription.class) {
-			ServiceDescription serviceDescription = (ServiceDescription) object;
-			ServiceDescription otherServiceDescription = (ServiceDescription) object;
-			if (serviceDescription.getServiceId() == null) {
-				if (otherServiceDescription.getServiceId() != null)
-					return true;
-			} else if (!serviceDescription.getServiceId().equals(otherServiceDescription.getServiceId()))
-				return true;
-			if (serviceDescription.getVersion() == null) {
-				if (otherServiceDescription.getVersion() != null)
-					return true;
-			} else if (!serviceDescription.getVersion().equals(otherServiceDescription.getVersion()))
-				return true;
-			return false;
-		}
-		// unknown
-		else if (object.equals(otherObject)) {
-			return false;
-		}
-		else {
-			return true;
-		}
+	private boolean isConflict(Element element, Element otherElement) {
+		return !element.isEqualNode(otherElement);
 	}
 	
-	private List<Note> composeNotes(List<Note> notes,List<Note> otherNotes) {
-		
-		ArrayList<Note> result = new ArrayList<Note>();
+	private List<Node> composeNotes(List<Element> notes,List<Element> otherNotes, Document newDocument) {
+		ArrayList<Node> result = new ArrayList<Node>();
 		// process all from notes trying to match each with otherNote
-		for (Iterator<Note> notesIt = notes.iterator(); notesIt.hasNext(); ) {
-			Note note = notesIt.next();
-			for (Iterator<Note> otherNotesIt = otherNotes.iterator(); otherNotesIt.hasNext(); ) {
-				Note otherNote = otherNotesIt.next();
-				if (note.getLang() == null) {
-					if (otherNote.getLang() != null) {
-						continue;
-					}
+		for (Iterator<Element> notesIt = notes.iterator(); notesIt.hasNext(); ) {
+			Element note = notesIt.next();
+			for (Iterator<Element> otherNotesIt = otherNotes.iterator(); otherNotesIt.hasNext(); ) {
+				Element otherNote = otherNotesIt.next();
+				if (note.isEqualNode(otherNote)) {
+					result.add(newDocument.importNode(note, true));
+					notesIt.remove();
+					otherNotesIt.remove();
+					break;
 				}
-				else {
-					if (!note.getLang().equals(otherNote.getLang())) {
-						continue;
-					}
-				}
-				if (note.getValue() == null) {
-					if (otherNote.getValue() != null) {
-						continue;
-					}
-				}
-				else {
-					if (!note.getValue().equals(otherNote.getValue())) {
-						continue;
-					}
-				}
-				result.add(note);
-				notesIt.remove();
-				otherNotesIt.remove();
-				break;
 			}
 		}
-		// now add the ones left 
-		result.addAll(notes);
-		result.addAll(otherNotes);
+		// now add the ones left
+		for (Element note : notes) {
+			result.add(newDocument.importNode(note, true));
+		}
+		for (Element note : otherNotes) {
+			result.add(newDocument.importNode(note, true));
+		}
 		return result;
 	}
 	
-	private List<Device> composeDevices(
-			List<Device> devices,
-			List<Device> otherDevices) {
+	private List<Element> composeDevices(
+			List<Element> devices,
+			List<Element> otherDevices, Document newDocument) {
 				
-		ArrayList<Device> result = new ArrayList<Device>();
+		ArrayList<Element> result = new ArrayList<Element>();
 
-		for (Iterator<Device> it = devices.iterator(); it.hasNext(); ) {
-			Device device = it.next();
-			for (Iterator<Device> otherIt = otherDevices.iterator(); otherIt.hasNext(); ) {
-				Device otherDevice = otherIt.next();
-				Device compositionDevice = composeDevice(device, otherDevice);
+		for (Iterator<Element> it = devices.iterator(); it.hasNext(); ) {
+			Element device = it.next();
+			for (Iterator<Element> otherIt = otherDevices.iterator(); otherIt.hasNext(); ) {
+				Element otherDevice = otherIt.next();
+				Element compositionDevice = composeDevice(device, otherDevice, newDocument);
 				if (compositionDevice != null) {
 					// the composition has a result
 					result.add(compositionDevice);
@@ -528,20 +569,23 @@ public class PresenceCompositionPolicy implements StateComposer {
 			}
 		}
 		// now add the ones left but replacing the ids
-		for (Device device : devices) {
-			device.setId(Utils.getInstance().generateTag());
-			result.add(device);
+		Element e = null;
+		for (Element device : devices) {
+			e = (Element) newDocument.importNode(device, true);
+			e.setAttribute("id",generateNCName());
+			result.add(e);
 		}
-		for (Device device : otherDevices) {
-			device.setId(Utils.getInstance().generateTag());
-			result.add(device);
+		for (Element device : otherDevices) {
+			e = (Element) newDocument.importNode(device, true);
+			e.setAttribute("id",generateNCName());
+			result.add(e);
 		}
 		return result;
 		
 	}
 
-	private Device composeDevice(Device device,
-			Device otherDevice) {
+	private Element composeDevice(Element device,
+			Element otherDevice, Document newDocument) {
 		
 		/*
 		 * If the <deviceID> of the <device> elements that are published from
@@ -559,56 +603,81 @@ public class PresenceCompositionPolicy implements StateComposer {
 		 * elements.
 		 * 
 		 */
+		final DeviceElementData deviceElementData = new DeviceElementData(device);
+		final DeviceElementData otherDeviceElementData = new DeviceElementData(otherDevice);
 		
-		if (device.getDeviceID().equals(otherDevice.getDeviceID())) {
-			Device result = new Device();
+		if (deviceElementData.deviceID.getTextContent().equals(otherDeviceElementData.deviceID.getTextContent())) {
+			
+			Element result = newDocument.createElement("device");
+			result.appendChild(newDocument.importNode(deviceElementData.deviceID, true));
 			
 			// process timestamp
 			boolean deviceIsOlder = false;
-			if (device.getTimestamp() == null) {
-				result.setTimestamp(otherDevice.getTimestamp());
-				deviceIsOlder = true;
+			if (deviceElementData.timestamp == null) {
+				if (otherDeviceElementData.timestamp != null) {
+					result.appendChild(newDocument.importNode(otherDeviceElementData.timestamp, true));
+					deviceIsOlder = true;
+				}				
 			}
 			else {
-				if (otherDevice.getTimestamp() == null) {
-					result.setTimestamp(device.getTimestamp());
+				if (otherDeviceElementData.timestamp == null) {
+					result.appendChild(newDocument.importNode(deviceElementData.timestamp, true));
 				}
 				else {
-					if (device.getTimestamp().compare(otherDevice.getTimestamp()) > 0) {
-						result.setTimestamp(device.getTimestamp());
+					XMLGregorianCalendar timestamp = null;
+					XMLGregorianCalendar otherTimestamp = null;
+					try {
+						timestamp = DatatypeFactory.newInstance().newXMLGregorianCalendar(deviceElementData.timestamp.getTextContent());
+						otherTimestamp = DatatypeFactory.newInstance().newXMLGregorianCalendar(otherDeviceElementData.timestamp.getTextContent());
+					} catch (Exception e) {
+						e.printStackTrace();
+					}				
+					// need to compare
+					if (timestamp.compare(otherTimestamp) > 0) {
+						result.appendChild(newDocument.importNode(deviceElementData.timestamp, true));
 					}
 					else {
-						result.setTimestamp(otherDevice.getTimestamp());
+						result.appendChild(newDocument.importNode(otherDeviceElementData.timestamp, true));
 						deviceIsOlder = true;
 					}
 				}
 			}
 			
 			// process anys
-			result.getAny().addAll(compose(device.getAny(), otherDevice.getAny(),true,true,deviceIsOlder));
-						
+			List<Node> anys = composeAny(deviceElementData.any, otherDeviceElementData.any, true,true,deviceIsOlder, newDocument);
+			if (anys != null) {
+				for (Node any : anys) {
+					result.appendChild(any);
+				}			
+			}
+
 			// process notes
-			result.getNote().addAll(composeNotesT(device.getNote(), otherDevice.getNote()));
-			result.setDeviceID(device.getDeviceID());
-			result.setId(Utils.getInstance().generateTag());
-			return result;
+			List<Node> notes = composeNotes(deviceElementData.notes, otherDeviceElementData.notes, newDocument);
+			if (notes != null) {
+				for (Node note : notes) {
+					result.appendChild(note);
+				}			
+			}
+					
+			result.setAttribute("id", generateNCName());
+			return result;			
 		}
 		else {
 			return null;
 		}
 	}
 	
-	private List<Person> composePersons(
-			List<Person> persons,
-			List<Person> otherPersons) {
+	private List<Element> composePersons(
+			List<Element> persons,
+			List<Element> otherPersons, Document newDocument) {
 		
-		ArrayList<Person> result = new ArrayList<Person>();
+		ArrayList<Element> result = new ArrayList<Element>();
 
-		for (Iterator<Person> it = persons.iterator(); it.hasNext(); ) {
-			Person person = it.next();
-			for (Iterator<Person> otherIt = otherPersons.iterator(); otherIt.hasNext(); ) {
-				Person otherPerson = otherIt.next();
-				Person compositionPerson = composePerson(person, otherPerson);
+		for (Iterator<Element> it = persons.iterator(); it.hasNext(); ) {
+			Element person = it.next();
+			for (Iterator<Element> otherIt = otherPersons.iterator(); otherIt.hasNext(); ) {
+				Element otherPerson = otherIt.next();
+				Element compositionPerson = composePerson(person, otherPerson, newDocument);
 				if (compositionPerson != null) {
 					// the composition has a result
 					result.add(compositionPerson);
@@ -620,19 +689,22 @@ public class PresenceCompositionPolicy implements StateComposer {
 			}
 		}
 		// now add the ones left but replacing the ids
-		for (Person person : persons) {
-			person.setId(Utils.getInstance().generateTag());
-			result.add(person);
+		Element e = null;
+		for (Element person : persons) {
+			e = (Element) newDocument.importNode(person, true);
+			e.setAttribute("id",generateNCName());
+			result.add(e);
 		}
-		for (Person person : otherPersons) {
-			person.setId(Utils.getInstance().generateTag());
-			result.add(person);
+		for (Element person : otherPersons) {
+			e = (Element) newDocument.importNode(person, true);
+			e.setAttribute("id",generateNCName());
+			result.add(e);
 		}
 		return result;
 	}
 	
-	private Person composePerson(Person person,
-			Person otherPerson) {
+	private Element composePerson(Element person,
+			Element otherPerson, Document newDocument) {
 		
 		/*
 		 * If the following conditions all apply:
@@ -656,86 +728,283 @@ public class PresenceCompositionPolicy implements StateComposer {
 		 * other case, the PS SHALL keep <person> elements from different
 		 * Presence Sources separate.
 		 */
+		Element result = newDocument.createElement("person");
 		
-		Person result = new Person();
+		final PersonElementData personElementData = new PersonElementData(person);
+		final PersonElementData otherPersonElementData = new PersonElementData(otherPerson);
 		
 		// process anys
-		List<Object> anys = compose(person.getAny(), otherPerson.getAny(),false,false,false);
+		List<Node> anys = composeAny(personElementData.any, otherPersonElementData.any, false,false,false, newDocument);
 		if (anys != null) {
-			result.getAny().addAll(anys);
+			for (Node any : anys) {
+				result.appendChild(any);
+			}			
 		}
 		else {
 			return null;
 		}
-		
+
+		// process notes
+		List<Node> notes = composeNotes(personElementData.notes, otherPersonElementData.notes, newDocument);
+		if (notes != null) {
+			for (Node note : notes) {
+				result.appendChild(note);
+			}			
+		}
+				
 		// process timestamp
-		if (person.getTimestamp() == null) {
-			result.setTimestamp(otherPerson.getTimestamp());
+		if (personElementData.timestamp == null) {
+			if (otherPersonElementData.timestamp != null) {
+				result.appendChild(newDocument.importNode(otherPersonElementData.timestamp, true));
+			}			
 		}
 		else {
-			if (otherPerson.getTimestamp() == null) {
-				result.setTimestamp(person.getTimestamp());
+			if (otherPersonElementData.timestamp == null) {
+				result.appendChild(newDocument.importNode(personElementData.timestamp, true));
 			}
 			else {
-				if (person.getTimestamp().compare(otherPerson.getTimestamp()) > 0) {
-					result.setTimestamp(person.getTimestamp());
+				XMLGregorianCalendar timestamp = null;
+				XMLGregorianCalendar otherTimestamp = null;
+				try {
+					timestamp = DatatypeFactory.newInstance().newXMLGregorianCalendar(personElementData.timestamp.getTextContent());
+					otherTimestamp = DatatypeFactory.newInstance().newXMLGregorianCalendar(otherPersonElementData.timestamp.getTextContent());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}				
+				// need to compare
+				if (timestamp.compare(otherTimestamp) > 0) {
+					result.appendChild(newDocument.importNode(personElementData.timestamp, true));
 				}
 				else {
-					result.setTimestamp(otherPerson.getTimestamp());
+					result.appendChild(newDocument.importNode(otherPersonElementData.timestamp, true));
 				}
 			}
 		}
-		
-		// process notes
-		result.getNote().addAll(composeNotesT(person.getNote(), otherPerson.getNote()));
-		
-		result.setId(Utils.getInstance().generateTag());
+ 
+		result.setAttribute("id", generateNCName());
 		return result;
+	}
+
+	// --- temp element data structures
+	
+	private static final List<Element> EMPTY_LIST = Collections.emptyList();
+	
+	private static class PresenceElementData {	
+		
+		List<Element> tuples;
+		List<Element> devices;
+		List<Element> persons;
+		List<Element> any;
+		List<Element> notes;
+		String entity;
+		
+		PresenceElementData(Element element) {
+			entity = element.getAttribute("entity");
+			NodeList childs = element.getChildNodes();
+			Node child = null;
+			for(int i=0;i<childs.getLength();i++) {
+				child = childs.item(i);
+				if(DomUtils.isElementNamed(child, "tuple")) {
+					if(tuples == null) {
+						tuples = new ArrayList<Element>();
+					}
+					tuples.add((Element) child);
+				}
+				else if(DomUtils.isElementNamed(child, "device")) {
+					if(devices == null) {
+						devices = new ArrayList<Element>();
+					}
+					devices.add((Element) child);
+				}
+				else if(DomUtils.isElementNamed(child, "person")) {
+					if(persons == null) {
+						persons = new ArrayList<Element>();
+					}
+					persons.add((Element) child);
+				}
+				else if(DomUtils.isElementNamed(child, "note")) {
+					if(notes == null) {
+						notes = new ArrayList<Element>();
+					}
+					notes.add((Element) child);
+				}
+				else if (child.getNodeType() == Node.ELEMENT_NODE) {
+					if(any == null) {
+						any = new ArrayList<Element>();
+					}
+					any.add((Element) child);
+				}
+			}
+			if (any == null) {
+				any = EMPTY_LIST;
+			}
+			if (devices == null) {
+				devices = EMPTY_LIST;
+			}
+			if (notes == null) {
+				notes = EMPTY_LIST;
+			}
+			if (persons == null) {
+				persons = EMPTY_LIST;
+			}
+			if (tuples == null) {
+				tuples = EMPTY_LIST;
+			}			
+		}		
 	}
 	
-	/**
-	 * same thing as composeNotes, just the object type differs
-	 * @param notes
-	 * @param otherNotes
-	 * @return
-	 */
-	private List<NoteT> composeNotesT(List<NoteT> notes,List<NoteT> otherNotes) {
+	private static class TupleElementData {	
 		
-		ArrayList<NoteT> result = new ArrayList<NoteT>();
-		// process all from notes trying to match each with otherNote
-		for (Iterator<NoteT> notesIt = notes.iterator(); notesIt.hasNext(); ) {
-			NoteT note = notesIt.next();
-			for (Iterator<NoteT> otherNotesIt = otherNotes.iterator(); otherNotesIt.hasNext(); ) {
-				NoteT otherNote = otherNotesIt.next();
-				if (note.getLang() == null) {
-					if (otherNote.getLang() != null) {
-						continue;
-					}
+		Element serviceDescription;
+		Element contact;
+		Element status;
+		Element timestamp;
+		List<Element> any;
+		List<Element> notes;
+		
+		TupleElementData(Element element) {
+
+			NodeList childs = element.getChildNodes();
+			Node child = null;
+			for(int i=0;i<childs.getLength();i++) {
+				child = childs.item(i);
+				if(DomUtils.isElementNamed(child, "contact")) {
+					contact = (Element) child;
 				}
-				else {
-					if (!note.getLang().equals(otherNote.getLang())) {
-						continue;
-					}
+				else if(DomUtils.isElementNamed(child, "service-description")) {
+					serviceDescription = (Element) child;
 				}
-				if (note.getValue() == null) {
-					if (otherNote.getValue() != null) {
-						continue;
-					}
+				else if(DomUtils.isElementNamed(child, "status")) {
+					status = (Element) child;
 				}
-				else {
-					if (!note.getValue().equals(otherNote.getValue())) {
-						continue;
-					}
+				else if(DomUtils.isElementNamed(child, "timestamp")) {
+					timestamp = (Element) child;
 				}
-				result.add(note);
-				notesIt.remove();
-				otherNotesIt.remove();
-				break;
+				else if(DomUtils.isElementNamed(child, "note")) {
+					if(notes == null) {
+						notes = new ArrayList<Element>();
+					}
+					notes.add((Element) child);
+				}
+				else if (child.getNodeType() == Node.ELEMENT_NODE) {
+					if(any == null) {
+						any = new ArrayList<Element>();
+					}
+					any.add((Element) child);
+				}
 			}
-		}
-		// now add the ones left 
-		result.addAll(notes);
-		result.addAll(otherNotes);
-		return result;
+			if (any == null) {
+				any = EMPTY_LIST;
+			}			
+			if (notes == null) {
+				notes = EMPTY_LIST;
+			}						
+		}		
 	}
+	
+	private static class StatusElementData {	
+		
+		Element basic;
+		List<Element> any;
+		
+		StatusElementData(Element element) {
+			NodeList childs = element.getChildNodes();
+			Node child = null;
+			for(int i=0;i<childs.getLength();i++) {
+				child = childs.item(i);
+				if(DomUtils.isElementNamed(child, "basic")) {
+					basic = (Element) child;
+				}				
+				else if (child.getNodeType() == Node.ELEMENT_NODE) {
+					if(any == null) {
+						any = new ArrayList<Element>();
+					}
+					any.add((Element) child);
+				}
+			}
+			if (any == null) {
+				any = EMPTY_LIST;
+			}											
+		}		
+	}
+	
+	private static class DeviceElementData {	
+		
+		
+		Element deviceID;
+		Element timestamp;
+		List<Element> any;
+		List<Element> notes;
+		
+		DeviceElementData(Element element) {
+
+			NodeList childs = element.getChildNodes();
+			Node child = null;
+			for(int i=0;i<childs.getLength();i++) {
+				child = childs.item(i);
+				if(DomUtils.isElementNamed(child, "deviceID")) {
+					deviceID = (Element) child;
+				}
+				else if(DomUtils.isElementNamed(child, "timestamp")) {
+					timestamp = (Element) child;
+				}
+				else if(DomUtils.isElementNamed(child, "note")) {
+					if(notes == null) {
+						notes = new ArrayList<Element>();
+					}
+					notes.add((Element) child);
+				}
+				else if (child.getNodeType() == Node.ELEMENT_NODE) {
+					if(any == null) {
+						any = new ArrayList<Element>();
+					}
+					any.add((Element) child);
+				}
+			}
+			if (any == null) {
+				any = EMPTY_LIST;
+			}			
+			if (notes == null) {
+				notes = EMPTY_LIST;
+			}						
+		}		
+	}
+
+	private static class PersonElementData {	
+			
+		Element timestamp;
+		List<Element> any;
+		List<Element> notes;
+		
+		PersonElementData(Element element) {
+			
+			NodeList childs = element.getChildNodes();
+			Node child = null;
+			for(int i=0;i<childs.getLength();i++) {
+				child = childs.item(i);
+				if(DomUtils.isElementNamed(child, "timestamp")) {
+					timestamp = (Element) child;
+				}
+				else if(DomUtils.isElementNamed(child, "note")) {
+					if(notes == null) {
+						notes = new ArrayList<Element>();
+					}
+					notes.add((Element) child);
+				}
+				else if (child.getNodeType() == Node.ELEMENT_NODE) {
+					if(any == null) {
+						any = new ArrayList<Element>();
+					}
+					any.add((Element) child);
+				}
+			}
+			if (any == null) {
+				any = EMPTY_LIST;
+			}			
+			if (notes == null) {
+				notes = EMPTY_LIST;
+			}						
+		}		
+	}
+
 }

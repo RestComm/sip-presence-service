@@ -24,6 +24,7 @@ package org.mobicents.xdm.server.appusage.oma.userprofile;
 
 import javax.xml.validation.Validator;
 
+import org.mobicents.xdm.common.util.dom.DomUtils;
 import org.mobicents.xdm.server.appusage.AppUsage;
 import org.mobicents.xdm.server.appusage.AppUsageDataSource;
 import org.mobicents.xdm.server.appusage.AuthorizationPolicy;
@@ -87,7 +88,7 @@ public class OMAUserProfileAppUsage extends AppUsage {
 		NodeList userProfilesChildNodeList = userProfiles.getChildNodes();
 		for (int i=0;i<userProfilesChildNodeList.getLength();i++) {
 			Node userProfilesChildNode = userProfilesChildNodeList.item(i);
-			if (userProfilesChildNode.getNodeType() == Node.ELEMENT_NODE && userProfilesChildNode.getLocalName().equals(USER_PROFILE_ELEMENT_NAME)) {
+			if (DomUtils.isElementNamed(userProfilesChildNode,USER_PROFILE_ELEMENT_NAME)) {
 				Element userProfileElement = (Element) userProfilesChildNode;
 				String userProfileUri = userProfileElement.getAttributeNode(URI_ATTRIBUTE_NAME).getNodeValue();
 				if (!xui.equals(userProfileUri)) {

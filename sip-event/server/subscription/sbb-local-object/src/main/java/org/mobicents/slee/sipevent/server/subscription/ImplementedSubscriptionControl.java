@@ -26,7 +26,6 @@
 package org.mobicents.slee.sipevent.server.subscription;
 
 import javax.sip.ServerTransaction;
-import javax.xml.bind.Marshaller;
 
 import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
@@ -72,13 +71,6 @@ public interface ImplementedSubscriptionControl {
 	 * @return content filtered
 	 */
 	public Object filterContentPerSubscriber(Subscription subscription, Object unmarshalledContent);
-
-	/**
-	 * Retrieves a JAXB Marshaller to convert a JAXBElement to a String.
-	 * 
-	 * @return
-	 */
-	public Marshaller getMarshaller();
 
 	/**
 	 * notifies the event package impl that a subscription is about to be

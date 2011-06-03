@@ -22,7 +22,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <presence xmlns="urn:ietf:params:xml:ns:pidf"
 	entity="sip:publisher[call_number]@[remote_ip]">
-	<tuple id="[call_number]a">
+	<tuple id="a[call_number]">
 		<status>
         	<basic>open</basic>
 		</status>
@@ -63,7 +63,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <presence xmlns="urn:ietf:params:xml:ns:pidf"
 	entity="sip:publisher[call_number]@[remote_ip]">
-	<tuple id="[call_number]a">
+	<tuple id="a[call_number]">
 		<status>
         	<basic>closed</basic>
 		</status>

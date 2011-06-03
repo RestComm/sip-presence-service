@@ -5,7 +5,7 @@
 	<nop>
    		<action>
       		<assign assign_to="counter" value="0"/>
-     		<assignstr assign_to="expires" value="3600" />      		
+     		<assignstr assign_to="expires" value="120" />      		
   		</action>
  	</nop>
     
@@ -84,9 +84,9 @@
 	
 	<label id="wait_for_notify" />
  	
-  	<recv request="NOTIFY" timeout="3500000" ontimeout="loop-end-check"/>
+  	<recv request="NOTIFY" timeout="115000" ontimeout="loop-end-check"/>
 		
-	<send next="wait_for_notify">
+	<send">
 	<![CDATA[
       
       SIP/2.0 200 OK

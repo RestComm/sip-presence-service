@@ -24,35 +24,22 @@ package org.mobicents.slee.sippresence.server.publication;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.StringWriter;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 
 import org.junit.Test;
-import org.mobicents.slee.sippresence.pojo.pidf.Presence;
+import org.mobicents.xdm.common.util.dom.DomUtils;
+import org.openxdm.xcap.common.xml.TextWriter;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 public class PresenceCompositionPolicyTest {
-
-	private static final JAXBContext jaxbContext = initJAXBContext();
-
-	private static JAXBContext initJAXBContext() {
-		try {
-			return JAXBContext
-					.newInstance("org.mobicents.slee.sippresence.pojo.pidf"
-							+ ":org.mobicents.slee.sippresence.pojo.pidf.oma"
-							+ ":org.mobicents.slee.sippresence.pojo.rpid"
-							+ ":org.mobicents.slee.sippresence.pojo.datamodel"
-							+ ":org.mobicents.slee.sippresence.pojo.commonschema");
-		} catch (JAXBException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
 	
 	@Test
-	public void test() throws JAXBException, IOException {
+	public void test() throws IOException, ParserConfigurationException, TransformerException, SAXException {
 		String pidf1 =   
 			"<?xml version='1.0' encoding='UTF-8'?>" +
 			"<presence xmlns='urn:ietf:params:xml:ns:pidf' xmlns:dm='urn:ietf:params:xml:ns:pidf:data-model' xmlns:rpid='urn:ietf:params:xml:ns:pidf:rpid' xmlns:c='urn:ietf:params:xml:ns:pidf:cipid' xmlns:op='urn:oma:xml:prs:pidf:oma-pres' entity='sip:user@example.com'>" +
@@ -120,15 +107,14 @@ public class PresenceCompositionPolicyTest {
 		"</presence>";
 		
 		StringReader sr = new StringReader(pidf1);
-		Presence presence = ((JAXBElement<Presence>) jaxbContext.createUnmarshaller().unmarshal(sr)).getValue();
+		DocumentBuilder documentBuilder = DomUtils.DOCUMENT_BUILDER_NS_AWARE_FACTORY.newDocumentBuilder();
+		Document presence = documentBuilder.parse(new InputSource(sr));
 		sr.close();
 		sr = new StringReader(pidf2);
-		Presence otherPresence = ((JAXBElement<Presence>) jaxbContext.createUnmarshaller().unmarshal(sr)).getValue();
+		Document otherPresence =  documentBuilder.parse(new InputSource(sr));
 		sr.close();
-		Presence compositionPresence = new PresenceCompositionPolicy().compose(presence, otherPresence);
-		StringWriter sw = new StringWriter();
-		jaxbContext.createMarshaller().marshal(compositionPresence, sw);
-		System.out.println("Composed pidf:\n"+sw.toString());
-		sw.close();
+		Document compositionPresence = new PresenceCompositionPolicy().compose(presence, otherPresence);
+		System.out.println("Composed pidf:\n"+TextWriter.toString(compositionPresence,true));
+		
 	}
 }

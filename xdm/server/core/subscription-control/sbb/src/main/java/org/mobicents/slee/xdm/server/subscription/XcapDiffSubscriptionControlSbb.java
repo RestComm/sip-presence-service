@@ -32,10 +32,6 @@ import javax.slee.CreateException;
 import javax.slee.RolledBackContext;
 import javax.slee.Sbb;
 import javax.slee.SbbContext;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 
 import net.java.slee.resource.sip.SleeSipProvider;
 
@@ -149,15 +145,6 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 						unmarshalledContent,this);
 	}
 
-	public Marshaller getMarshaller() {
-		try {
-			return jaxbContext.createMarshaller();
-		} catch (JAXBException e) {
-			logger.error("failed to create marshaller", e);
-			return null;
-		}
-	}
-
 	// ------------ XcapDiffSubscriptionControlSbbLocalObject
 
 	// --- CMP
@@ -210,19 +197,6 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 		return headerFactory;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.mobicents.slee.xdm.server.subscription.XcapDiffSubscriptionControlSbbInterface#getUnmarshaller()
-	 */
-	public Unmarshaller getUnmarshaller() {
-		try {
-			return jaxbContext.createUnmarshaller();
-		} catch (JAXBException e) {
-			logger.error("failed to create unmarshaller", e);
-			return null;
-		}
-	}
-
 	// ------------ updates on xdm docs
 
 	public void onAttributeUpdatedEvent(AttributeUpdatedEvent event,
@@ -238,24 +212,6 @@ public abstract class XcapDiffSubscriptionControlSbb implements Sbb,
 	public void onElementUpdatedEvent(ElementUpdatedEvent event,
 			ActivityContextInterface aci) {
 		XCAP_DIFF_SUBSCRIPTION_CONTROL.documentUpdated(event, aci, this);
-	}
-
-	
-	// --------- JAXB
-
-	/*
-	 * JAXB context is thread safe
-	 */
-	private static final JAXBContext jaxbContext = initJAXBContext();
-
-	private static JAXBContext initJAXBContext() {
-		try {
-			return JAXBContext.newInstance("org.openxdm.xcap.common.xcapdiff"
-					+ ":org.openxdm.xcap.client.appusage.resourcelists.jaxb");
-		} catch (JAXBException e) {
-			logger.error("failed to create jaxb context");
-			return null;
-		}
 	}
 
 	// ----------- SBB OBJECT's LIFE CYCLE

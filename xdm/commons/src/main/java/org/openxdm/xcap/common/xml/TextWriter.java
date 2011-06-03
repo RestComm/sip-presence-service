@@ -29,31 +29,54 @@ import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.mobicents.xdm.common.util.dom.DomUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import com.sun.org.apache.xml.internal.serializer.OutputPropertiesFactory;
+
 public class TextWriter {
 
-	private static final TransformerFactory TRANSFORMER_FACTORY = TransformerFactory.newInstance();
-
+	/**
+	 * 
+	 * @param node
+	 * @return
+	 * @throws TransformerException
+	 */
 	public static String toString(Node node) throws TransformerException {
-		
+		return toString(node, false);
+	}
+
+	/**
+	 * 
+	 * @param node
+	 * @param indent
+	 * @return
+	 * @throws TransformerException
+	 */
+	public static String toString(Node node, boolean indent)
+			throws TransformerException {
+
 		if (node == null) {
 			throw new IllegalArgumentException("node can't be null.");
 		}
-		
-		Source source = new DOMSource(node);			
+
+		Source source = new DOMSource(node);
 		StringWriter stringWriter = new StringWriter();
 		Result result = new StreamResult(stringWriter);
-		Transformer transformer = TRANSFORMER_FACTORY.newTransformer();
+		Transformer transformer = DomUtils.TRANSFORMER_FACTORY.newTransformer();
 		if (node instanceof Element) {
-			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION,"yes");						
+			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION,
+					"yes");
+		}
+		if (indent) {
+			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			transformer.setOutputProperty(OutputPropertiesFactory.S_KEY_INDENT_AMOUNT, "2");
 		}
 		transformer.transform(source, result);
-		return stringWriter.getBuffer().toString();        
-    }
+		return stringWriter.getBuffer().toString();
+	}
 }

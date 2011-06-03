@@ -97,15 +97,17 @@ public class ResourceInterdependenciesTest extends AbstractT {
 		// create uri		
 		String documentSelector1 = DocumentSelectorBuilder.getUserDocumentSelectorBuilder(RLSServicesAppUsage.ID,user1,documentName).toPercentEncodedString();
 		String documentSelector2 = DocumentSelectorBuilder.getUserDocumentSelectorBuilder(RLSServicesAppUsage.ID,user2,documentName).toPercentEncodedString();
+		String documentSelector3 = DocumentSelectorBuilder.getGlobalDocumentSelectorBuilder(RLSServicesAppUsage.ID,"index").toPercentEncodedString();
 		
 		UriBuilder uriBuilder = new UriBuilder()
 			.setSchemeAndAuthority("http://localhost:8080")
-			.setXcapRoot("/mobicents")
+			.setXcapRoot("/mobicents/")
 			.setDocumentSelector(documentSelector1);
 		URI documentURI1 = uriBuilder.toURI();
 		uriBuilder.setDocumentSelector(documentSelector2);
 		URI documentURI2 = uriBuilder.toURI();
-		
+		uriBuilder.setDocumentSelector(documentSelector3);
+		URI documentURI3 = uriBuilder.toURI();
 				
 		// INSERT USER1 DOC
 		// read document xml
@@ -132,6 +134,13 @@ public class ResourceInterdependenciesTest extends AbstractT {
 		System.out.println("Response got:\n"+putResponse2);
 		assertTrue("Put response must exists",putResponse2 != null);
 		assertTrue("Put response code should be 201",putResponse2.getCode() == 201);
+		
+		// GET GLOBAL INDEX DOC
+		XcapResponse getResponse = client.get(documentURI3,null,credentials2);
+		// check response
+		System.out.println("Response got:\n"+getResponse);
+		assertTrue("Get response must exists",getResponse != null);
+		assertTrue("Get response code should be 200",getResponse.getCode() == 200);
 		
 		client.delete(documentURI1,null,credentials1);
 		client.delete(documentURI2,null,credentials2);

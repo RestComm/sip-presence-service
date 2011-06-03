@@ -27,7 +27,6 @@ import gov.nist.javax.sip.header.HeaderFactoryExt;
 import gov.nist.javax.sip.header.HeaderFactoryImpl;
 import gov.nist.javax.sip.header.ims.PChargingVectorHeader;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Map;
@@ -42,8 +41,6 @@ import javax.sip.header.SubscriptionStateHeader;
 import javax.sip.message.Request;
 import javax.slee.ActivityContextInterface;
 import javax.slee.facilities.Tracer;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
 
 import net.java.slee.resource.sip.DialogActivity;
@@ -71,28 +68,31 @@ public class SipSubscriberNotificationHandler {
 			SipSubscriptionHandler sipSubscriptionHandler) {
 		this.sipSubscriptionHandler = sipSubscriptionHandler;
 		if (tracer == null) {
-			tracer = sipSubscriptionHandler.sbb.getSbbContext().getTracer(getClass().getSimpleName());
+			tracer = sipSubscriptionHandler.sbb.getSbbContext().getTracer(
+					getClass().getSimpleName());
 		}
 	}
 
-	public void notifySipSubscriber(NotifyContent notifyContent, Subscription subscription,
-			ActivityContextInterface dialogACI,
+	public void notifySipSubscriber(NotifyContent notifyContent,
+			Subscription subscription, ActivityContextInterface dialogACI,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
 
 		try {
 			DialogActivity dialog = (DialogActivity) dialogACI.getActivity();
 			// create notify
-			Request notify = createNotify(dialog, subscription, notifyContent.getEventHeaderParams());
+			Request notify = createNotify(dialog, subscription,
+					notifyContent.getEventHeaderParams());
 			// add content
-			if (notifyContent.getContent() != null) {
-				notify = setNotifyContent(subscription, notify, notifyContent.getContent(),
+			if (notifyContent != null && notifyContent.getContent() != null) {
+				notify = setNotifyContent(subscription, notify,
+						notifyContent.getContent(),
 						notifyContent.getContentTypeHeader(), childSbb);
-				
+
 			}
 			// ....aayush added code here (with ref issue #567)
 			notify.addHeader(addPChargingVectorHeader());
 			// send notify in dialog related with subscription
-			dialog.sendRequest(notify);							
+			dialog.sendRequest(notify);
 		} catch (Exception e) {
 			tracer.severe("failed to notify subscriber", e);
 		}
@@ -101,41 +101,25 @@ public class SipSubscriberNotificationHandler {
 	public Request setNotifyContent(Subscription subscription, Request notify,
 			Object content, ContentTypeHeader contentTypeHeader,
 			ImplementedSubscriptionControlSbbLocalObject childSbb)
-			throws JAXBException, ParseException, IOException {
+			throws ParseException, IOException {
 
-		if (!subscription.getResourceList() && !subscription.getKey().isWInfoSubscription()) {
-			// filter content per subscriber (notifier rules)
-			Object filteredContent = childSbb.filterContentPerSubscriber(subscription,content);
+		if (!subscription.getResourceList()
+				&& !subscription.getKey().isWInfoSubscription()) {
+			content = childSbb
+					.filterContentPerSubscriber(subscription, content);
 			// filter content per notifier (subscriber rules)
 			// TODO
-			// marshall content and add to sip message
-			if (content instanceof Node) {
-				// dom
-				try {
-					notify.setContent(TextWriter.toString((Node)content), contentTypeHeader);
-				} catch (TransformerException e) {
-					throw new IOException("failed to marshall DOM content",e);
-				}
-			}
-			else {
-				// jaxb
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				childSbb.getMarshaller().marshal(filteredContent, baos);
-				notify.setContent(baos.toByteArray(), contentTypeHeader);
+		}
+		if (content instanceof Node) {
+			// marshall content
+			try {
+				content = TextWriter.toString((Node) content);
+			} catch (TransformerException e) {
+				throw new IOException("failed to marshall DOM content", e);
 			}
 		}
-		else {
-			// resource list or winfo subscription, no filtering, it's done at each backend subscription
-			if (content instanceof JAXBElement<?>) {
-				// marshall content and add to sip message
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				childSbb.getMarshaller().marshal(content, baos);
-				notify.setContent(baos.toByteArray(), contentTypeHeader);
-			}
-			else {
-				notify.setContent(content, contentTypeHeader);
-			}
-		}
+		notify.setContent(content, contentTypeHeader);
+
 		return notify;
 	}
 
@@ -155,53 +139,60 @@ public class SipSubscriberNotificationHandler {
 		// add content if subscription is active
 		if (subscription.getStatus().equals(Subscription.Status.active)) {
 			if (subscription.getKey().getEventPackage().endsWith(".winfo")) {
-				notify = createNotify(dialog, subscription,null);
+				notify = createNotify(dialog, subscription, null);
 				// winfo content, increment version before adding the content
 				subscription.incrementVersion();
 				subscription.store();
-				notify.setContent(
-						sipSubscriptionHandler.sbb
-								.getWInfoSubscriptionHandler()
-								.getFullWatcherInfoContent(dataSource,
-										subscription),
-						sipSubscriptionHandler.sbb
-								.getWInfoSubscriptionHandler()
-								.getWatcherInfoContentHeader());
+				try {
+					notify = setNotifyContent(
+							subscription,
+							notify,
+							sipSubscriptionHandler.sbb
+									.getWInfoSubscriptionHandler()
+									.getFullWatcherInfoContent(dataSource,
+											subscription),
+							sipSubscriptionHandler.sbb
+									.getWInfoSubscriptionHandler()
+									.getWatcherInfoContentHeader(), childSbb);
+				} catch (Exception e) {
+					tracer.severe("failed to set notify content", e);
+				}
 			} else {
 				// specific event package content
 				NotifyContent notifyContent = childSbb
 						.getNotifyContent(subscription);
 				if (notifyContent == null) {
 					notify = createNotify(dialog, subscription, null);
-				}
-				else {
-					notify = createNotify(dialog, subscription, notifyContent.getEventHeaderParams());
+				} else {
+					notify = createNotify(dialog, subscription,
+							notifyContent.getEventHeaderParams());
 					// add content
 					if (notifyContent.getContent() != null) {
 						try {
 							notify = setNotifyContent(subscription, notify,
-									notifyContent.getContent(), notifyContent
-											.getContentTypeHeader(), childSbb);
+									notifyContent.getContent(),
+									notifyContent.getContentTypeHeader(),
+									childSbb);
 						} catch (Exception e) {
 							tracer.severe("failed to set notify content", e);
 						}
 					}
-				}				
+				}
 			}
+		} else {
+			notify = createNotify(dialog, subscription, null);
 		}
-		else {
-			notify = createNotify(dialog, subscription,null);
-		}
-		
+
 		// ....aayush added code here (with ref issue #567)
 		notify.addHeader(addPChargingVectorHeader());
-		
+
 		// send notify
 		dialog.sendRequest(notify);
 	}
 
 	// creates a notify request and fills headers
-	public Request createNotify(Dialog dialog, Subscription subscription, Map<String, String> eventHeaderParams) {
+	public Request createNotify(Dialog dialog, Subscription subscription,
+			Map<String, String> eventHeaderParams) {
 
 		Request notify = null;
 		try {
@@ -213,7 +204,7 @@ public class SipSubscriberNotificationHandler {
 			if (subscription.getKey().getEventId() != null)
 				eventHeader.setEventId(subscription.getKey().getEventId());
 			if (eventHeaderParams != null) {
-				for(Entry<String, String> entry : eventHeaderParams.entrySet()) {
+				for (Entry<String, String> entry : eventHeaderParams.entrySet()) {
 					eventHeader.setParameter(entry.getKey(), entry.getValue());
 				}
 			}
@@ -258,46 +249,52 @@ public class SipSubscriberNotificationHandler {
 				 * "terminated", the notifier SHOULD also include a "reason"
 				 * parameter.
 				 */
-				if(subscription.getLastEvent() != null) { 
+				if (subscription.getLastEvent() != null) {
 					ssh.setReasonCode(subscription.getLastEvent().toString());
 				}
 			}
 			notify.addHeader(ssh);
-			
+
 			// if it's a RLS notify a required header must be present
 			if (subscription.getResourceList()) {
-				notify.addHeader(sipSubscriptionHandler.sbb.getHeaderFactory().createRequireHeader("eventlist"));
+				notify.addHeader(sipSubscriptionHandler.sbb.getHeaderFactory()
+						.createRequireHeader("eventlist"));
 			}
-			
+
 		} catch (Exception e) {
 			tracer.severe("unable to fill notify headers", e);
 		}
 		return notify;
 	}
+
 	/**
 	 * 
 	 * @return the newly created P-charging-vector header
-	 * @throws ParseException 
+	 * @throws ParseException
 	 */
-	private PChargingVectorHeader addPChargingVectorHeader() throws ParseException
-	{
+	private PChargingVectorHeader addPChargingVectorHeader()
+			throws ParseException {
 		// aayush..started adding here.
-		
+
 		/*
-		 * (with ref to issue #567)
-		 * Need to add a P-charging-vector header here with a unique ICID parameter
-		 * and an orig-ioi parameter pointing to the home domain of the PS.
+		 * (with ref to issue #567) Need to add a P-charging-vector header here
+		 * with a unique ICID parameter and an orig-ioi parameter pointing to
+		 * the home domain of the PS.
 		 */
-		
-		// sbb.getHeaderFactory() does not provide the API for creating P-headers.
+
+		// sbb.getHeaderFactory() does not provide the API for creating
+		// P-headers.
 		HeaderFactoryExt extensions = new HeaderFactoryImpl();
-		
-		// Ideally,there should also be an ICID generator in Utils, that generates a unique ICID.
-		PChargingVectorHeader pcv = extensions.createChargingVectorHeader(Utils.getInstance().generateBranchId()+System.currentTimeMillis());
-		pcv.setOriginatingIOI(sipSubscriptionHandler.sbb.getConfiguration().getPChargingVectorHeaderTerminatingIOI());
-		
+
+		// Ideally,there should also be an ICID generator in Utils, that
+		// generates a unique ICID.
+		PChargingVectorHeader pcv = extensions.createChargingVectorHeader(Utils
+				.getInstance().generateBranchId() + System.currentTimeMillis());
+		pcv.setOriginatingIOI(sipSubscriptionHandler.sbb.getConfiguration()
+				.getPChargingVectorHeaderTerminatingIOI());
+
 		return pcv;
-		//aayush...added code till here.
-		
+		// aayush...added code till here.
+
 	}
 }

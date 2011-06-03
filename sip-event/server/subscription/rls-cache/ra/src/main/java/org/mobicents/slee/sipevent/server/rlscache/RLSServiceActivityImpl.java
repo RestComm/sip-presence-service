@@ -30,6 +30,8 @@ public class RLSServiceActivityImpl implements RLSServiceActivity {
 	
 	private RLSServicesCacheResourceAdaptor ra;
 	
+	private boolean ending;
+	
 	public RLSServiceActivityImpl(String serviceURI,RLSServicesCacheResourceAdaptor ra) {
 		if (serviceURI == null) {
 			throw new NullPointerException("null serviceURI");
@@ -48,6 +50,14 @@ public class RLSServiceActivityImpl implements RLSServiceActivity {
 		return ra.getDataSource().getRLSService(serviceURI);
 	}
 		
+	public boolean isEnding() {
+		return ending;
+	}
+	
+	public void ending() {
+		this.ending = true;
+	}
+	
 	@Override
 	public String toString() {
 		return new StringBuilder("RLSServicesActivityImpl[uri=").append(serviceURI).append("]").toString();

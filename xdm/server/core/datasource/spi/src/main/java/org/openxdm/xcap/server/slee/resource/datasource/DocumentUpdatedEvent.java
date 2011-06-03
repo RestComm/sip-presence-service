@@ -30,7 +30,6 @@ import java.util.Set;
 
 import javax.slee.EventTypeID;
 import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.mobicents.protocols.xcap.diff.BuildPatchException;
 import org.mobicents.protocols.xcap.diff.dom.DOMXcapDiffFactory;
@@ -62,9 +61,6 @@ public class DocumentUpdatedEvent implements Serializable {
 	// the server config
 	protected static final ServerConfiguration XDM_SERVER_CONFIGURATION = ServerConfiguration
 			.getInstance();
-	// dom doc factory
-	protected static final DocumentBuilderFactory DOM_BUILDER_FACTORY = DocumentBuilderFactory
-			.newInstance();
 
 	// xcap diff patches
 	private transient Document docXcapDiffWithPatch;
@@ -91,7 +87,7 @@ public class DocumentUpdatedEvent implements Serializable {
 		this.oldDocument = oldDocument;
 		this.newDocumentDOM = newDocumentDOM;
 		this.newDocumentString = newDocumentString;
-		this.newETag = newETag;		
+		this.newETag = newETag;
 	}
 
 	public String getDefaultDocNamespace() {
@@ -130,27 +126,28 @@ public class DocumentUpdatedEvent implements Serializable {
 	 * @return
 	 * @throws BuildPatchException
 	 */
-	public Document getDocXcapDiff(boolean mayIncludePatch) throws BuildPatchException {
+	public Document getDocXcapDiff(boolean mayIncludePatch)
+			throws BuildPatchException {
 		if (mayIncludePatch) {
 			// may include patch
 			if (docXcapDiffWithPatch == null) {
 				docXcapDiffWithPatch = createDocXcapDiff(true);
 			}
 			return docXcapDiffWithPatch;
-		}
-		else {
+		} else {
 			// may not include patch
 			if (docXcapDiffWithoutPatch == null) {
 				docXcapDiffWithoutPatch = createDocXcapDiff(false);
 			}
 			return docXcapDiffWithoutPatch;
-		}		
+		}
 	}
 
 	/**
 	 * Retrieves the xcap diff patch for the specified node in the document.
 	 * 
-	 * Beware that the subscription document selector is not validated against the one in the event.
+	 * Beware that the subscription document selector is not validated against
+	 * the one in the event.
 	 * 
 	 * @param nodeSubscription
 	 * @return null if the node was not changed
@@ -209,12 +206,14 @@ public class DocumentUpdatedEvent implements Serializable {
 		NodeSelector nodeSelector = nodeSubscription.getNodeSelector();
 		DOMNodeComparator nodeComparator = new DOMNodeComparator();
 		DOMNodeComparator.Result result = nodeComparator.compare(
-				oldDocumentDOM, newDocumentDOM, nodeSelector.toStringWithEmptyPrefix(),
+				oldDocumentDOM, newDocumentDOM,
+				nodeSelector.toStringWithEmptyPrefix(),
 				nodeSelector.getNamespaceContext());
 		if (!result.isDifferent()) {
 			return null;
 		}
-		// going to build patch, start by creating the sel patch component attribute
+		// going to build patch, start by creating the sel patch component
+		// attribute
 		if (nodeSelector.getTerminalSelector() == null) {
 			// elem
 			if (result.isRemoved()) {
@@ -237,8 +236,8 @@ public class DocumentUpdatedEvent implements Serializable {
 				patchComponents[0] = XCAP_DIFF_FACTORY
 						.getPatchBuilder()
 						.getElementPatchComponentBuilder()
-						.buildPatchComponent(nodeSubscription.getSel(), element,
-								namespaceBindings);
+						.buildPatchComponent(nodeSubscription.getSel(),
+								element, namespaceBindings);
 			}
 		} else {
 			// attr
@@ -316,7 +315,8 @@ public class DocumentUpdatedEvent implements Serializable {
 
 	}
 
-	protected Document createDocXcapDiff(boolean mayPatch) throws BuildPatchException {
+	protected Document createDocXcapDiff(boolean mayPatch)
+			throws BuildPatchException {
 		Element[] patchComponents = new Element[1];
 		if (oldDocument != null) {
 			if (newDocumentDOM != null) {
@@ -325,28 +325,28 @@ public class DocumentUpdatedEvent implements Serializable {
 					Element[] patchInstructions = null;
 					try {
 						patchInstructions = XCAP_DIFF_FACTORY
-						.getPatchBuilder()
-						.getDocumentPatchComponentBuilder()
-						.getXmlPatchOperationsBuilder()
-						.buildPatchInstructions(oldDocument.getAsDOMDocument(),
-										newDocumentDOM);						
+								.getPatchBuilder()
+								.getDocumentPatchComponentBuilder()
+								.getXmlPatchOperationsBuilder()
+								.buildPatchInstructions(
+										oldDocument.getAsDOMDocument(),
+										newDocumentDOM);
 					} catch (InternalServerErrorException e) {
 						throw new BuildPatchException(e.getMessage(), e);
 					}
 					patchComponents[0] = XCAP_DIFF_FACTORY
-					.getPatchBuilder()
-					.getDocumentPatchComponentBuilder()
-					.buildPatchComponent(documentSelector.toString(),
-							getPreviousETag(), newETag,
-							patchInstructions);
-				}
-				else {
+							.getPatchBuilder()
+							.getDocumentPatchComponentBuilder()
+							.buildPatchComponent(documentSelector.toString(),
+									getPreviousETag(), newETag,
+									patchInstructions);
+				} else {
 					patchComponents[0] = XCAP_DIFF_FACTORY
-					.getPatchBuilder()
-					.getDocumentPatchComponentBuilder()
-					.buildPatchComponent(documentSelector.toString(),
-							getPreviousETag(), newETag,null);
-				}				
+							.getPatchBuilder()
+							.getDocumentPatchComponentBuilder()
+							.buildPatchComponent(documentSelector.toString(),
+									getPreviousETag(), newETag, null);
+				}
 			} else {
 				// doc removed
 				patchComponents[0] = XCAP_DIFF_FACTORY

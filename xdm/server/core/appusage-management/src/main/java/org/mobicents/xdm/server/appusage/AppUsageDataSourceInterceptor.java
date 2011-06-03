@@ -46,23 +46,34 @@ public interface AppUsageDataSourceInterceptor {
 
 	/**
 	 * 
-	 * @param documentParent
+	 * @param collection
 	 * @param includeChildCollections
 	 * @param dataSource
 	 * @return
 	 * @throws InternalServerErrorException
 	 */
-	public InterceptedDocument[] getDocuments(String documentParent, boolean includeChildCollections,
-			AppUsageDataSource dataSource) throws InternalServerErrorException;
+	public InterceptedDocument[] getDocuments(String collection,
+			boolean includeChildCollections, AppUsageDataSource dataSource)
+			throws InternalServerErrorException;
 
 	/**
+	 * Indicates if the interceptor is responsible for a document.
 	 * 
-	 * @param includeChildCollections
-	 * @param dataSource
-	 * @return
-	 * @throws InternalServerErrorException
+	 * @param documentSelector
+	 * @return false if the interceptor does not retrieves the document with the
+	 *         specified selector
 	 */
-	public InterceptedDocument[] getDocuments(boolean includeChildCollections,AppUsageDataSource dataSource)
-			throws InternalServerErrorException;
+	public boolean interceptsDocument(DocumentSelector documentSelector);
+
+	/**
+	 * Indicates if the interceptor is responsible for a collection.
+	 * 
+	 * @param collection
+	 * @param includeChildCollections
+	 * @return false if the interceptor does not retrieves the documents in the
+	 *         specified collection
+	 */
+	public boolean interceptsCollection(String collection,
+			boolean includeChildCollections);
 
 }

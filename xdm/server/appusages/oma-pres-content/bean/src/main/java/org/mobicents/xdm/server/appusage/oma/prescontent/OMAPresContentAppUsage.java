@@ -26,6 +26,7 @@ import java.util.Set;
 
 import javax.xml.validation.Validator;
 
+import org.mobicents.xdm.common.util.dom.DomUtils;
 import org.mobicents.xdm.server.appusage.AppUsage;
 import org.mobicents.xdm.server.appusage.AppUsageDataSource;
 import org.openxdm.xcap.common.error.ConstraintFailureConflictException;
@@ -105,8 +106,7 @@ public class OMAPresContentAppUsage extends AppUsage {
 			for (int i = 0; i < contentChildNodeList.getLength(); i++) {
 				Node contentChildNode = contentChildNodeList.item(i);
 				if (!mimytypeFound
-						&& contentChildNode.getNodeType() == Node.ELEMENT_NODE
-						&& contentChildNode.getLocalName().equals(
+						&& DomUtils.isElementNamed(contentChildNode,
 								MIMETYPE_ELEMENT_NAME)) {
 					Element mimeTypeElement = (Element) contentChildNode;
 					if (mimeTypeElement.getTextContent() == null
@@ -119,8 +119,7 @@ public class OMAPresContentAppUsage extends AppUsage {
 						return;
 					}
 				} else if (!encodingFound
-						&& contentChildNode.getNodeType() == Node.ELEMENT_NODE
-						&& contentChildNode.getLocalName().equals(
+						&& DomUtils.isElementNamed(contentChildNode,
 								ENCODING_ELEMENT_NAME)) {
 					Element encodingElement = (Element) contentChildNode;
 					if (encodingElement.getTextContent() == null
@@ -133,8 +132,7 @@ public class OMAPresContentAppUsage extends AppUsage {
 						return;
 					}
 				} else if (!dataFound
-						&& contentChildNode.getNodeType() == Node.ELEMENT_NODE
-						&& contentChildNode.getLocalName().equals(
+						&& DomUtils.isElementNamed(contentChildNode,
 								DATA_ELEMENT_NAME)) {
 					// ensure data size is not higher than max size
 					Element dataElement = (Element) contentChildNode;

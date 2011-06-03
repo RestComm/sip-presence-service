@@ -24,40 +24,24 @@ package org.openxdm.xcap.server.slee.appusage.rlsservices;
 
 import java.net.URI;
 import java.net.URLDecoder;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.HashSet;
+import java.util.Set;
 
-import javax.xml.XMLConstants;
 import javax.xml.validation.Validator;
 
 import org.apache.log4j.Logger;
+import org.mobicents.xdm.common.util.dom.DomUtils;
 import org.mobicents.xdm.server.appusage.AppUsage;
 import org.mobicents.xdm.server.appusage.AppUsageDataSource;
 import org.mobicents.xdm.server.appusage.AppUsageRequestProcessor;
-import org.openxdm.xcap.common.error.BadRequestException;
-import org.openxdm.xcap.common.error.CannotDeleteConflictException;
-import org.openxdm.xcap.common.error.CannotInsertConflictException;
-import org.openxdm.xcap.common.error.ConflictException;
 import org.openxdm.xcap.common.error.ConstraintFailureConflictException;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
-import org.openxdm.xcap.common.error.MethodNotAllowedException;
-import org.openxdm.xcap.common.error.NoParentConflictException;
 import org.openxdm.xcap.common.error.NotAuthorizedRequestException;
-import org.openxdm.xcap.common.error.NotFoundException;
-import org.openxdm.xcap.common.error.NotUTF8ConflictException;
-import org.openxdm.xcap.common.error.NotValidXMLFragmentConflictException;
-import org.openxdm.xcap.common.error.NotXMLAttributeValueConflictException;
-import org.openxdm.xcap.common.error.PreconditionFailedException;
 import org.openxdm.xcap.common.error.SchemaValidationErrorConflictException;
 import org.openxdm.xcap.common.error.UniquenessFailureConflictException;
-import org.openxdm.xcap.common.error.UnsupportedMediaTypeException;
 import org.openxdm.xcap.common.uri.AttributeSelector;
 import org.openxdm.xcap.common.uri.DocumentSelector;
 import org.openxdm.xcap.common.uri.ElementSelector;
-import org.openxdm.xcap.common.uri.ElementSelectorStep;
-import org.openxdm.xcap.common.uri.ElementSelectorStepByAttr;
 import org.openxdm.xcap.common.uri.NodeSelector;
 import org.openxdm.xcap.common.xml.NamespaceContext;
 import org.openxdm.xcap.server.slee.appusage.resourcelists.ResourceListsAppUsage;
@@ -75,33 +59,109 @@ public class RLSServicesAppUsage extends AppUsage {
 	private static final Logger logger = Logger
 			.getLogger(RLSServicesAppUsage.class);
 
-	public RLSServicesAppUsage(Validator schemaValidator) {
+	private final NamespaceContext namespaceContext;
+	private final boolean validateUniquenessContraints;
+
+	public RLSServicesAppUsage(Validator schemaValidator, boolean validateUniquenessContraints) {
 		super(ID, DEFAULT_DOC_NAMESPACE, MIMETYPE, schemaValidator,
 				new RLSServicesAuthorizationPolicy());
+		namespaceContext = new NamespaceContext();
+		namespaceContext.setDefaultDocNamespace(DEFAULT_DOC_NAMESPACE);
+		this.validateUniquenessContraints = validateUniquenessContraints;
 	}
 
-	private final static DocumentSelector GLOBAL_DOCUMENT_SELECTOR = new DocumentSelector(
-			ID+"/global", "index");
-	private static final ElementSelectorStep RLS_SERVICES_ELEMENT_SELECTOR_STEP = new ElementSelectorStep(
-			"rls-services");
 	private static final String SERVICE_ELEMENT_NAME = "service";
 	private static final String URI_ATTRIBUTE_NAME = "uri";
 
-	private Map<String, Element> getServices(Document document) {
-		Map<String, Element> serviceURIs = new HashMap<String, Element>();
-		NodeList documentChildNodes = document.getDocumentElement()
-				.getChildNodes();
-		for (int i = 0; i < documentChildNodes.getLength(); i++) {
-			Node documentChildNode = documentChildNodes.item(i);
-			if (documentChildNode.getNodeType() == Node.ELEMENT_NODE
-					&& documentChildNode.getLocalName().equals(
-							SERVICE_ELEMENT_NAME)) {
-				Element element = (Element) documentChildNode;
-				serviceURIs.put(element.getAttributeNode(URI_ATTRIBUTE_NAME)
-						.getNodeValue(), element);
+	private Set<String> getServiceURIs(Document document)
+			throws UniquenessFailureConflictException {
+		Set<String> serviceURIs = new HashSet<String>();
+		NodeList nodeList = document.getDocumentElement().getChildNodes();
+		Node node = null;
+		for (int i = 0; i < nodeList.getLength(); i++) {
+			node = nodeList.item(i);
+			if (DomUtils.isElementNamed(node, SERVICE_ELEMENT_NAME)) {
+				Element element = (Element) node;
+				if (!serviceURIs.add(element.getAttribute(URI_ATTRIBUTE_NAME))) {
+					throw new UniquenessFailureConflictException();
+				}
 			}
 		}
 		return serviceURIs;
+	}
+
+	static boolean isUserIndexDoc(DocumentSelector documentSelector) {
+		if (!documentSelector.getDocumentName().equals("index")) {
+			return false;
+		}
+		return documentSelector.getCollection().equals(
+				new StringBuilder("rls-services/users/").append(
+						documentSelector.getUser()).toString());
+	}
+
+	private void checkServiceExists(String uri, AppUsageDataSource dataSource)
+			throws UniquenessFailureConflictException,
+			InternalServerErrorException {
+		// fetch all user docs
+		DocumentSelector ds = null;
+		NodeList nodeList = null;
+		Node node = null;
+		for (org.openxdm.xcap.common.datasource.Document document : dataSource
+				.getDocuments("rls-services/users", true)) {
+			ds = new DocumentSelector(document.getCollection(),
+					document.getDocumentName());
+			if (RLSServicesAppUsage.isUserIndexDoc(ds)) {
+				// only process index docs at the user dir collection
+				// get all 2nd level elements
+				nodeList = document.getAsDOMDocument().getDocumentElement()
+						.getChildNodes();
+				for (int i = 0; i < nodeList.getLength(); i++) {
+					node = nodeList.item(i);
+					if (DomUtils.isElementNamed(node, SERVICE_ELEMENT_NAME)) {
+						// rls-services/service element
+						if (((Element) node).getAttribute(URI_ATTRIBUTE_NAME)
+								.equals(uri)) {
+							// uri attribute matches, thus new service not
+							// unique
+							throw new UniquenessFailureConflictException();
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private void checkServicesExists(Set<String> uris,
+			AppUsageDataSource dataSource)
+			throws UniquenessFailureConflictException,
+			InternalServerErrorException {
+		// fetch all user docs
+		DocumentSelector ds = null;
+		NodeList nodeList = null;
+		Node node = null;
+		for (org.openxdm.xcap.common.datasource.Document document : dataSource
+				.getDocuments("rls-services/users", true)) {
+			ds = new DocumentSelector(document.getCollection(),
+					document.getDocumentName());
+			if (RLSServicesAppUsage.isUserIndexDoc(ds)) {
+				// only process index docs at the user dir collection
+				// get all 2nd level elements
+				nodeList = document.getAsDOMDocument().getDocumentElement()
+						.getChildNodes();
+				for (int i = 0; i < nodeList.getLength(); i++) {
+					node = nodeList.item(i);
+					if (DomUtils.isElementNamed(node, SERVICE_ELEMENT_NAME)) {
+						// rls-services/service element
+						if (uris.contains(((Element) node)
+								.getAttribute(URI_ATTRIBUTE_NAME))) {
+							// uri attribute matches, thus new service not
+							// unique
+							throw new UniquenessFailureConflictException();
+						}
+					}
+				}
+			}
+		}
 	}
 
 	@Override
@@ -128,69 +188,23 @@ public class RLSServicesAppUsage extends AppUsage {
 					+ ", attributeSelector = " + attributeSelector + " )");
 		}
 
-		if (documentSelector.isUserDocument()) {
-			try {
-				requestProcessor.putAttribute(documentSelector, nodeSelector,
-						elementSelector, attributeSelector, newAttrValue, this);
-			} catch (NoParentConflictException e) {
-				throw new InternalServerErrorException(
-						"Update of service in rls global doc thrown exception",
-						e);
-			} catch (NotXMLAttributeValueConflictException e) {
-				throw new InternalServerErrorException(
-						"Update of service in rls global doc thrown exception",
-						e);
-			} catch (CannotInsertConflictException e) {
-				throw new InternalServerErrorException(
-						"Update of service in rls global doc thrown exception",
-						e);
-			} catch (BadRequestException e) {
-				throw new InternalServerErrorException(
-						"Update of service in rls global doc thrown exception",
-						e);
-			} catch (NotAuthorizedRequestException e) {
-				throw new InternalServerErrorException(
-						"Update of service in rls global doc thrown exception",
-						e);
-			}
+		if (!validateUniquenessContraints) {
+			return;
 		}
-	}
+		
+		if (!isUserIndexDoc(documentSelector)) {
+			return;
+		}
 
-	private boolean putElement(NodeSelector nodeSelector,
-			ElementSelector elementSelector, Element newElement,
-			AppUsageRequestProcessor requestProcessor)
-			throws InternalServerErrorException {
-		try {
-			return requestProcessor.putElement(GLOBAL_DOCUMENT_SELECTOR,
-					nodeSelector, elementSelector, newElement, this);
-		} catch (NoParentConflictException e) {
-			throw new InternalServerErrorException(
-					"Put of service in rls global doc thrown exception", e);
-		} catch (NotUTF8ConflictException e) {
-			throw new InternalServerErrorException(
-					"Put of service in rls global doc thrown exception", e);
-		} catch (CannotInsertConflictException e) {
-			throw new InternalServerErrorException(
-					"Put of service in rls global doc thrown exception", e);
-		} catch (BadRequestException e) {
-			throw new InternalServerErrorException(
-					"Put of service in rls global doc thrown exception", e);
-		} catch (SchemaValidationErrorConflictException e) {
-			throw new InternalServerErrorException(
-					"Put of service in rls global doc thrown exception", e);
-		} catch (ConstraintFailureConflictException e) {
-			throw new InternalServerErrorException(
-					"Put of service in rls global doc thrown exception", e);
-		} catch (NotValidXMLFragmentConflictException e) {
-			throw new InternalServerErrorException(
-					"Put of service in rls global doc thrown exception", e);
-		} catch (UniquenessFailureConflictException e) {
-			throw new InternalServerErrorException(
-					"Put of service in rls global doc thrown exception", e);
-		} catch (NotAuthorizedRequestException e) {
-			throw new InternalServerErrorException(
-					"Put of service in rls global doc thrown exception", e);
+		if (elementSelector.getStepsSize() != 2
+				|| !attributeSelector.getAttName().equals("uri")) {
+			// only the change of a service uri is relevant
+			return;
 		}
+
+		// the new attr value is a new service uri, check it doesn't exists
+		checkServiceExists(newAttrValue, dataSource);
+
 	}
 
 	@Override
@@ -203,6 +217,7 @@ public class RLSServicesAppUsage extends AppUsage {
 			throws SchemaValidationErrorConflictException,
 			UniquenessFailureConflictException, InternalServerErrorException,
 			ConstraintFailureConflictException {
+
 		if (logger.isDebugEnabled()) {
 			logger.debug("processResourceInterdependenciesOnPutElement( oldElement = "
 					+ oldElement
@@ -213,55 +228,41 @@ public class RLSServicesAppUsage extends AppUsage {
 					+ ", elementSelector = " + elementSelector + " )");
 		}
 
-		if (documentSelector.isUserDocument()) {
-			if (elementSelector.getStepsSize() > 2) {
-				// update of service
-				if (logger.isDebugEnabled()) {
-					logger.debug("Updating " + elementSelector
-							+ " in rls services global doc");
-				}
-				putElement(nodeSelector, elementSelector, newElement,
-						requestProcessor);
-				if (logger.isInfoEnabled()) {
-					logger.info("Updated " + elementSelector
-							+ " in rls services global doc");
-				}
-			} else if (elementSelector.getStepsSize() == 2) {
-				// put of service
-				if (oldElement != null) {
-					// update of service
-					if (logger.isDebugEnabled()) {
-						logger.debug("Updating " + elementSelector
-								+ " in rls services global doc");
-					}
-					putElement(nodeSelector, elementSelector, newElement,
-							requestProcessor);
-					if (logger.isInfoEnabled()) {
-						logger.info("Updated " + elementSelector
-								+ " in rls services global doc");
-					}
+		if (!validateUniquenessContraints) {
+			return;
+		}
+		
+		if (!isUserIndexDoc(documentSelector)) {
+			return;
+		}
+
+		if (elementSelector.getStepsSize() > 2) {
+			// only the change of a service uri is relevant
+			return;
+		} else if (elementSelector.getStepsSize() == 2) {
+			// put of 1 service
+			if (oldElement != null) {
+				// update
+				if (oldElement.getAttribute("uri").equals(
+						newElement.getAttribute("uri"))) {
+					// uri didn't change
+					return;
 				} else {
-					// new service
-					if (logger.isDebugEnabled()) {
-						logger.debug("Adding " + elementSelector
-								+ " to rls services global doc");
-					}
-					if (!putElement(nodeSelector, elementSelector, newElement,
-							requestProcessor)) {
-						throw new UniquenessFailureConflictException();
-					}
-					if (logger.isInfoEnabled()) {
-						logger.info("Added " + elementSelector
-								+ " to rls services global doc");
-					}
+					// check if the new uri exists
+					checkServiceExists(newElement.getAttribute("uri"),
+							dataSource);
 				}
 			} else {
-				// put of all services, same as put of doc
-				processResourceInterdependenciesOnPutDocument(dataSource
-						.getDocument(documentSelector).getAsDOMDocument(),
-						document, documentSelector, newETag, requestProcessor,
-						dataSource);
+				// creation
+				// check if the new uri exists
+				checkServiceExists(newElement.getAttribute("uri"), dataSource);
 			}
+		} else {
+			// put of all services, same as put of doc
+			processResourceInterdependenciesOnPutDocument(dataSource
+					.getDocument(documentSelector).getAsDOMDocument(),
+					document, documentSelector, newETag, requestProcessor,
+					dataSource);
 		}
 	}
 
@@ -283,334 +284,22 @@ public class RLSServicesAppUsage extends AppUsage {
 					+ ", documentSelector = " + documentSelector + " )");
 		}
 
-		if (documentSelector.isUserDocument()) {
-			if (oldDocument == null) {
-
-				// add all services in new doc
-
-				for (Entry<String, Element> entry : getServices(newDocument)
-						.entrySet()) {
-					LinkedList<ElementSelectorStep> elementSelectorSteps = new LinkedList<ElementSelectorStep>();
-					elementSelectorSteps
-							.add(RLS_SERVICES_ELEMENT_SELECTOR_STEP);
-					elementSelectorSteps.add(new ElementSelectorStepByAttr(
-							SERVICE_ELEMENT_NAME, URI_ATTRIBUTE_NAME, entry
-									.getKey()));
-					ElementSelector elementSelector = new ElementSelector(
-							elementSelectorSteps);
-					try {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Adding " + entry.getKey()
-									+ " to rls services global doc");
-						}
-						if (!putElement(
-								new NodeSelector(elementSelector.toString(),
-										EMPTY_NAMESPACE_CONTEXT),
-								elementSelector, entry.getValue(),
-								requestProcessor)) {
-							throw new UniquenessFailureConflictException();
-						}
-						if (logger.isInfoEnabled()) {
-							logger.info("Added " + entry.getKey()
-									+ " to rls services global doc");
-						}
-					} catch (InternalServerErrorException e) {
-						// global doc does not exists, put user doc as global
-						if (logger.isDebugEnabled()) {
-							logger.debug("Rls services global doc does not exists yet");
-						}
-						try {
-							if (!requestProcessor
-									.putDocument(GLOBAL_DOCUMENT_SELECTOR,
-											newDocument, this)) {
-								throw new UniquenessFailureConflictException();
-							}
-							if (logger.isDebugEnabled()) {
-								logger.debug("Rls services global doc created");
-							}
-							return;
-						} catch (NoParentConflictException f) {
-							throw new InternalServerErrorException(
-									"Creation of rls global doc thrown exception",
-									f);
-						} catch (UniquenessFailureConflictException f) {
-							// concurrent put? restart process
-							if (logger.isDebugEnabled()) {
-								logger.debug("Failed to create Rls services global doc, concurrent creation? Restarting update due to user doc put.");
-							}
-							processResourceInterdependenciesOnPutDocument(
-									oldDocument, newDocument, documentSelector,
-									newEtag, requestProcessor, dataSource);
-						} catch (ConflictException f) {
-							throw new InternalServerErrorException(
-									"Creation of rls global doc thrown exception",
-									f);
-						} catch (MethodNotAllowedException f) {
-							throw new InternalServerErrorException(
-									"Creation of rls global doc thrown exception",
-									f);
-						} catch (UnsupportedMediaTypeException f) {
-							throw new InternalServerErrorException(
-									"Creation of rls global doc thrown exception",
-									f);
-						} catch (PreconditionFailedException f) {
-							throw new InternalServerErrorException(
-									"Creation of rls global doc thrown exception",
-									f);
-						} catch (BadRequestException f) {
-							throw new InternalServerErrorException(
-									"Creation of rls global doc thrown exception",
-									f);
-						} catch (NotAuthorizedRequestException f) {
-							throw new InternalServerErrorException(
-									"Creation of rls global doc thrown exception",
-									f);
-						}
-					}
-				}
-			} else {
-				// doc update
-				// gather services to add, update and remove in global doc
-				Map<String, Element> newServiceURIs = getServices(newDocument);
-				Map<String, Element> toAddServiceURIs = getServices(newDocument);
-				Map<String, Element> toUpdateServiceURIs = getServices(newDocument);
-				Map<String, Element> toDeleteServiceURIs = getServices(oldDocument);
-				// setup services to add
-				for (String serviceURI : toDeleteServiceURIs.keySet()) {
-					toAddServiceURIs.remove(serviceURI);
-				}
-				if (logger.isDebugEnabled()) {
-					logger.debug("Services to add to global rls service doc: "
-							+ toAddServiceURIs);
-				}
-				// setup services to update
-				for (String serviceURI : toAddServiceURIs.keySet()) {
-					toUpdateServiceURIs.remove(serviceURI);
-				}
-				if (logger.isDebugEnabled()) {
-					logger.debug("Services to update in global rls service doc: "
-							+ toUpdateServiceURIs);
-				}
-				// setup services to delete
-				for (String serviceURI : newServiceURIs.keySet()) {
-					toDeleteServiceURIs.remove(serviceURI);
-				}
-				if (logger.isDebugEnabled()) {
-					logger.debug("Services to delete from global rls service doc: "
-							+ toDeleteServiceURIs);
-				}
-
-				// add new ones
-				for (Entry<String, Element> entry : toAddServiceURIs.entrySet()) {
-					LinkedList<ElementSelectorStep> elementSelectorSteps = new LinkedList<ElementSelectorStep>();
-					elementSelectorSteps
-							.add(RLS_SERVICES_ELEMENT_SELECTOR_STEP);
-					elementSelectorSteps.add(new ElementSelectorStepByAttr(
-							SERVICE_ELEMENT_NAME, URI_ATTRIBUTE_NAME, entry
-									.getKey()));
-					ElementSelector elementSelector = new ElementSelector(
-							elementSelectorSteps);
-					if (logger.isDebugEnabled()) {
-						logger.debug("Adding " + entry.getKey()
-								+ " to rls services global doc");
-					}
-					if (!putElement(
-							new NodeSelector(elementSelector.toString(),
-									EMPTY_NAMESPACE_CONTEXT), elementSelector,
-							entry.getValue(), requestProcessor)) {
-						throw new UniquenessFailureConflictException();
-					}
-					if (logger.isInfoEnabled()) {
-						logger.info("Added " + entry.getKey()
-								+ " to rls services global doc");
-					}
-				}
-				// now the updates
-				for (Entry<String, Element> entry : toUpdateServiceURIs
-						.entrySet()) {
-					LinkedList<ElementSelectorStep> elementSelectorSteps = new LinkedList<ElementSelectorStep>();
-					elementSelectorSteps
-							.add(RLS_SERVICES_ELEMENT_SELECTOR_STEP);
-					elementSelectorSteps.add(new ElementSelectorStepByAttr(
-							SERVICE_ELEMENT_NAME, URI_ATTRIBUTE_NAME, entry
-									.getKey()));
-					ElementSelector elementSelector = new ElementSelector(
-							elementSelectorSteps);
-					if (logger.isDebugEnabled()) {
-						logger.debug("Updating " + entry.getKey()
-								+ " in rls services global doc");
-					}
-					putElement(new NodeSelector(elementSelector.toString(),
-							EMPTY_NAMESPACE_CONTEXT), elementSelector,
-							entry.getValue(), requestProcessor);
-					if (logger.isInfoEnabled()) {
-						logger.info("Updated " + entry.getKey()
-								+ " in rls services global doc");
-					}
-				}
-
-				// finally the deletes
-				for (Entry<String, Element> entry : toDeleteServiceURIs
-						.entrySet()) {
-					LinkedList<ElementSelectorStep> elementSelectorSteps = new LinkedList<ElementSelectorStep>();
-					elementSelectorSteps
-							.add(RLS_SERVICES_ELEMENT_SELECTOR_STEP);
-					elementSelectorSteps.add(new ElementSelectorStepByAttr(
-							SERVICE_ELEMENT_NAME, URI_ATTRIBUTE_NAME, entry
-									.getKey()));
-					ElementSelector elementSelector = new ElementSelector(
-							elementSelectorSteps);
-					if (logger.isDebugEnabled()) {
-						logger.debug("Deleting " + entry.getKey()
-								+ " from rls services global doc");
-					}
-					deleteElement(new NodeSelector(elementSelector.toString(),
-							EMPTY_NAMESPACE_CONTEXT), elementSelector,
-							requestProcessor);
-					if (logger.isInfoEnabled()) {
-						logger.info("Deleted " + entry.getKey()
-								+ " from rls services global doc");
-					}
-				}
-			}
+		if (!validateUniquenessContraints) {
+			return;
 		}
-	}
-
-	private void deleteElement(NodeSelector nodeSelector,
-			ElementSelector elementSelector,
-			AppUsageRequestProcessor requestProcessor)
-			throws InternalServerErrorException {
-		try {
-			requestProcessor.deleteElement(GLOBAL_DOCUMENT_SELECTOR,
-					nodeSelector, elementSelector, this);
-		} catch (CannotDeleteConflictException e) {
-			throw new InternalServerErrorException(e.getMessage(), e);
-		} catch (NotFoundException e) {
-			throw new InternalServerErrorException(e.getMessage(), e);
-		} catch (BadRequestException e) {
-			throw new InternalServerErrorException(e.getMessage(), e);
-		} catch (UniquenessFailureConflictException e) {
-			throw new InternalServerErrorException(e.getMessage(), e);
-		} catch (SchemaValidationErrorConflictException e) {
-			throw new InternalServerErrorException(e.getMessage(), e);
-		} catch (ConstraintFailureConflictException e) {
-			throw new InternalServerErrorException(e.getMessage(), e);
-		}
-	}
-
-	private static final NamespaceContext EMPTY_NAMESPACE_CONTEXT = initEmptyNamespaceContext();
-
-	private static NamespaceContext initEmptyNamespaceContext() {
-		final Map<String, String> namespaces = new HashMap<String, String>();
-		namespaces.put(XMLConstants.DEFAULT_NS_PREFIX,
-				RLSServicesAppUsage.DEFAULT_DOC_NAMESPACE);
-		return new NamespaceContext(namespaces);
-	}
-
-	@Override
-	public void processResourceInterdependenciesOnDeleteDocument(
-			Document deletedDocument, DocumentSelector documentSelector,
-			AppUsageRequestProcessor requestProcessor,
-			AppUsageDataSource dataSource)
-			throws SchemaValidationErrorConflictException,
-			UniquenessFailureConflictException, InternalServerErrorException,
-			ConstraintFailureConflictException {
-
-		if (logger.isDebugEnabled()) {
-			logger.debug("processResourceInterdependenciesOnDeleteDocument( documentSelector = "
-					+ documentSelector + " )");
+		
+		if (!isUserIndexDoc(documentSelector)) {
+			return;
 		}
 
-		if (documentSelector.isUserDocument()) {
-			// delete all services from global doc
-			NodeList documentChildNodes = deletedDocument.getDocumentElement()
-					.getChildNodes();
-			for (int i = 0; i < documentChildNodes.getLength(); i++) {
-				Node documentChildNode = documentChildNodes.item(i);
-				if (documentChildNode.getNodeType() == Node.ELEMENT_NODE
-						&& documentChildNode.getLocalName().equals(
-								SERVICE_ELEMENT_NAME)) {
-					String serviceURI = ((Element) documentChildNode)
-							.getAttributeNode(URI_ATTRIBUTE_NAME)
-							.getNodeValue();
-					LinkedList<ElementSelectorStep> elementSelectorSteps = new LinkedList<ElementSelectorStep>();
-					elementSelectorSteps
-							.add(RLS_SERVICES_ELEMENT_SELECTOR_STEP);
-					elementSelectorSteps.add(new ElementSelectorStepByAttr(
-							SERVICE_ELEMENT_NAME, URI_ATTRIBUTE_NAME,
-							serviceURI));
-					ElementSelector elementSelector = new ElementSelector(
-							elementSelectorSteps);
-					if (logger.isDebugEnabled()) {
-						logger.debug("Deleting " + serviceURI
-								+ " from rls services global doc");
-					}
-					deleteElement(new NodeSelector(elementSelector.toString(),
-							EMPTY_NAMESPACE_CONTEXT), elementSelector,
-							requestProcessor);
-					if (logger.isInfoEnabled()) {
-						logger.info("Deleted " + serviceURI
-								+ " from rls services global doc");
-					}
-				}
-			}
-		}
-	}
-
-	@Override
-	public void processResourceInterdependenciesOnDeleteElement(
-			Node deletedElement, DocumentSelector documentSelector,
-			String newETag, NodeSelector nodeSelector,
-			ElementSelector elementSelector,
-			AppUsageRequestProcessor requestProcessor,
-			AppUsageDataSource dataSource)
-			throws SchemaValidationErrorConflictException,
-			UniquenessFailureConflictException, InternalServerErrorException,
-			ConstraintFailureConflictException {
-
-		if (logger.isDebugEnabled()) {
-			logger.debug("processResourceInterdependenciesOnDeleteElement( documentSelector = "
-					+ documentSelector
-					+ ", elementSelector = "
-					+ elementSelector + " )");
-		}
-
-		if (documentSelector.isUserDocument()) {
-			// delete element from global doc
-			deleteElement(nodeSelector, elementSelector, requestProcessor);
-		}
-	}
-
-	@Override
-	public void processResourceInterdependenciesOnDeleteAttribute(
-			DocumentSelector documentSelector, String newETag,
-			NodeSelector nodeSelector, ElementSelector elementSelector,
-			AttributeSelector attributeSelector,
-			AppUsageRequestProcessor requestProcessor,
-			AppUsageDataSource dataSource)
-			throws SchemaValidationErrorConflictException,
-			UniquenessFailureConflictException, InternalServerErrorException,
-			ConstraintFailureConflictException {
-
-		if (logger.isDebugEnabled()) {
-			logger.debug("processResourceInterdependenciesOnDeleteAttribute( documentSelector = "
-					+ documentSelector
-					+ ", elementSelector = "
-					+ elementSelector
-					+ ", attributeSelector = "
-					+ attributeSelector + " )");
-		}
-
-		if (documentSelector.isUserDocument()) {
-			// delete attribute from global doc
-			try {
-				requestProcessor.deleteAttribute(GLOBAL_DOCUMENT_SELECTOR,
-						nodeSelector, elementSelector, attributeSelector, this);
-			} catch (NotFoundException e) {
-				throw new InternalServerErrorException(e.getMessage(), e);
-			} catch (BadRequestException e) {
-				throw new InternalServerErrorException(e.getMessage(), e);
-			}
+		if (oldDocument == null) {
+			// insert
+			checkServicesExists(getServiceURIs(newDocument), dataSource);
+		} else {
+			// update
+			Set<String> newURIs = getServiceURIs(newDocument);
+			newURIs.removeAll(getServiceURIs(oldDocument));
+			checkServicesExists(newURIs, dataSource);
 		}
 	}
 
@@ -653,16 +342,14 @@ public class RLSServicesAppUsage extends AppUsage {
 		// process each one
 		for (int i = 0; i < childNodes.getLength(); i++) {
 			Node childNode = childNodes.item(i);
-			if (childNode.getNodeType() == Node.ELEMENT_NODE
-					&& childNode.getLocalName().equals("service")) {
+			if (DomUtils.isElementNamed(childNode, "service")) {
 				// service element
 				// get childs
 				NodeList serviceChildNodes = childNode.getChildNodes();
 				// process each one
 				for (int j = 0; j < serviceChildNodes.getLength(); j++) {
 					Node serviceChildNode = serviceChildNodes.item(j);
-					if (serviceChildNode.getNodeType() == Node.ELEMENT_NODE
-							&& serviceChildNode.getLocalName().equals("list")) {
+					if (DomUtils.isElementNamed(serviceChildNode, "list")) {
 						// list element
 						/*
 						 * o In addition, an RLS services document can contain a
@@ -673,9 +360,8 @@ public class RLSServicesAppUsage extends AppUsage {
 						 */
 						ResourceListsAppUsage.checkNodeResourceListConstraints(
 								serviceChildNode, false);
-					} else if (serviceChildNode.getNodeType() == Node.ELEMENT_NODE
-							&& serviceChildNode.getLocalName().equals(
-									"resource-list")) {
+					} else if (DomUtils.isElementNamed(serviceChildNode,
+							"resource-list")) {
 						// resource-list element
 
 						// flag setup
@@ -725,7 +411,8 @@ public class RLSServicesAppUsage extends AppUsage {
 											String resourceListXUIDecoded = URLDecoder
 													.decode(resourceListUriPaths[k + 2],
 															"UTf-8");
-											String requestXUI = documentSelector.getUser();
+											String requestXUI = documentSelector
+													.getUser();
 											if (resourceListXUIDecoded
 													.equals(requestXUI)) {
 												throwException = false;

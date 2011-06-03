@@ -28,6 +28,7 @@ import java.util.Set;
 
 import javax.xml.validation.Validator;
 
+import org.mobicents.xdm.common.util.dom.DomUtils;
 import org.mobicents.xdm.server.appusage.AppUsage;
 import org.mobicents.xdm.server.appusage.AppUsageDataSource;
 import org.openxdm.xcap.common.error.ConstraintFailureConflictException;
@@ -89,7 +90,7 @@ public class ResourceListsAppUsage extends AppUsage {
 		// process each one
 		for(int i=0;i<childNodes.getLength();i++) {
 			Node childNode = childNodes.item(i);			
-			if (childNode.getNodeType() == Node.ELEMENT_NODE && childNode.getLocalName().equals(LIST_ELEMENT_NAME)) {
+			if (DomUtils.isElementNamed(childNode,LIST_ELEMENT_NAME)) {
 				// list element
 				Attr nameAttr = ((Element)childNode).getAttributeNode(NAME_ATTRIBUTE_NAME);
 				if (nameAttr != null) {
@@ -119,7 +120,7 @@ public class ResourceListsAppUsage extends AppUsage {
 				}
 				
 			}
-			else if (childNode.getNodeType() == Node.ELEMENT_NODE && childNode.getLocalName().equals("entry")) {
+			else if (DomUtils.isElementNamed(childNode,"entry")) {
 				// entry element
 				Attr uriAttr = ((Element)childNode).getAttributeNode("uri");
 				/*
@@ -138,7 +139,7 @@ public class ResourceListsAppUsage extends AppUsage {
 					uriSet.add(uriAttr.getNodeValue());
 				}							
 			}
-			else if (childNode.getNodeType() == Node.ELEMENT_NODE && childNode.getLocalName().equals("entry-ref")) {
+			else if (DomUtils.isElementNamed(childNode,"entry-ref")) {
 				// entry-ref element
 				Attr refUriAttr = ((Element)childNode).getAttributeNode("ref");
 				/*
@@ -171,7 +172,7 @@ public class ResourceListsAppUsage extends AppUsage {
 					refUriSet.add(refUriAttr.getNodeValue());
 				}				
 			}
-			else if (childNode.getNodeType() == Node.ELEMENT_NODE && childNode.getLocalName().equals("external")) {
+			else if (DomUtils.isElementNamed(childNode,"external")) {
 				// external element
 				Attr anchorUriAttr = ((Element)childNode).getAttributeNode("anchor");
 				/*

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE scenario SYSTEM "sipp.dtd">                                                               
 <scenario name="Mobicents SIP Presence Internal Publisher Subcriber">
-
+	
   	<send retrans="2000">
     <![CDATA[
 
@@ -21,27 +21,7 @@
     ]]>
 	</send>
 
- 	<recv response="202" rtd="true" rrs="true" />
-
-  	<recv request="NOTIFY" />
-
-	<send>
-	<![CDATA[
-      
-      SIP/2.0 200 OK
-      [last_Via:]
-      [last_From:]
-      [last_To:]
-      [last_Call-ID:]
-      [last_CSeq:]
-      [last_Contact:]
-      [last_Record-Route:]
-      [routes]
-      Max-Forwards: 70
-      Content-Length: 0
-      
-	]]>
-	</send>
+ 	<recv response="200" rtd="true" rrs="true" />
 	
 	<recv request="NOTIFY" />
 

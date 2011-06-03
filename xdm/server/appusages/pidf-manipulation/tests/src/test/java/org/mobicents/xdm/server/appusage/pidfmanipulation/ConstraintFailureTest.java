@@ -96,7 +96,7 @@ public class ConstraintFailureTest extends AbstractT {
 		String documentSelector = DocumentSelectorBuilder.getUserDocumentSelectorBuilder(PIDFManipulationAppUsage.ID,user,documentName).toPercentEncodedString();
 		UriBuilder uriBuilder = new UriBuilder()
 			.setSchemeAndAuthority("http://localhost:8080")
-			.setXcapRoot("/mobicents")
+			.setXcapRoot("/mobicents/")
 			.setDocumentSelector(documentSelector);
 		URI documentURI = uriBuilder.toURI();
 		

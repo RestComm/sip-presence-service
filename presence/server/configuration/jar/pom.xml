@@ -9,4 +9,15 @@
 	
 	<artifactId>sip-presence-server-configuration-jar</artifactId>
 	
+	<dependencies>
+		<dependency>
+			<artifactId>commons</artifactId>
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mobicents.servers.jainslee.core</groupId>
+			<artifactId>spi</artifactId>	
+		</dependency>
+	</dependencies>
 </project>

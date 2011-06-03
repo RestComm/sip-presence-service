@@ -75,6 +75,7 @@ import org.mobicents.slee.sipevent.server.subscription.eventlist.MultiPart;
 import org.mobicents.slee.sipevent.server.subscription.jmx.SubscriptionControlManagement;
 import org.mobicents.slee.sipevent.server.subscription.sip.SipSubscriptionHandler;
 import org.mobicents.slee.sipevent.server.subscription.winfo.WInfoSubscriptionHandler;
+import org.w3c.dom.Document;
 
 /**
  * Sbb to control subscriptions of sip events in a dialog
@@ -469,7 +470,7 @@ public abstract class SubscriptionControlSbb implements Sbb,
 		// increment subscription version
 		subscription.incrementVersion();
 		// create notify content
-		String content = wInfoSubscriptionHandler.getPartialWatcherInfoContent(subscription, event.getWatcherSubscriptionKey(), event.getWatcher());
+		Document content = wInfoSubscriptionHandler.getPartialWatcherInfoContent(subscription, event.getWatcherSubscriptionKey(), event.getWatcher());
 		ContentTypeHeader contentTypeHeader = wInfoSubscriptionHandler.getWatcherInfoContentHeader();
 		// store subscription
 		subscription.store();

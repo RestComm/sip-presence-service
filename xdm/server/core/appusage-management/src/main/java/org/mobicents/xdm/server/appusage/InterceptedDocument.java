@@ -37,18 +37,33 @@ public class InterceptedDocument implements Document {
 	private static final long serialVersionUID = 1L;
 	private final DocumentSelector documentSelector;
 	private final org.w3c.dom.Document domDocument;
+	private final String eTag;
 	private String documentAsString;
-	
-	public InterceptedDocument(DocumentSelector documentSelector,org.w3c.dom.Document domDocument) {
+
+	public InterceptedDocument(DocumentSelector documentSelector,
+			org.w3c.dom.Document domDocument) {
+		this(documentSelector, domDocument, "null");
+	}
+
+	public InterceptedDocument(DocumentSelector documentSelector,
+			org.w3c.dom.Document domDocument, String eTag) {
 		this.documentSelector = documentSelector;
 		this.domDocument = domDocument;
+		this.eTag = eTag;
 	}
-	
+
+	public InterceptedDocument(Document document)
+			throws InternalServerErrorException {
+		this(new DocumentSelector(document.getCollection(),
+				document.getDocumentName()), document.getAsDOMDocument(),
+				document.getETag());
+	}
+
 	@Override
 	public String getCollection() {
 		return documentSelector.getCollection();
 	}
-	
+
 	@Override
 	public org.w3c.dom.Document getAsDOMDocument()
 			throws InternalServerErrorException {
@@ -61,7 +76,7 @@ public class InterceptedDocument implements Document {
 			try {
 				documentAsString = TextWriter.toString(domDocument);
 			} catch (TransformerException e) {
-				throw new InternalServerErrorException(e.getMessage(),e);
+				throw new InternalServerErrorException(e.getMessage(), e);
 			}
 		}
 		return documentAsString;
@@ -74,7 +89,7 @@ public class InterceptedDocument implements Document {
 
 	@Override
 	public String getETag() {
-		return "NA";
+		return eTag;
 	}
-	
+
 }

@@ -109,6 +109,7 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 			}
 	}
 
+	@Override
 	public void subscribeOk(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int expires,
 			int responseCode) {
@@ -137,14 +138,16 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 				* 1000, expires * 1000, 0, timerOptions);
 	}
 
+	@Override
 	public void subscribeError(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int error) {
 		tracer.info("error on subscribe: error=" + error);
 	}
 
+	@Override
 	public void notifyEvent(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, Event terminationReason,
-			Status status, String content, String contentType,
+			Status status, Object content, String contentType,
 			String contentSubtype) {
 		String notification = "\nNOTIFY EVENT:" + "\n+-- Subscriber: "
 				+ subscriber + "\n+-- Notifier: " + notifier
@@ -168,12 +171,14 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 		}
 	}
 
+	@Override
 	public void resubscribeOk(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int expires) {
 		tracer.info("resubscribe Ok : expires=" + expires);
 
 	}
 
+	@Override
 	public void resubscribeError(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int error) {
 		tracer.info("error on resubscribe: error=" + error);
@@ -200,12 +205,14 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 		}
 	}
 
+	@Override
 	public void unsubscribeOk(String subscriber, String notifier,
 			String eventPackage, String subscriptionId) {
 		tracer.info("unsubscribe Ok");
 
 	}
 
+	@Override
 	public void unsubscribeError(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, int error) {
 		tracer.info("error on unsubscribe: error=" + error);

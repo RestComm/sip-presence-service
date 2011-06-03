@@ -6,6 +6,10 @@
 	
 	<bean name="Mobicents.XDMS.AppUsage.Deployer.RLSServices"
 		class="org.openxdm.xcap.server.slee.appusage.rlsservices.RLSServicesAppUsageDeployer">      
+      <constructor>
+      	  <!-- if true turns on the uniqueness constraint validation of rls-services docs, i.e., each <service> must have a unique uri among all <service>s in XDMS, note that this truly slows down puts of user rls-services docs -->		
+          <parameter>true</parameter> 
+     	</constructor>
       <!-- this app usage depends on resource lists -->
       <depends>Mobicents.XDMS.AppUsage.Deployer.ResourceLists</depends>      
    </bean>

@@ -36,13 +36,10 @@ import javax.sip.header.EventHeader;
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
 import javax.slee.SbbLocalObject;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 
 import org.apache.log4j.Logger;
 import org.mobicents.protocols.xcap.diff.BuildPatchException;
@@ -53,11 +50,9 @@ import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.mobicents.slee.xdm.server.ServerConfiguration;
+import org.mobicents.xdm.common.util.dom.DomUtils;
 import org.mobicents.xdm.server.appusage.AppUsage;
 import org.mobicents.xdm.server.appusage.AppUsageManagement;
-import org.openxdm.xcap.client.appusage.resourcelists.jaxb.EntryType;
-import org.openxdm.xcap.client.appusage.resourcelists.jaxb.ListType;
-import org.openxdm.xcap.client.appusage.resourcelists.jaxb.ResourceLists;
 import org.openxdm.xcap.common.datasource.Document;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
 import org.openxdm.xcap.common.uri.DocumentSelector;
@@ -72,7 +67,9 @@ import org.openxdm.xcap.server.slee.resource.datasource.DocumentActivity;
 import org.openxdm.xcap.server.slee.resource.datasource.DocumentUpdatedEvent;
 import org.openxdm.xcap.server.slee.resource.datasource.NodeSubscription;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 /**
  * Logic for {@link XcapDiffSubscriptionControlSbb}
@@ -91,13 +88,13 @@ public class XcapDiffSubscriptionControl {
 			.getInstance();
 
 	private final Map<String, String> EVENT_HEADER_PATCHING_PARAMS = initEventHeaderPatchingParams();
-	
+
 	private Map<String, String> initEventHeaderPatchingParams() {
-		Map<String,String> map = new HashMap<String, String>();
+		Map<String, String> map = new HashMap<String, String>();
 		map.put(DiffProcessing.PARAM, DiffProcessing.XcapPatching.toString());
 		return Collections.unmodifiableMap(map);
 	}
-	
+
 	public static String[] getEventPackages() {
 		return xcapDiffEventPackages;
 	}
@@ -137,31 +134,43 @@ public class XcapDiffSubscriptionControl {
 			}
 		}
 
-		StringReader stringReader = null;
+		if (content == null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("xcap diff subscription request includes no content, replying forbidden");
+			}
+			sbb.getParentSbb().newSubscriptionAuthorization(subscriber,
+					subscriberDisplayName, notifier, key, expires,
+					Response.FORBIDDEN, eventList, serverTransaction);
+			return;
+		}
 
 		try {
-			stringReader = new StringReader(content);
-			ResourceLists object = (ResourceLists) sbb.getUnmarshaller()
-					.unmarshal(stringReader);
-			stringReader.close();
-			stringReader = null;
+			org.w3c.dom.Document document = DomUtils.DOCUMENT_BUILDER_NS_AWARE_FACTORY
+					.newDocumentBuilder().parse(
+							new InputSource(new StringReader(content)));
+			Element resourceLists = document.getDocumentElement();
+
 			// ok, resource-lists parsed, let's process it's lists elements
 			HashSet<String> collectionsToSubscribe = null;
 			HashSet<DocumentSelector> documentsToSubscribe = new HashSet<DocumentSelector>();
 			HashSet<NodeSubscription> nodeSubscriptions = new HashSet<NodeSubscription>();
-			for (ListType listType : object.getList()) {
-				for (Object listOrExternalOrEntry : listType
-						.getListOrExternalOrEntry()) {
-					if (listOrExternalOrEntry instanceof JAXBElement<?>) {
-						JAXBElement<?> jAXBElement = (JAXBElement<?>) listOrExternalOrEntry;
-						if (jAXBElement.getValue() instanceof EntryType) {
-							EntryType entryType = (EntryType) jAXBElement
-									.getValue();
+			NodeList resourceListsChilds = resourceLists.getChildNodes();
+			for (int i = 0; i < resourceListsChilds.getLength(); i++) {
+				Node resourceListsChild = resourceListsChilds.item(i);
+				if (DomUtils.isElementNamed(resourceListsChild, "list")) {
+					// resource-lists/list
+					NodeList listChilds = resourceListsChild.getChildNodes();
+					Node listChild = null;
+					String uri = null;
+					for (int j = 0; j < listChilds.getLength(); j++) {
+						listChild = listChilds.item(j);
+						if (DomUtils.isElementNamed(listChild, "entry")) {
+							// resource-lists/list/entry
+							uri = ((Element) listChild).getAttribute("uri");
 							// process it
 							ResourceSelector resourceSelector = null;
 							try {
-								int queryComponentSeparator = entryType
-										.getUri().indexOf('?');
+								int queryComponentSeparator = uri.indexOf('?');
 								// note: in xcap uris the root start with /, in
 								// xcap diff it doesn't, due to separation of
 								// full xcap root from doc collection, so we
@@ -173,22 +182,17 @@ public class XcapDiffSubscriptionControl {
 															.getInstance()
 															.getXcapRoot()
 															.substring(1),
-													entryType
-															.getUri()
-															.substring(0,
-																	queryComponentSeparator),
-													entryType
-															.getUri()
-															.substring(
-																	queryComponentSeparator + 1));
+													uri.substring(0,
+															queryComponentSeparator),
+													uri.substring(queryComponentSeparator + 1));
 								} else {
 									resourceSelector = Parser
 											.parseResourceSelector(
 													ServerConfiguration
 															.getInstance()
 															.getXcapRoot()
-															.substring(1),
-													entryType.getUri(), null);
+															.substring(1), uri,
+													null);
 								}
 
 								// authorize
@@ -257,7 +261,8 @@ public class XcapDiffSubscriptionControl {
 										NodeSubscription nodeSubscription = new NodeSubscription()
 												.setDocumentSelector(
 														documentSelector)
-												.setNodeSelector(nodeSelector).setSel(entryType.getUri());
+												.setNodeSelector(nodeSelector)
+												.setSel(uri);
 										if (logger.isInfoEnabled()) {
 											logger.info("subscribing node "
 													+ nodeSelector
@@ -283,7 +288,7 @@ public class XcapDiffSubscriptionControl {
 							} catch (Exception e) {
 								logger.error(
 										"failed to parse entry uri to subscribe, ignoring "
-												+ entryType.getUri(), e);
+												+ uri, e);
 							}
 						}
 					}
@@ -365,12 +370,9 @@ public class XcapDiffSubscriptionControl {
 			sbb.getParentSbb().newSubscriptionAuthorization(subscriber,
 					subscriberDisplayName, notifier, key, expires, Response.OK,
 					eventList, serverTransaction);
-		} catch (JAXBException e) {
+		} catch (Exception e) {
 			logger.error("failed to parse resource-lists in initial subscribe",
 					e);
-			if (stringReader != null) {
-				stringReader.close();
-			}
 			sbb.getParentSbb().newSubscriptionAuthorization(subscriber,
 					subscriberDisplayName, notifier, key, expires,
 					Response.FORBIDDEN, eventList, serverTransaction);
@@ -472,8 +474,9 @@ public class XcapDiffSubscriptionControl {
 		// let's process first collections
 		for (String collection : subscriptions.getCollectionSubscriptions()) {
 			// get documents that exist in this collection
-			if(logger.isDebugEnabled()) {
-				logger.debug("building patch component for collection "+collection);				
+			if (logger.isDebugEnabled()) {
+				logger.debug("building patch component for collection "
+						+ collection);
 			}
 			try {
 				for (Document document : sbb.getDataSourceSbbInterface()
@@ -498,8 +501,9 @@ public class XcapDiffSubscriptionControl {
 		// now individual docs
 		for (DocumentSelector documentSelector : subscriptions
 				.getDocumentSubscriptions()) {
-			if(logger.isDebugEnabled()) {
-				logger.debug("building patch component for document subscription "+documentSelector);				
+			if (logger.isDebugEnabled()) {
+				logger.debug("building patch component for document subscription "
+						+ documentSelector);
 			}
 			Document document = null;
 			try {
@@ -524,8 +528,9 @@ public class XcapDiffSubscriptionControl {
 		NodeSelector nodeSelector = null;
 		for (NodeSubscription nodeSubscription : subscriptions
 				.getNodeSubscriptions()) {
-			if(logger.isDebugEnabled()) {
-				logger.debug("building patch component for node subscription "+nodeSubscription);				
+			if (logger.isDebugEnabled()) {
+				logger.debug("building patch component for node subscription "
+						+ nodeSubscription);
 			}
 			try {
 				document = sbb.getDataSourceSbbInterface().getDocument(
@@ -553,19 +558,23 @@ public class XcapDiffSubscriptionControl {
 					continue;
 				}
 				nodeSelector.getNamespaceContext().setDefaultDocNamespace(
-							appUsage.getDefaultDocumentNamespace());				
-				final XPath xpath = XPathFactory.newInstance().newXPath();
+						appUsage.getDefaultDocumentNamespace());
+				final XPath xpath = DomUtils.XPATH_FACTORY.newXPath();
 				xpath.setNamespaceContext(nodeSelector.getNamespaceContext());
 				try {
 					// exec query to get element
 					final NodeList nodeList = (NodeList) xpath.evaluate(
-							nodeSelector.toStringWithEmptyPrefix(), documentDOM,
-							XPathConstants.NODESET);
+							nodeSelector.toStringWithEmptyPrefix(),
+							documentDOM, XPathConstants.NODESET);
 					if (nodeList.getLength() == 0) {
 						// node does not exists
-						if(logger.isDebugEnabled()) {
+						if (logger.isDebugEnabled()) {
 							try {
-								logger.debug("no node matches expression "+nodeSelector.toStringWithEmptyPrefix()+" in doc: \n"+TextWriter.toString(documentDOM));
+								logger.debug("no node matches expression "
+										+ nodeSelector
+												.toStringWithEmptyPrefix()
+										+ " in doc: \n"
+										+ TextWriter.toString(documentDOM));
 							} catch (TransformerException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
@@ -624,7 +633,8 @@ public class XcapDiffSubscriptionControl {
 			logger.error("failed to build xcap diff patch", e);
 			return null;
 		}
-		return new NotifyContent(xcapDiff, getXcapDiffContentTypeHeader(sbb), null);
+		return new NotifyContent(xcapDiff, getXcapDiffContentTypeHeader(sbb),
+				null);
 
 	}
 
@@ -640,14 +650,15 @@ public class XcapDiffSubscriptionControl {
 	 * @param aci
 	 * @param sbb
 	 */
-	public void documentUpdated(DocumentUpdatedEvent event, 
+	public void documentUpdated(DocumentUpdatedEvent event,
 			ActivityContextInterface aci,
 			XcapDiffSubscriptionControlSbbInterface sbb) {
 
-		if(logger.isDebugEnabled()) {
-			logger.debug("document "+event.getDocumentSelector()+" updated.");				
+		if (logger.isDebugEnabled()) {
+			logger.debug("document " + event.getDocumentSelector()
+					+ " updated.");
 		}
-		
+
 		SubscriptionsMap subscriptionsMap = sbb.getSubscriptionsMap();
 		if (subscriptionsMap == null) {
 			return;
@@ -657,26 +668,30 @@ public class XcapDiffSubscriptionControl {
 		Object activity = aci.getActivity();
 		if (activity instanceof CollectionActivity) {
 			eventCollection = ((CollectionActivity) activity).getCollection();
-			if(logger.isDebugEnabled()) {
-				logger.debug("document update in a collection activity -> "+eventCollection);				
+			if (logger.isDebugEnabled()) {
+				logger.debug("document update in a collection activity -> "
+						+ eventCollection);
 			}
 		}
 
 		for (Subscriptions s : subscriptionsMap.getSubscriptions()) {
 
-			if(logger.isDebugEnabled()) {
-				logger.debug("processing subscription "+s.getKey());				
+			if (logger.isDebugEnabled()) {
+				logger.debug("processing subscription " + s.getKey());
 			}
-			
+
 			if (eventCollection != null) {
 				// event was fired in a collection, look for subscriptions with
 				// such collection
 				for (String collection : s.getCollectionSubscriptions()) {
 					if (eventCollection.equals(collection)) {
-						if(logger.isDebugEnabled()) {
-							logger.debug("subscription "+s.getKey()+" is subscribed to collection "+collection+", requesting notification...");				
+						if (logger.isDebugEnabled()) {
+							logger.debug("subscription " + s.getKey()
+									+ " is subscribed to collection "
+									+ collection
+									+ ", requesting notification...");
 						}
-						notifySubscriber(s,event,sbb);
+						notifySubscriber(s, event, sbb);
 					}
 				}
 
@@ -685,8 +700,10 @@ public class XcapDiffSubscriptionControl {
 				// collections
 				for (DocumentSelector ds : s.getDocumentSubscriptions()) {
 					if (ds.equals(event.getDocumentSelector())) {
-						if(logger.isDebugEnabled()) {
-							logger.debug("subscription "+s.getKey()+" is subscribed to document "+ds+", requesting notification...");				
+						if (logger.isDebugEnabled()) {
+							logger.debug("subscription " + s.getKey()
+									+ " is subscribed to document " + ds
+									+ ", requesting notification...");
 						}
 						notifySubscriber(s, event, sbb);
 					}
@@ -695,17 +712,20 @@ public class XcapDiffSubscriptionControl {
 				for (NodeSubscription ns : s.getNodeSubscriptions()) {
 					if (ns.getDocumentSelector().equals(
 							event.getDocumentSelector())) {
-						if(logger.isDebugEnabled()) {
-							logger.debug("subscription "+s.getKey()+" is subscribed to "+ns+", requesting notification...");				
+						if (logger.isDebugEnabled()) {
+							logger.debug("subscription " + s.getKey()
+									+ " is subscribed to " + ns
+									+ ", requesting notification...");
 						}
 						// tell underlying sip event framework to notify
 						// subscriber
 						try {
-							sbb.getParentSbb()
-									.notifySubscriber(
-											s.getKey(),
-											new NotifyContent(event.getNodeXcapDiff(ns),
-													getXcapDiffContentTypeHeader(sbb), null));
+							sbb.getParentSbb().notifySubscriber(
+									s.getKey(),
+									new NotifyContent(
+											event.getNodeXcapDiff(ns),
+											getXcapDiffContentTypeHeader(sbb),
+											null));
 						} catch (BuildPatchException e) {
 							logger.error(
 									"Failed to build and notify xcap diff for subscription "
@@ -720,33 +740,31 @@ public class XcapDiffSubscriptionControl {
 		}
 	}
 
-	private void notifySubscriber(Subscriptions s, DocumentUpdatedEvent event, XcapDiffSubscriptionControlSbbInterface sbb) {
+	private void notifySubscriber(Subscriptions s, DocumentUpdatedEvent event,
+			XcapDiffSubscriptionControlSbbInterface sbb) {
 		// tell underlying sip event framework to notify
 		// subscriber
 		try {
-			if (s.getDiffProcessing() == null || s.getDiffProcessing() == DiffProcessing.NoPatching) {
-				sbb.getParentSbb()
-				.notifySubscriber(
+			if (s.getDiffProcessing() == null
+					|| s.getDiffProcessing() == DiffProcessing.NoPatching) {
+				sbb.getParentSbb().notifySubscriber(
 						s.getKey(),
-						new NotifyContent(event
-								.getDocXcapDiff(false), getXcapDiffContentTypeHeader(sbb), null)
-						);								
-			}
-			else {
-				sbb.getParentSbb()
-				.notifySubscriber(
+						new NotifyContent(event.getDocXcapDiff(false),
+								getXcapDiffContentTypeHeader(sbb), null));
+			} else {
+				sbb.getParentSbb().notifySubscriber(
 						s.getKey(),
-						new NotifyContent(event
-								.getDocXcapDiff(true), getXcapDiffContentTypeHeader(sbb), EVENT_HEADER_PATCHING_PARAMS)
-						);
+						new NotifyContent(event.getDocXcapDiff(true),
+								getXcapDiffContentTypeHeader(sbb),
+								EVENT_HEADER_PATCHING_PARAMS));
 			}
-			
+
 		} catch (BuildPatchException e) {
 			logger.error(
 					"Failed to build and notify xcap diff for subscription "
 							+ s + " and document "
 							+ event.getDocumentSelector(), e);
-		}		
+		}
 	}
 
 	private static Logger logger = Logger

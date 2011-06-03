@@ -29,7 +29,6 @@ import javax.sip.ServerTransaction;
 import javax.sip.message.Response;
 import javax.slee.ActivityContextInterface;
 import javax.slee.resource.StartActivityException;
-import javax.xml.bind.JAXBElement;
 
 import org.apache.log4j.Logger;
 import org.mobicents.slee.sipevent.server.publication.data.ComposedPublication;
@@ -37,16 +36,17 @@ import org.mobicents.slee.sipevent.server.subscription.NotifyContent;
 import org.mobicents.slee.sipevent.server.subscription.data.Notifier;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
-import org.mobicents.slee.sippresence.pojo.datamodel.Person;
-import org.mobicents.slee.sippresence.pojo.pidf.Presence;
-import org.mobicents.slee.sippresence.pojo.rpid.Sphere;
 import org.mobicents.slee.sippresence.server.presrulescache.PresRulesActivity;
 import org.mobicents.slee.sippresence.server.subscription.rules.OMAPresRule;
 import org.mobicents.slee.sippresence.server.subscription.rules.PresRuleCMPKey;
 import org.mobicents.slee.sippresence.server.subscription.rules.RulesetProcessor;
 import org.mobicents.slee.sippresence.server.subscription.rules.SubHandlingAction;
+import org.mobicents.xdm.common.util.dom.DomUtils;
 import org.openxdm.xcap.client.appusage.presrules.jaxb.commonpolicy.Ruleset;
 import org.openxdm.xcap.common.uri.DocumentSelector;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Logic for the sip presence subscription control, which complements the SIP
@@ -224,7 +224,6 @@ public class PresenceSubscriptionControl {
 	/**
 	 * interface used by rules processor to get sphere for a notifier
 	 */
-	@SuppressWarnings("rawtypes")
 	public String getSphere(String notifier, PresenceSubscriptionControlSbbInterface sbb) {
 
 		// get ridden of notifier uri params, if any
@@ -232,46 +231,52 @@ public class PresenceSubscriptionControl {
 		
 		ComposedPublication composedPublication = sbb.getPublicationChildSbb()
 				.getComposedPublication(notifierWithoutParams, "presence");
-		if (composedPublication != null
-				&& composedPublication.getUnmarshalledContent().getValue() instanceof Presence) {
-			Presence presence = (Presence) composedPublication
-					.getUnmarshalledContent().getValue();
-			for (Object anyObject : presence.getAny()) {
-				JAXBElement anyElement = (JAXBElement) anyObject;
-				if (anyElement.getValue() instanceof Person) {
-					Person person = (Person) anyElement.getValue();
-					for (Object anotherAnyObject : person.getAny()) {
-						JAXBElement anotherAnyElement = (JAXBElement) anotherAnyObject;
-						if (anotherAnyElement.getValue() instanceof Sphere) {
-							Sphere sphere = ((Sphere) anotherAnyElement
-									.getValue());
-							String result = null;
-							for (Object contentObject : sphere.getContent()) {
-								if (contentObject instanceof String) {
-									if (result == null) {
-										result = (String) contentObject;
-									} else {
-										result += " " + (String) contentObject;
-									}
-								} else if (contentObject instanceof JAXBElement) {
-									JAXBElement contentElement = (JAXBElement) contentObject;
-									if (result == null) {
-										result = contentElement.getName()
-												.getLocalPart();
-									} else {
-										result += " "
-												+ contentElement.getName()
-														.getLocalPart();
-									}
+		if (composedPublication == null || composedPublication.getDocumentAsDOM() == null) {
+			return null;
+		}
+		
+		String sphere = null;
+		Element presence = composedPublication.getDocumentAsDOM().getDocumentElement();
+		NodeList presenceChilds = presence.getChildNodes();
+		Node presenceChild = null;
+		for (int i=0; i < presenceChilds.getLength();i++) {
+			presenceChild = presenceChilds.item(i);
+			if (DomUtils.isElementNamed(presenceChild,"person")) {
+				// presence/person element
+				NodeList personChilds = presenceChild.getChildNodes();
+				Node personChild = null;
+				for (int j=0; j < personChilds.getLength();j++) {
+					personChild = personChilds.item(j);
+					if (DomUtils.isElementNamed(personChild,"sphere")) {
+						// presence/person/sphere element
+						String tmpSphere = null;
+						NodeList sphereChilds = personChild.getChildNodes();
+						Node sphereChild = null;
+						for (int l=0; l < sphereChilds.getLength();l++) {
+							sphereChild = sphereChilds.item(l);
+							if(sphereChild.getNodeType() == Node.ELEMENT_NODE) {
+								if (tmpSphere == null) {
+									tmpSphere = DomUtils.getElementName(sphereChild);
+								} else {
+									tmpSphere += " "
+											+ DomUtils.getElementName(sphereChild);
 								}
 							}
-							return result;
 						}
+						if (sphere == null) {
+							sphere = tmpSphere;
+						}
+						else {
+							if (!sphere.equals(tmpSphere)) {
+								// inconsistent sphere values
+								return null;
+							}
+						}						
 					}
 				}
 			}
 		}
-		return null;
+		return sphere;
 	}
 
 	public NotifyContent getNotifyContent(Subscription subscription, PresenceSubscriptionControlSbbInterface sbb) {
@@ -281,9 +286,9 @@ public class PresenceSubscriptionControl {
 					.getPublicationChildSbb().getComposedPublication(
 							subscription.getNotifier().getUri(),
 							subscription.getKey().getEventPackage());
-			if (composedPublication != null && composedPublication.getUnmarshalledContent() != null) {
+			if (composedPublication != null && composedPublication.getDocumentAsDOM() != null) {
 				return new NotifyContent(composedPublication
-						.getUnmarshalledContent(), sbb.getHeaderFactory()
+						.getDocumentAsDOM(), sbb.getHeaderFactory()
 						.createContentTypeHeader(
 								composedPublication.getContentType(),
 								composedPublication.getContentSubType()),null);
@@ -294,7 +299,6 @@ public class PresenceSubscriptionControl {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	public Object filterContentPerSubscriber(Subscription subscription, Object unmarshalledContent, PresenceSubscriptionControlSbbInterface sbb) {
 		
 		// get rules for subscriptions on this sbb entity (sip dialog)

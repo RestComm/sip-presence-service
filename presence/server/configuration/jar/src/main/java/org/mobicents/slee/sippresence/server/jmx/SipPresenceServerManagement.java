@@ -25,6 +25,14 @@
  */
 package org.mobicents.slee.sippresence.server.jmx;
 
+import java.net.URI;
+
+import javax.xml.validation.Schema;
+
+import org.jboss.virtual.VFS;
+import org.jboss.virtual.VFSUtils;
+import org.openxdm.xcap.common.xml.SchemaContext;
+
 /**
  * @author martins
  *
@@ -33,7 +41,6 @@ public class SipPresenceServerManagement implements SipPresenceServerManagementM
 
 	private String presRulesAUID;
 	private String presRulesDocumentName;
-	private String jaxbPackageNames;
 	
 	private static SipPresenceServerManagement INSTANCE = new SipPresenceServerManagement();
 	
@@ -48,7 +55,24 @@ public class SipPresenceServerManagement implements SipPresenceServerManagementM
 	/**
 	 * 
 	 */
-	private SipPresenceServerManagement() {}
+	private SipPresenceServerManagement() {
+		// establish default xsd dir
+		try {
+			java.net.URL url = VFSUtils.getCompatibleURL(VFS
+				.getRoot(SipPresenceServerManagement.class.getClassLoader()
+						.getResource("../xsd")));
+			URI schemaDirURI = new java.net.URI(url.toExternalForm()
+				.replaceAll(" ", "%20"));
+			// create schema context
+			SchemaContext schemaContext = SchemaContext.fromDir(schemaDirURI);
+			// get schema from context
+			schema = schemaContext
+						.getCombinedSchema();
+				
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 	
 	/* (non-Javadoc)
 	 * @see org.mobicents.slee.sippresence.server.jmx.SipPresenceServerManagementMBean#getPresRulesAUID()
@@ -81,22 +105,10 @@ public class SipPresenceServerManagement implements SipPresenceServerManagementM
 	public void setPresRulesDocumentName(String documentName) {
 		this.presRulesDocumentName = documentName;
 	}
-
-	/**
-	 * Retrieves the package names for jaxb pojos, to be used when (un)marshalling presence content.
-	 * @return
-	 */
-	public String getJaxbPackageNames() {
-		return jaxbPackageNames;
-	}
-
-	/**
-	 * Sets the package names (separated by ':' char) for jaxb pojos, to be used when (un)marshalling
-	 * presence content. All whitespaces will be removed.
-	 * 
-	 * @param packageNames
-	 */
-	public void setJaxbPackageNames(String packageNames) {
-		this.jaxbPackageNames = packageNames.replaceAll("\\s","");
+	
+	private Schema schema;
+	
+	public Schema getCombinedSchema() {		
+		return schema;
 	}
 }

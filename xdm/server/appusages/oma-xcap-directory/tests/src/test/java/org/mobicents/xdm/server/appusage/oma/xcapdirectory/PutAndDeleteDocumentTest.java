@@ -89,7 +89,7 @@ public class PutAndDeleteDocumentTest extends AbstractT {
 		String documentSelector = DocumentSelectorBuilder.getUserDocumentSelectorBuilder("rls-services",user,documentName).toPercentEncodedString();
 		UriBuilder uriBuilder = new UriBuilder()
 			.setSchemeAndAuthority("http://localhost:8080")
-			.setXcapRoot("/mobicents")
+			.setXcapRoot("/mobicents/")
 			.setDocumentSelector(documentSelector);
 		URI documentURI = uriBuilder.toURI();
 		
@@ -111,7 +111,7 @@ public class PutAndDeleteDocumentTest extends AbstractT {
 		String xdDocumentSelector = DocumentSelectorBuilder.getUserDocumentSelectorBuilder(XcapDirectoryAppUsage.ID,user,XcapDirectoryAppUsageDataSourceInterceptor.DIRECTORY_DOCUMENT_NAME).toPercentEncodedString();
 		UriBuilder xdUriBuilder = new UriBuilder()
 		.setSchemeAndAuthority("http://localhost:8080")
-		.setXcapRoot("/mobicents")
+		.setXcapRoot("/mobicents/")
 		.setDocumentSelector(xdDocumentSelector);
 		URI xdDocumentURI = xdUriBuilder.toURI();
 		XcapResponse getResponse = client.get(xdDocumentURI,null,credentials);

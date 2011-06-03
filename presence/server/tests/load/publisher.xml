@@ -6,13 +6,15 @@
 	
 	<nop>
 		<action>
-			<assign assign_to="wait_period" value="3500000" />
+			<assign assign_to="wait_period" value="50000" />
+			<assignstr assign_to="expires" value="60" />
 		</action>	
 	</nop>
 	
 	<!-- initial publish -->
 	
-  	<send retrans="500">
+  	
+	<send retrans="500">
     <![CDATA[
 
       PUBLISH sip:[field0]@[remote_ip] SIP/2.0
@@ -22,7 +24,7 @@
       Call-ID: [call_id]
       CSeq: 1 PUBLISH
       Max-Forwards: 70
-      Expires: 3600
+      Expires: [$expires]
       Event: presence
       Content-Type: application/pidf+xml
       Content-Length: [len]
@@ -30,7 +32,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <presence xmlns="urn:ietf:params:xml:ns:pidf"
 	entity="sip:[field0]@[remote_ip]">
-	<tuple id="[call_number]a">
+	<tuple id="a[call_number]">
 		<status>
         	<basic>open</basic>
 		</status>
@@ -61,7 +63,7 @@
       Call-ID: [call_id]
       CSeq: 2 PUBLISH
       Max-Forwards: 70
-      Expires: 3600
+      Expires: [$expires]
       Event: presence
       SIP-If-Match: [$etag]
       [routes]
@@ -90,7 +92,7 @@
       Call-ID: [call_id]
       CSeq: 3 PUBLISH
       Max-Forwards: 70
-      Expires: 3600
+      Expires: [$expires]
       Event: presence
       SIP-If-Match: [$etag]
       [routes]
@@ -119,7 +121,7 @@
       Call-ID: [call_id]
       CSeq: 4 PUBLISH
       Max-Forwards: 70
-      Expires: 3600
+      Expires: [$expires]
       Event: presence
       SIP-If-Match: [$etag]
       [routes]
@@ -148,7 +150,7 @@
       Call-ID: [call_id]
       CSeq: 5 PUBLISH
       Max-Forwards: 70
-      Expires: 3600
+      Expires: [$expires]
       Event: presence
       SIP-If-Match: [$etag]
       [routes]
@@ -177,7 +179,7 @@
       Call-ID: [call_id]
       CSeq: 6 PUBLISH
       Max-Forwards: 70
-      Expires: 3600
+      Expires: [$expires]
       Event: presence
       SIP-If-Match: [$etag]
       [routes]
@@ -187,7 +189,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <presence xmlns="urn:ietf:params:xml:ns:pidf"
 	entity="sip:[field0]@[remote_ip]">
-	<tuple id="[call_number]a">
+	<tuple id="a[call_number]">
 		<status>
         	<basic>closed</basic>
 		</status>
@@ -216,7 +218,7 @@
       Call-ID: [call_id]
       CSeq: 7 PUBLISH
       Max-Forwards: 70
-      Expires: 3600
+      Expires: [$expires]
       Event: presence
       SIP-If-Match: [$etag]
       [routes]
@@ -245,7 +247,7 @@
       Call-ID: [call_id]
       CSeq: 8 PUBLISH
       Max-Forwards: 70
-      Expires: 3600
+      Expires: [$expires]
       Event: presence
       SIP-If-Match: [$etag]
       [routes]
@@ -274,7 +276,7 @@
       Call-ID: [call_id]
       CSeq: 9 PUBLISH
       Max-Forwards: 70
-      Expires: 3600
+      Expires: [$expires]
       Event: presence
       SIP-If-Match: [$etag]
       [routes]

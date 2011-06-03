@@ -17,12 +17,9 @@
 			<artifactId>spi</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>sun-jaxb</groupId>
-			<artifactId>jaxb-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>sun-jaxb</groupId>
-			<artifactId>jaxb-impl</artifactId>
+			<artifactId>commons</artifactId>
+			<groupId>org.mobicents.servers.xdm</groupId>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 	

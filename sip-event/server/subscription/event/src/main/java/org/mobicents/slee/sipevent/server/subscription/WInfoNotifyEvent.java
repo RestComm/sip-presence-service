@@ -24,10 +24,10 @@ package org.mobicents.slee.sipevent.server.subscription;
 
 import org.mobicents.sipevent.server.subscription.util.AbstractEvent;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
-import org.mobicents.slee.sipevent.server.subscription.winfo.pojo.Watcher;
 
 /**
- * Event that is fired on a subscription aci, so notifications for a subscription are serialized.
+ * Event that is fired on a subscription aci, so notifications for a
+ * subscription are serialized.
  * 
  * @author martins
  * 
@@ -37,32 +37,113 @@ public class WInfoNotifyEvent extends AbstractEvent {
 	private final Watcher watcher;
 	private final SubscriptionKey subscriptionKey;
 	private final SubscriptionKey watcherSubscriptionKey;
-	
-	public WInfoNotifyEvent(SubscriptionKey subscriptionKey, SubscriptionKey watcherSubscriptionKey, Watcher watcher) {
+
+	public WInfoNotifyEvent(SubscriptionKey subscriptionKey,
+			SubscriptionKey watcherSubscriptionKey, Watcher watcher) {
 		super();
 		this.subscriptionKey = subscriptionKey;
 		this.watcherSubscriptionKey = watcherSubscriptionKey;
-		this.watcher = watcher;		
+		this.watcher = watcher;
 	}
-	
+
 	public Watcher getWatcher() {
 		return watcher;
 	}
-	
+
 	public SubscriptionKey getWatcherSubscriptionKey() {
 		return watcherSubscriptionKey;
 	}
-	
+
 	public SubscriptionKey getSubscriptionKey() {
 		return subscriptionKey;
 	}
-	
+
 	private String toString = null;
+
 	@Override
 	public String toString() {
 		if (toString == null) {
-			toString = new StringBuilder("WINFO NOTIFY EVENT [ Subscription = ").append(String.valueOf(subscriptionKey)).append(" ]").toString();
+			toString = new StringBuilder("WINFO NOTIFY EVENT [ Subscription = ")
+					.append(String.valueOf(subscriptionKey)).append(" ]")
+					.toString();
 		}
 		return toString;
+	}
+
+	public static class Watcher {
+
+		private String value;
+		private String displayName;
+		private String status;
+		private String event;
+		private Integer expiration;
+		private String id;
+		private Integer durationSubscribed;
+		private String lang;
+
+		public String getValue() {
+			return value;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+
+		public String getDisplayName() {
+			return displayName;
+		}
+
+		public void setDisplayName(String displayName) {
+			this.displayName = displayName;
+		}
+
+		public String getStatus() {
+			return status;
+		}
+
+		public void setStatus(String status) {
+			this.status = status;
+		}
+
+		public String getEvent() {
+			return event;
+		}
+
+		public void setEvent(String event) {
+			this.event = event;
+		}
+
+		public Integer getExpiration() {
+			return expiration;
+		}
+
+		public void setExpiration(Integer expiration) {
+			this.expiration = expiration;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public Integer getDurationSubscribed() {
+			return durationSubscribed;
+		}
+
+		public void setDurationSubscribed(Integer durationSubscribed) {
+			this.durationSubscribed = durationSubscribed;
+		}
+
+		public String getLang() {
+			return lang;
+		}
+
+		public void setLang(String lang) {
+			this.lang = lang;
+		}
+
 	}
 }

@@ -89,7 +89,7 @@ public class Publisher implements SipListener {
 
 	private int expires = 60;
 	private String etag;
-	private final String tupleId = Utils.getInstance().generateTag();
+	private final String tupleId;
 	
 	private final String publisher;
 	private final int listeningPort;
@@ -101,10 +101,11 @@ public class Publisher implements SipListener {
 
 	private StateMachine stateMachine;
 
-	public Publisher(String publisher, int listeningPort, ResourceListServerSipTest test) {
+	public Publisher(String publisher, int listeningPort, ResourceListServerSipTest test, String tupleId) {
 		this.publisher = publisher;
 		this.listeningPort = listeningPort;
 		this.test = test;
+		this.tupleId = tupleId;
 	}
 
 	public void publish() throws InvalidArgumentException,
@@ -244,7 +245,7 @@ public class Publisher implements SipListener {
 				+ publisher
 				+ "'>"
 				+ "<tuple id='"+tupleId+"'><status><basic>open</basic></status></tuple>"
-				+ "<dm:person id='"+tupleId+"'>"
+				+ "<dm:person id='"+tupleId+"a'>"
 				+ "<rpid:activities><rpid:busy/></rpid:activities>"
 				+ "<dm:note>Busy</dm:note>" + "</dm:person>" + "</presence>";
 	}

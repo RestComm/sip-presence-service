@@ -23,14 +23,12 @@
 package org.mobicents.slee.sipevent.server.internal;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.text.ParseException;
 
 import javax.sip.header.ContentTypeHeader;
 import javax.slee.ActivityContextInterface;
 import javax.slee.facilities.Tracer;
 import javax.slee.nullactivity.NullActivity;
-import javax.xml.bind.JAXBException;
 import javax.xml.transform.TransformerException;
 
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
@@ -75,8 +73,8 @@ public class InternalSubscriberNotificationHandler {
 	}
 
 	public void notifyInternalSubscriber(
-			Subscription subscription, String content,
-			ContentTypeHeader contentTypeHeader, ActivityContextInterface aci) {
+			Subscription subscription, Object content,
+			ContentTypeHeader contentTypeHeader, ActivityContextInterface aci) throws IOException {
 		
 		String contentType = null;
 		String contentSubtype = null;
@@ -100,6 +98,14 @@ public class InternalSubscriberNotificationHandler {
 
 		SubscriptionClientControlParentSbbLocalObject parent = internalSubscriptionHandler.sbb.getParentSbb();
 		if (parent != null) {
+			if (content instanceof Node) {
+				// marshall content 			
+				try {
+					content = TextWriter.toString((Node) content);
+				} catch (TransformerException e) {
+					throw new IOException("failed to marshall DOM content", e);
+				}
+			} 
 			parent.notifyEvent(
 				subscription.getSubscriber(),
 				subscription.getNotifier().getUriWithParam(),
@@ -127,7 +133,7 @@ public class InternalSubscriberNotificationHandler {
 					}
 					else {
 						// resource list subscription, no filtering
-						notifyInternalSubscriber(subscription, (String)content, contentTypeHeader, aci);
+						notifyInternalSubscriber(subscription, content, contentTypeHeader, aci);
 					}
 				}
 				else {
@@ -143,31 +149,14 @@ public class InternalSubscriberNotificationHandler {
 		}
 	}
 	
-	private String getFilteredNotifyContent(Subscription subscription,
+	private Object getFilteredNotifyContent(Subscription subscription,
 			Object content, ImplementedSubscriptionControlSbbLocalObject childSbb)
-			throws JAXBException, ParseException, IOException {
+			throws ParseException, IOException {
 
 		// filter content per subscriber (notifier rules)
 		Object filteredContent = childSbb.filterContentPerSubscriber(subscription, content);
 		// filter content per notifier (subscriber rules)
 		// TODO
-		// marshall content to string
-		String result = null;
-		if (content instanceof Node) {
-			// dom
-			try {
-				result = TextWriter.toString((Node)content);
-			} catch (TransformerException e) {
-				throw new IOException("failed to marshall DOM content",e);
-			}
-		}
-		else {
-			// jaxb
-			StringWriter stringWriter = new StringWriter();
-			childSbb.getMarshaller().marshal(filteredContent, stringWriter);
-			result = stringWriter.toString();
-			stringWriter.close();
-		}
-		return result;
+		return filteredContent;
 	}
 }

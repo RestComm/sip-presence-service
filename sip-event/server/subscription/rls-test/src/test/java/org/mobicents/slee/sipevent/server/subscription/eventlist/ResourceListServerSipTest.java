@@ -44,9 +44,9 @@ public class ResourceListServerSipTest {
 		// create rls services
 		rlsServicesManager.putRlsServices();
 		// create and init publishers
-		Publisher publisher1 = new Publisher(publishers[0],6060,this);
+		Publisher publisher1 = new Publisher(publishers[0],6060,this,"bs35r9");
 		publisher1.publish();
-		Publisher publisher2 = new Publisher(publishers[1],6061,this);
+		Publisher publisher2 = new Publisher(publishers[1],6061,this,"ty4658");
 		publisher2.publish();
 		// create and init subscriber
 		Subscriber subscriber = new Subscriber(this.subscriber,resourceList,6062,this);

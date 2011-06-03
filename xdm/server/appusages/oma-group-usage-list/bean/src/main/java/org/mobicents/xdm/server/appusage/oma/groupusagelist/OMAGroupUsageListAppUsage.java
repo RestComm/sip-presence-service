@@ -24,6 +24,7 @@ package org.mobicents.xdm.server.appusage.oma.groupusagelist;
 
 import javax.xml.validation.Validator;
 
+import org.mobicents.xdm.common.util.dom.DomUtils;
 import org.mobicents.xdm.server.appusage.AppUsageDataSource;
 import org.openxdm.xcap.common.error.ConstraintFailureConflictException;
 import org.openxdm.xcap.common.error.InternalServerErrorException;
@@ -85,16 +86,16 @@ public class OMAGroupUsageListAppUsage extends ResourceListsAppUsage {
 		NodeList resourceListsChildNodeList = resourceLists.getChildNodes();
 		for (int i=0;i<resourceListsChildNodeList.getLength();i++) {
 			Node resourceListsChildNode = resourceListsChildNodeList.item(i);
-			if (resourceListsChildNode.getNodeType() == Node.ELEMENT_NODE && resourceListsChildNode.getLocalName().equals(LIST_ELEMENT_NAME)) {
+			if (DomUtils.isElementNamed(resourceListsChildNode,LIST_ELEMENT_NAME)) {
 				// note: name constraint checked by super()
 				NodeList listChildNodeList = resourceListsChildNode.getChildNodes();
 				for (int j=0;j<listChildNodeList.getLength();j++) {
 					Node listChildNode = listChildNodeList.item(j);
 					if (listChildNode.getNodeType() == Node.ELEMENT_NODE) {
-						if (listChildNode.getLocalName().equals(ENTRY_REF_ELEMENT_NAME)) {
+						if (DomUtils.getElementName(listChildNode).equals(ENTRY_REF_ELEMENT_NAME)) {
 							throw new ConstraintFailureConflictException(NOT_ALLOWED_ERROR_PHRASE);
 						}
-						else if (listChildNode.getLocalName().equals(EXTERNAL_ELEMENT_NAME)) {
+						else if (DomUtils.getElementName(listChildNode).equals(EXTERNAL_ELEMENT_NAME)) {
 							throw new ConstraintFailureConflictException(NOT_ALLOWED_ERROR_PHRASE);
 						}
 					}

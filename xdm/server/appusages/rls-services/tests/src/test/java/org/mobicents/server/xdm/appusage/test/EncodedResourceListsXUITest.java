@@ -91,7 +91,7 @@ public class EncodedResourceListsXUITest extends AbstractT {
 				.getUserDocumentSelectorBuilder(RLSServicesAppUsage.ID, user,
 						documentName).toPercentEncodedString();
 		UriBuilder uriBuilder = new UriBuilder().setSchemeAndAuthority(
-				"http://localhost:8080").setXcapRoot("/mobicents")
+				"http://localhost:8080").setXcapRoot("/mobicents/")
 				.setDocumentSelector(documentSelector);
 		URI documentURI = uriBuilder.toURI();
 
