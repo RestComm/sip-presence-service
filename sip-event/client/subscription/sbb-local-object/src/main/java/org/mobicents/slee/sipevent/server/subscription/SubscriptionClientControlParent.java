@@ -126,6 +126,6 @@ public interface SubscriptionClientControlParent {
 	public void notifyEvent(String subscriber, String notifier,
 			String eventPackage, String subscriptionId,
 			Subscription.Event terminationReason, Subscription.Status status,
-			Object content, String contentType, String contentSubtype);
+			String content, String contentType, String contentSubtype);
 	
 }

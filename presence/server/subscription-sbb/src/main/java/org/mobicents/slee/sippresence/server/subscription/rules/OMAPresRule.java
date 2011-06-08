@@ -35,7 +35,7 @@ public class OMAPresRule extends PresRule {
 	private static final long serialVersionUID = 865547623453835201L;
 	
 	private boolean provideBarringState;
-	private GeoPrivTransformation provideGeopriv = GeoPrivTransformation.false_;
+	private GeoPrivTransformation provideGeopriv = GeoPrivTransformation.FALSE;
 	private boolean provideNetworkAvailability;
 	private boolean provideRegistrationState;
 	private Set<String> serviceIDs;
@@ -59,7 +59,10 @@ public class OMAPresRule extends PresRule {
 		this.provideNetworkAvailability = this.provideNetworkAvailability || other.provideNetworkAvailability;
 		this.provideRegistrationState = this.provideRegistrationState || other.provideRegistrationState;
 		if (other.serviceIDs != null) {
-			getServiceIDs().addAll(other.serviceIDs);
+			if (this.serviceIDs == null) {
+				this.serviceIDs = new HashSet<String>();
+			}
+			serviceIDs.addAll(other.serviceIDs);
 		}
 		this.provideSessionParticipation = this.provideSessionParticipation || other.provideSessionParticipation;
 		this.provideWillingness = this.provideWillingness || other.provideWillingness;
@@ -113,10 +116,12 @@ public class OMAPresRule extends PresRule {
 		this.provideWillingness = provideWillingness;
 	}
 
-	public Set<String> getServiceIDs() {
-		if (serviceIDs == null) {
-			serviceIDs = new HashSet<String>();
-		}
+	public Set<String> getServiceIDs() {		
 		return serviceIDs;
 	}
+	
+	public void setServiceIDs(Set<String> serviceIDs) {
+		this.serviceIDs = serviceIDs;
+	}
+	
 }

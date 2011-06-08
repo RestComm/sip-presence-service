@@ -28,7 +28,6 @@ import javax.sip.header.ContentTypeHeader;
 import javax.slee.ActivityContextInterface;
 import javax.slee.facilities.Tracer;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlSbbLocalObject;
@@ -104,7 +103,7 @@ public class WInfoSubscriptionHandler {
 	}
 
 	/*
-	 * creates watcher jaxb object for a subscription
+	 * creates watcher object for a subscription
 	 */
 	private Watcher createWInfoWatcher(Subscription subscription) {
 		// create watcher
@@ -177,6 +176,8 @@ public class WInfoSubscriptionHandler {
 		Document document = builder.newDocument();
 		Element watcherInfo = document.createElementNS(
 				"urn:ietf:params:xml:ns:watcherinfo", "watcherinfo");
+		winfoSubscription.incrementVersion();
+		winfoSubscription.store();
 		watcherInfo.setAttribute("version",
 				Integer.toString(winfoSubscription.getVersion()));
 		watcherInfo.setAttribute("state", state);

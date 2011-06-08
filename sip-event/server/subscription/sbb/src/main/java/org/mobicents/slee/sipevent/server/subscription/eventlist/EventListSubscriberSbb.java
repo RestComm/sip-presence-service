@@ -33,7 +33,6 @@ import javax.slee.RolledBackContext;
 import javax.slee.Sbb;
 import javax.slee.SbbContext;
 import javax.slee.facilities.Tracer;
-import javax.xml.transform.TransformerException;
 
 import org.mobicents.slee.ChildRelationExt;
 import org.mobicents.slee.SbbContextExt;
@@ -49,8 +48,6 @@ import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Event;
 import org.mobicents.slee.sipevent.server.subscription.data.Subscription.Status;
 import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 import org.openxdm.xcap.client.appusage.resourcelists.jaxb.EntryType;
-import org.openxdm.xcap.common.xml.TextWriter;
-import org.w3c.dom.Node;
 
 /**
  * 
@@ -232,7 +229,7 @@ public abstract class EventListSubscriberSbb implements Sbb,
 	@Override
 	public void notifyEvent(String subscriber, String notifier,
 			String eventPackage, String subscriptionId,
-			Event terminationReason, Status status, Object content,
+			Event terminationReason, Status status, String content,
 			String contentType, String contentSubtype) {
 		
 		SubscriptionKey subscriptionKey = getSubscriptionKey();
@@ -257,25 +254,12 @@ public abstract class EventListSubscriberSbb implements Sbb,
 				}
 			}
 
-			String unmarshalledContent = null;
-			if (content != null) {
-				if (content instanceof Node) {
-					try {
-						unmarshalledContent = TextWriter.toString((Node)content);
-					} catch (TransformerException e) {
-						tracer.severe("failed to unmarshall dom node", e);
-					}
-				}
-				else {
-					unmarshalledContent = (String) content;
-				}
-			}
 			// add notification data
 			String id = notifier;
-			String cid = unmarshalledContent != null ? id : null;
+			String cid = content != null ? id : null;
 			MultiPart multiPart = null;
 			try {
-				multiPart = notificationData.addNotificationData(notifier, cid, id, unmarshalledContent, contentType, contentSubtype, status.toString(), (terminationReason == null ? null : terminationReason.toString()));
+				multiPart = notificationData.addNotificationData(notifier, cid, id, content, contentType, contentSubtype, status.toString(), (terminationReason == null ? null : terminationReason.toString()));
 			}
 			catch (IllegalStateException e) {
 				if (tracer.isFineEnabled()) {
@@ -287,7 +271,7 @@ public abstract class EventListSubscriberSbb implements Sbb,
 					// null then abort notification
 					return;
 				}
-				multiPart = notificationData.addNotificationData(notifier, cid, id, unmarshalledContent, contentType, contentSubtype, status.toString(), (terminationReason == null ? null : terminationReason.toString()));
+				multiPart = notificationData.addNotificationData(notifier, cid, id, content, contentType, contentSubtype, status.toString(), (terminationReason == null ? null : terminationReason.toString()));
 			}
 			// notify parent?
 			if (multiPart != null) {

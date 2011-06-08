@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presence xmlns="urn:ietf:params:xml:ns:pidf" xmlns:pdm="urn:ietf:params:xml:ns:pidf:data-model"
+	xmlns:rpid="urn:ietf:params:xml:ns:pidf:rpid" xmlns:op="urn:oma:xml:prs:pidf:oma-pres"
+	xmlns:gp="urn:ietf:params:xml:ns:pidf:geopriv10" xmlns:cl="urn:ietf:params:xml:ns:pidf:geopriv10:civicAddr"
+	xmlns:gml="http://www.opengis.net/gml" xmlns:lt="urn:ietf:params:xml:ns:location-type"
+	xmlns:opd="urn:oma:xml:pde:pidf:ext" xmlns:opd1.1="urn:oma:xml:pde:pidf:ext:1.1"
+	xmlns:caps="urn:ietf:params:xml:ns:pidf:caps" entity="sip:someone@example.com">
+
+	<tuple id="a1231">
+		<status>
+			<basic>open</basic>
+		</status>
+		<op:willingness opd:until="2008-10-28T22:20:00Z">
+			<op:basic>open</op:basic>
+		</op:willingness>
+		<op:session-participation>
+			<op:basic>open</op:basic>
+		</op:session-participation>
+		<rpid:status-icon>http://example.com/~my-icons/PoC-Session
+		</rpid:status-icon>
+		<op:registration-state>active</op:registration-state>
+		<op:barring-state>terminated</op:barring-state>
+		<rpid:class>forfriends</rpid:class>
+		<op:service-description>
+			<op:service-id>org.openmobilealliance:PoC-session</op:service-id>
+			<op:version>1.0</op:version>
+			<op:description>This is the OMA PoC-Session service</op:description>
+		</op:service-description>
+		<pdm:deviceID>urn:uuid:d27459b7-8213-4395-aa77-ed859a3e5b3a
+		</pdm:deviceID>
+		<opd:session-answermode>
+			<opd:manual />
+		</opd:session-answermode>
+		<contact priority="0.8">sip:someone@example.com</contact>
+		<timestamp>2008-10-28T20:07:07Z</timestamp>
+	</tuple>
+	<tuple id="a1232">
+		<status>
+			<basic>closed</basic>
+		</status>
+		<op:willingness>
+			<op:basic>closed</op:basic>
+		</op:willingness>
+		<rpid:status-icon>http://example.com/~my-icons/PoC-Alert
+		</rpid:status-icon>
+		<op:registration-state>active</op:registration-state>
+		<op:barring-state>active</op:barring-state>
+		<rpid:class>forfriends</rpid:class>
+		<op:service-description>
+			<op:service-id>org.openmobilealliance:PoC-alert</op:service-id>
+			<op:version>1.0</op:version>
+			<op:description>This is the OMA PoC-Alert service</op:description>
+		</op:service-description>
+		<contact priority="0.5">sip:someone@example.com</contact>
+		<timestamp>2008-10-28T20:07:07Z</timestamp>
+	</tuple>
+
+</presence>

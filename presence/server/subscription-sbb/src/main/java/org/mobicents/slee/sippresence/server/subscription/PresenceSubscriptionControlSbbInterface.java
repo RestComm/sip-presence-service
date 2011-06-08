@@ -48,7 +48,13 @@ public interface PresenceSubscriptionControlSbbInterface extends ImplementedSubs
 
 	@SuppressWarnings("rawtypes")
 	public void setCombinedRules(HashMap combinedRules);
-
+	
+	/*
+	public boolean getPoliteBlockNotifySent();
+	
+	public void setPoliteBlockNotifySent(boolean value);
+	*/
+	
 	public ImplementedSubscriptionControlParentSbbLocalObject getParentSbb();
 
 	public PresRulesActivityContextInterfaceFactory getPresRulesACIF();

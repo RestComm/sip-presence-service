@@ -23,7 +23,6 @@
 package org.mobicents.slee.sipevent.server.internal;
 
 import java.io.IOException;
-import java.text.ParseException;
 
 import javax.sip.header.ContentTypeHeader;
 import javax.slee.ActivityContextInterface;
@@ -58,6 +57,13 @@ public class InternalSubscriberNotificationHandler {
 		}
 	}
 
+	/**
+	 * Notifies subscriber due to subscription action, not state change.
+	 * 
+	 * @param subscription
+	 * @param aci
+	 * @param childSbb
+	 */
 	public void notifyInternalSubscriber(
 			Subscription subscription, ActivityContextInterface aci,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
@@ -68,12 +74,12 @@ public class InternalSubscriberNotificationHandler {
 			notifyContent = childSbb.getNotifyContent(subscription); 
 		}
 			
-		notifyInternalSubscriber(subscription, notifyContent, aci,childSbb);		
+		notifyInternalSubscriber(subscription, notifyContent, aci,childSbb,false,false);		
 		
 	}
 
-	public void notifyInternalSubscriber(
-			Subscription subscription, Object content,
+	private void notifyInternalSubscriber(
+			Subscription subscription, String content,
 			ContentTypeHeader contentTypeHeader, ActivityContextInterface aci) throws IOException {
 		
 		String contentType = null;
@@ -98,14 +104,6 @@ public class InternalSubscriberNotificationHandler {
 
 		SubscriptionClientControlParentSbbLocalObject parent = internalSubscriptionHandler.sbb.getParentSbb();
 		if (parent != null) {
-			if (content instanceof Node) {
-				// marshall content 			
-				try {
-					content = TextWriter.toString((Node) content);
-				} catch (TransformerException e) {
-					throw new IOException("failed to marshall DOM content", e);
-				}
-			} 
 			parent.notifyEvent(
 				subscription.getSubscriber(),
 				subscription.getNotifier().getUriWithParam(),
@@ -115,48 +113,68 @@ public class InternalSubscriberNotificationHandler {
 		}
 	}
 
+	/**
+	 * Notifies the subscriber due to notifier state change.
+	 * @param subscription
+	 * @param notifyContent
+	 * @param aci
+	 * @param childSbb
+	 */
 	public void notifyInternalSubscriber(
 			Subscription subscription, NotifyContent notifyContent,
 			ActivityContextInterface aci,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
+		boolean doNotifierFiltering = !subscription.isResourceList() && !subscription.isWInfoSubscription();
+		notifyInternalSubscriber(subscription, notifyContent, aci, childSbb, doNotifierFiltering, true);
+	}
+
+	private void notifyInternalSubscriber(
+			Subscription subscription, NotifyContent notifyContent,
+			ActivityContextInterface aci,
+			ImplementedSubscriptionControlSbbLocalObject childSbb, boolean doNotifierFiltering, boolean isStateChange) {
 
 		try {
+			
 			Object content = null;
 			ContentTypeHeader contentTypeHeader = null;
 			if (notifyContent != null) {
 				content = notifyContent.getContent();
-				contentTypeHeader = notifyContent.getContentTypeHeader();
-				if (content != null) {
-					if (!subscription.getResourceList()) {
-						notifyInternalSubscriber(subscription,getFilteredNotifyContent(subscription, content,
-										childSbb), contentTypeHeader, aci);
-					}
-					else {
-						// resource list subscription, no filtering
-						notifyInternalSubscriber(subscription, content, contentTypeHeader, aci);
-					}
+				contentTypeHeader = notifyContent.getContentTypeHeader();				
+			}		
+			
+			String newState = null; 
+			// filter content if needed
+			if (doNotifierFiltering) {
+				content = childSbb
+						.filterContentPerSubscriber(subscription, content);			
+			}
+			
+			//if (content == null && subscription.)
+			// filter content per notifier (subscriber rules)
+			// TODO
+			
+			// marshall content to string if needed
+			if (content instanceof Node) {
+				try {
+					newState = TextWriter.toString((Node) content);
+				} catch (TransformerException e) {
+					throw new IOException("failed to marshall DOM content", e);
 				}
-				else {
-					notifyInternalSubscriber(subscription,null, null, aci);
-				}				
 			}
 			else {
-				notifyInternalSubscriber(subscription,null, null, aci);
-				
-			}			
+				newState = (String) content;
+			}
+			
+			if (newState == null && isStateChange) {
+				// if this happens then no notification should be sent
+				return;				
+			}
+			
+			notifyInternalSubscriber(subscription, newState, contentTypeHeader, aci);
+						
 		} catch (Exception e) {
 			tracer.severe("failed to notify internal subscriber", e);
 		}
 	}
 	
-	private Object getFilteredNotifyContent(Subscription subscription,
-			Object content, ImplementedSubscriptionControlSbbLocalObject childSbb)
-			throws ParseException, IOException {
-
-		// filter content per subscriber (notifier rules)
-		Object filteredContent = childSbb.filterContentPerSubscriber(subscription, content);
-		// filter content per notifier (subscriber rules)
-		// TODO
-		return filteredContent;
-	}
 }

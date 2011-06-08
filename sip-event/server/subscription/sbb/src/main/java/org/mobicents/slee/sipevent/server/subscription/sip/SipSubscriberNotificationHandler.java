@@ -73,6 +73,16 @@ public class SipSubscriberNotificationHandler {
 		}
 	}
 
+	/**
+	 * Notifies the subscriber due to a change of state by the notifier. Note that it only
+	 * notifies if after filtering by subscriber, the notify content is
+	 * different from previous notification.
+	 * 
+	 * @param notifyContent
+	 * @param subscription
+	 * @param dialogACI
+	 * @param childSbb
+	 */
 	public void notifySipSubscriber(NotifyContent notifyContent,
 			Subscription subscription, ActivityContextInterface dialogACI,
 			ImplementedSubscriptionControlSbbLocalObject childSbb) {
@@ -84,10 +94,16 @@ public class SipSubscriberNotificationHandler {
 					notifyContent.getEventHeaderParams());
 			// add content
 			if (notifyContent != null && notifyContent.getContent() != null) {
+				boolean doSubscriberFiltering  = !subscription.isResourceList() && !subscription.isWInfoSubscription();
 				notify = setNotifyContent(subscription, notify,
 						notifyContent.getContent(),
-						notifyContent.getContentTypeHeader(), childSbb);
-
+						notifyContent.getContentTypeHeader(), childSbb, doSubscriberFiltering,true);
+				if (notify == null) {
+					if (tracer.isFineEnabled()) {
+						tracer.fine("notification aborted for "+subscription);
+					}
+					return;
+				}
 			}
 			// ....aayush added code here (with ref issue #567)
 			notify.addHeader(addPChargingVectorHeader());
@@ -98,35 +114,53 @@ public class SipSubscriberNotificationHandler {
 		}
 	}
 
-	public Request setNotifyContent(Subscription subscription, Request notify,
+	private Request setNotifyContent(Subscription subscription, Request notify,
 			Object content, ContentTypeHeader contentTypeHeader,
-			ImplementedSubscriptionControlSbbLocalObject childSbb)
+			ImplementedSubscriptionControlSbbLocalObject childSbb, boolean doNotifierFiltering, boolean isStateChange)
 			throws ParseException, IOException {
 
-		if (!subscription.getResourceList()
-				&& !subscription.getKey().isWInfoSubscription()) {
+		String notifyContent = null; 
+		// filter content if needed
+		if (doNotifierFiltering) {
 			content = childSbb
-					.filterContentPerSubscriber(subscription, content);
-			// filter content per notifier (subscriber rules)
-			// TODO
+					.filterContentPerSubscriber(subscription, content);			
 		}
+		
+		//if (content == null && subscription.)
+		// filter content per notifier (subscriber rules)
+		// TODO
+		
+		// marshall content to string if needed
 		if (content instanceof Node) {
-			// marshall content
 			try {
-				content = TextWriter.toString((Node) content);
+				notifyContent = TextWriter.toString((Node) content);
 			} catch (TransformerException e) {
 				throw new IOException("failed to marshall DOM content", e);
 			}
 		}
-		notify.setContent(content, contentTypeHeader);
-
+		else {
+			notifyContent = (String) content;
+		}
+		
+		if (notifyContent == null) {
+			if (isStateChange) {
+				// if this happens then no notification should be sent
+				return null;
+			}
+			else {
+				// notify with no content
+				return notify;
+			}
+		}
+		
+		notify.setContent(notifyContent, contentTypeHeader);
 		return notify;
 	}
 
 	/*
-	 * for internal usage, creates a NOTIFY notify, asks the content to the
-	 * concrete implementation component, and then sends the request to the
-	 * subscriber
+	 * notification that results from a subscription related action, not state
+	 * change, creates a NOTIFY notify, asks the content to the concrete
+	 * implementation component, and then sends the request to the subscriber
 	 */
 	public void createAndSendNotify(SubscriptionControlDataSource dataSource,
 			Subscription subscription, DialogActivity dialog,
@@ -137,12 +171,11 @@ public class SipSubscriberNotificationHandler {
 		// create notify
 		Request notify = null;
 		// add content if subscription is active
-		if (subscription.getStatus().equals(Subscription.Status.active)) {
-			if (subscription.getKey().getEventPackage().endsWith(".winfo")) {
+		if (subscription.getStatus() == Subscription.Status.active) {
+			// setup notify request
+			if (subscription.isWInfoSubscription()) {
 				notify = createNotify(dialog, subscription, null);
-				// winfo content, increment version before adding the content
-				subscription.incrementVersion();
-				subscription.store();
+				// winfo content
 				try {
 					notify = setNotifyContent(
 							subscription,
@@ -153,7 +186,7 @@ public class SipSubscriberNotificationHandler {
 											subscription),
 							sipSubscriptionHandler.sbb
 									.getWInfoSubscriptionHandler()
-									.getWatcherInfoContentHeader(), childSbb);
+									.getWatcherInfoContentHeader(), childSbb, false, false);
 				} catch (Exception e) {
 					tracer.severe("failed to set notify content", e);
 				}
@@ -172,13 +205,14 @@ public class SipSubscriberNotificationHandler {
 							notify = setNotifyContent(subscription, notify,
 									notifyContent.getContent(),
 									notifyContent.getContentTypeHeader(),
-									childSbb);
+									childSbb, false, false );
 						} catch (Exception e) {
 							tracer.severe("failed to set notify content", e);
 						}
 					}
 				}
 			}
+			//subscription.store();
 		} else {
 			notify = createNotify(dialog, subscription, null);
 		}
@@ -191,7 +225,7 @@ public class SipSubscriberNotificationHandler {
 	}
 
 	// creates a notify request and fills headers
-	public Request createNotify(Dialog dialog, Subscription subscription,
+	private Request createNotify(Dialog dialog, Subscription subscription,
 			Map<String, String> eventHeaderParams) {
 
 		Request notify = null;
@@ -256,7 +290,7 @@ public class SipSubscriberNotificationHandler {
 			notify.addHeader(ssh);
 
 			// if it's a RLS notify a required header must be present
-			if (subscription.getResourceList()) {
+			if (subscription.isResourceList()) {
 				notify.addHeader(sipSubscriptionHandler.sbb.getHeaderFactory()
 						.createRequireHeader("eventlist"));
 			}

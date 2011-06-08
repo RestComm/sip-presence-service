@@ -147,7 +147,7 @@ public abstract class InternalSubscriberExampleSbb implements javax.slee.Sbb,
 	@Override
 	public void notifyEvent(String subscriber, String notifier,
 			String eventPackage, String subscriptionId, Event terminationReason,
-			Status status, Object content, String contentType,
+			Status status, String content, String contentType,
 			String contentSubtype) {
 		String notification = "\nNOTIFY EVENT:" + "\n+-- Subscriber: "
 				+ subscriber + "\n+-- Notifier: " + notifier

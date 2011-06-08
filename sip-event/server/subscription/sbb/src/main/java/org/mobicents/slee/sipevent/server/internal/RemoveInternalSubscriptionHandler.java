@@ -92,7 +92,7 @@ public class RemoveInternalSubscriptionHandler {
 		sbb.getParentSbb().unsubscribeOk(subscriber, notifier, eventPackage,
 				subscriptionId);
 
-		if (subscription.getResourceList()) {
+		if (subscription.isResourceList()) {
 			internalSubscriptionHandler.sbb.getEventListSubscriptionHandler().removeSubscription(subscription);
 		}
 		

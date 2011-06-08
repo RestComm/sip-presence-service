@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cr:ruleset xmlns="urn:ietf:params:xml:ns:pres-rules"
+	xmlns:pr="urn:ietf:params:xml:ns:pres-rules" xmlns:cr="urn:ietf:params:xml:ns:common-policy">
+	<cr:rule id="a">
+		<cr:conditions>
+			<cr:identity>
+				<cr:one id="sip:subscriber@example.com" />
+			</cr:identity>
+		</cr:conditions>
+		<cr:actions>
+			<pr:sub-handling>allow</pr:sub-handling>
+		</cr:actions>
+		<cr:transformations>
+			<pr:provide-services>
+				<pr:service-uri-scheme>tel</pr:service-uri-scheme>				
+			</pr:provide-services>				
+			<provide-all-attributes />
+		</cr:transformations>
+	</cr:rule>
+</cr:ruleset>

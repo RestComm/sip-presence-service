@@ -33,7 +33,7 @@ import org.mobicents.slee.sipevent.server.subscription.data.SubscriptionKey;
 
 /**
  * @author martins
- *
+ * 
  */
 public interface ImplementedSubscriptionControl {
 
@@ -43,7 +43,8 @@ public interface ImplementedSubscriptionControl {
 	 * subscription control to authorize a subscriber, the concrete
 	 * implemeentation must then invoke newSubscriptionAuthorization(...) so the
 	 * new subscription process is completed
-	 * @param eventList 
+	 * 
+	 * @param eventList
 	 * 
 	 * @param serverTransaction
 	 *            in case it is a sip subscription the server transaction must
@@ -52,13 +53,17 @@ public interface ImplementedSubscriptionControl {
 	 * @return
 	 */
 	public void isSubscriberAuthorized(String subscriber,
-			String subscriberDisplayName, Notifier notifier, SubscriptionKey key,
-			int expires, String content, String contentType,
-			String contentSubtype, boolean eventList, ServerTransaction serverTransaction);
+			String subscriberDisplayName, Notifier notifier,
+			SubscriptionKey key, int expires, String content,
+			String contentType, String contentSubtype, boolean eventList,
+			ServerTransaction serverTransaction);
 
 	/**
 	 * Retrieves the content for the NOTIFY request of the specified
-	 * Subscription
+	 * Subscription.
+	 * 
+	 * This assumes the returned result is filtered if there was any rules that
+	 * applies to the subscription.
 	 * 
 	 * @param subscription
 	 * @return
@@ -70,7 +75,8 @@ public interface ImplementedSubscriptionControl {
 	 * 
 	 * @return content filtered
 	 */
-	public Object filterContentPerSubscriber(Subscription subscription, Object unmarshalledContent);
+	public Object filterContentPerSubscriber(Subscription subscription,
+			Object unmarshalledContent);
 
 	/**
 	 * notifies the event package impl that a subscription is about to be
@@ -84,9 +90,11 @@ public interface ImplementedSubscriptionControl {
 	 * @return
 	 */
 	public String[] getEventPackages();
-	
+
 	/**
-	 * Indicates if the implementation accepts event lists, that is, if it makes sense to act as a RLS.
+	 * Indicates if the implementation accepts event lists, that is, if it makes
+	 * sense to act as a RLS.
+	 * 
 	 * @return
 	 */
 	public boolean acceptsEventList();

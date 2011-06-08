@@ -122,10 +122,12 @@ public class Subscription implements Serializable {
 	 * if true the subscription if for a resource list
 	 */
 	private boolean resourceList;
-	
+		
 	private transient SubscriptionControlDataSource dataSource;
 	
 	private transient boolean created = false;
+	
+	//private String lastNotificationContent;
 	
 	/**
 	 * 
@@ -307,13 +309,31 @@ public class Subscription implements Serializable {
 		this.version++;
 	}
 	
-	public boolean getResourceList() {
+	public boolean isInternalSubscription() {
+		return key.isInternalSubscription(); 
+	}
+	
+	public boolean isWInfoSubscription() {
+    	return key.isWInfoSubscription();
+	}
+	
+	public boolean isResourceList() {
 		return resourceList;
 	}
 	
 	public void setResourceList(boolean resourceList) {
 		this.resourceList = resourceList;
 	}
+	
+	/*
+	public String getLastNotificationContent() {
+		return lastNotificationContent;
+	}
+	
+	public void setLastNotificationContent(String lastNotificationContent) {
+		this.lastNotificationContent = lastNotificationContent;
+	}
+	*/
 	
 	@Override
 	public String toString() {

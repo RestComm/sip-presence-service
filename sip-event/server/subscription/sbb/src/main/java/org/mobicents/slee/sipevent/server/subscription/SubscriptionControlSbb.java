@@ -254,7 +254,7 @@ public abstract class SubscriptionControlSbb implements Sbb,
 			
 			// terminate subscriptions which are not rls services
 			for (Subscription subscription : dataSource.getSubscriptionsByNotifier(notifierWithoutParams)) {				
-				if (!subscription.getResourceList()) {
+				if (!subscription.isResourceList()) {
 					// remove subscription in those cases
 					ActivityContextInterface subscriptionAci = getActivityContextNamingfacility().lookup(
 							subscription.getKey().toString());
@@ -385,7 +385,7 @@ public abstract class SubscriptionControlSbb implements Sbb,
 		} else {
 			subscription.changeStatus(Event.timeout);
 			// remove subscription
-			if (subscription.getResourceList()) {
+			if (subscription.isResourceList()) {
 				eventListSubscriptionHandler.removeSubscription(subscription);
 			}
 			if (dialog != null) {
@@ -467,14 +467,10 @@ public abstract class SubscriptionControlSbb implements Sbb,
 			return;
 		}
 		
-		// increment subscription version
-		subscription.incrementVersion();
 		// create notify content
 		Document content = wInfoSubscriptionHandler.getPartialWatcherInfoContent(subscription, event.getWatcherSubscriptionKey(), event.getWatcher());
 		ContentTypeHeader contentTypeHeader = wInfoSubscriptionHandler.getWatcherInfoContentHeader();
-		// store subscription
-		subscription.store();
-		
+				
 		// notify
 		notifySubscriber(subscription, new NotifyContent(content, contentTypeHeader, null), aci);
 	}
@@ -679,7 +675,7 @@ public abstract class SubscriptionControlSbb implements Sbb,
 				
 				if (subscription.getStatus().equals(
 						Subscription.Status.terminated)) {
-					if (subscription.getResourceList()) {
+					if (subscription.isResourceList()) {
 						eventListSubscriptionHandler.removeSubscription(subscription);
 					}
 					if (dialog == null) {
@@ -696,7 +692,7 @@ public abstract class SubscriptionControlSbb implements Sbb,
 				}
 				else {
 					boolean notifySubscriber = true;
-					if (subscription.getResourceList()) {
+					if (subscription.isResourceList()) {
 						if (subscription.getStatus().equals(
 								Subscription.Status.active)) {
 							notifySubscriber = false;

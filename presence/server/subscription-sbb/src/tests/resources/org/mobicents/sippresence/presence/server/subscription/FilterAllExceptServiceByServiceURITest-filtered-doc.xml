@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presence xmlns="urn:ietf:params:xml:ns:pidf" xmlns:pdm="urn:ietf:params:xml:ns:pidf:data-model"
+	xmlns:rpid="urn:ietf:params:xml:ns:pidf:rpid" xmlns:op="urn:oma:xml:prs:pidf:oma-pres"
+	xmlns:gp="urn:ietf:params:xml:ns:pidf:geopriv10" xmlns:cl="urn:ietf:params:xml:ns:pidf:geopriv10:civicAddr"
+	xmlns:gml="http://www.opengis.net/gml" xmlns:lt="urn:ietf:params:xml:ns:location-type"
+	xmlns:opd="urn:oma:xml:pde:pidf:ext" xmlns:opd1.1="urn:oma:xml:pde:pidf:ext:1.1"
+	xmlns:caps="urn:ietf:params:xml:ns:pidf:caps" entity="sip:someone@example.com">
+
+	<tuple id="a1233">
+		<status>
+			<basic>open</basic>
+		</status>
+		<op:willingness>
+			<op:basic>closed</op:basic>
+		</op:willingness>
+		<caps:servcaps>
+			<caps:audio>true</caps:audio>
+			<caps:description xml:lang="en">My SIP VoIP Service
+			</caps:description>
+			<caps:duplex>
+				<caps:supported>
+					<caps:full />
+				</caps:supported>
+			</caps:duplex>
+			<caps:methods>
+				<caps:supported>
+					<caps:ACK />
+					<caps:BYE />
+					<caps:CANCEL />
+					<caps:INVITE />
+				</caps:supported>
+			</caps:methods>
+			<caps:schemes>
+				<caps:supported>
+					<caps:s>sip</caps:s>
+					<caps:s>tel</caps:s>
+				</caps:supported>
+			</caps:schemes>
+			<caps:video>false</caps:video>
+		</caps:servcaps>
+		<contact>tel:someone@example.com</contact>
+		<timestamp>2008-10-28T20:07:07Z</timestamp>
+	</tuple>
+
+</presence>

@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presence xmlns="urn:ietf:params:xml:ns:pidf" xmlns:pdm="urn:ietf:params:xml:ns:pidf:data-model"
+	xmlns:rpid="urn:ietf:params:xml:ns:pidf:rpid" xmlns:op="urn:oma:xml:prs:pidf:oma-pres"
+	xmlns:gp="urn:ietf:params:xml:ns:pidf:geopriv10" xmlns:cl="urn:ietf:params:xml:ns:pidf:geopriv10:civicAddr"
+	xmlns:gml="http://www.opengis.net/gml" xmlns:lt="urn:ietf:params:xml:ns:location-type"
+	xmlns:opd="urn:oma:xml:pde:pidf:ext" xmlns:opd1.1="urn:oma:xml:pde:pidf:ext:1.1"
+	xmlns:caps="urn:ietf:params:xml:ns:pidf:caps" entity="sip:someone@example.com">
+
+	<tuple id="a1231">
+		<status>
+			<basic>open</basic>
+		</status>
+		<op:willingness opd:until="2008-10-28T22:20:00Z">
+			<op:basic>open</op:basic>
+		</op:willingness>
+		<op:session-participation>
+			<op:basic>open</op:basic>
+		</op:session-participation>
+		<rpid:status-icon>http://example.com/~my-icons/PoC-Session
+		</rpid:status-icon>
+		<op:registration-state>active</op:registration-state>
+		<op:barring-state>terminated</op:barring-state>
+		<rpid:class>forfriends</rpid:class>
+		<op:service-description>
+			<op:service-id>org.openmobilealliance:PoC-session</op:service-id>
+			<op:version>1.0</op:version>
+			<op:description>This is the OMA PoC-Session service</op:description>
+		</op:service-description>
+		<pdm:deviceID>urn:uuid:d27459b7-8213-4395-aa77-ed859a3e5b3a
+		</pdm:deviceID>
+		<opd:session-answermode>
+			<opd:manual />
+		</opd:session-answermode>
+		<contact priority="0.8">sip:someone@example.com</contact>
+		<timestamp>2008-10-28T20:07:07Z</timestamp>
+	</tuple>
+	<tuple id="a1232">
+		<status>
+			<basic>closed</basic>
+		</status>
+		<op:willingness>
+			<op:basic>closed</op:basic>
+		</op:willingness>
+		<rpid:status-icon>http://example.com/~my-icons/PoC-Alert
+		</rpid:status-icon>
+		<op:registration-state>active</op:registration-state>
+		<op:barring-state>active</op:barring-state>
+		<rpid:class>forfriends</rpid:class>
+		<op:service-description>
+			<op:service-id>org.openmobilealliance:PoC-alert</op:service-id>
+			<op:version>1.0</op:version>
+			<op:description>This is the OMA PoC-Alert service</op:description>
+		</op:service-description>
+		<contact priority="0.5">sip:someone@example.com</contact>
+		<timestamp>2008-10-28T20:07:07Z</timestamp>
+	</tuple>
+
+	<tuple id="a1233">
+		<status>
+			<basic>open</basic>
+		</status>
+		<op:willingness>
+			<op:basic>closed</op:basic>
+		</op:willingness>
+		<caps:servcaps>
+			<caps:audio>true</caps:audio>
+			<caps:description xml:lang="en">My SIP VoIP Service
+			</caps:description>
+			<caps:duplex>
+				<caps:supported>
+					<caps:full />
+				</caps:supported>
+			</caps:duplex>
+			<caps:methods>
+				<caps:supported>
+					<caps:ACK />
+					<caps:BYE />
+					<caps:CANCEL />
+					<caps:INVITE />
+				</caps:supported>
+			</caps:methods>
+			<caps:schemes>
+				<caps:supported>
+					<caps:s>sip</caps:s>
+					<caps:s>tel</caps:s>
+				</caps:supported>
+			</caps:schemes>
+			<caps:video>false</caps:video>
+		</caps:servcaps>
+		<contact>tel:someone@example.com</contact>
+		<timestamp>2008-10-28T20:07:07Z</timestamp>
+	</tuple>
+
+	<pdm:person id="a1233">
+		<op:overriding-willingness opd:until="2008-10-28T21:00:00Z">
+			<op:basic>open</op:basic>
+		</op:overriding-willingness>
+		<opd1.1:link opd1.1:label="cool site" opd1.1:priority="0.725">http://www.openmobilealliance.org
+		</opd1.1:link>
+		<rpid:activities>
+			<rpid:meeting />
+		</rpid:activities>
+		<rpid:place-type until="2008-10-28T23:59:00Z">
+			<lt:office />
+		</rpid:place-type>
+		<rpid:mood>
+			<rpid:happy />
+		</rpid:mood>
+		<rpid:status-icon opd:etag="xvsdfx" opd:fsize="36147"
+			opd:contenttype="image/jpeg" opd:resolution="240x320">http://xcap.example.com/org.openmobilealliance.pres-
+			content/users/sip:someone@example.com/oma_status-icon/my-icon
+		</rpid:status-icon>
+		<rpid:time-offset>120</rpid:time-offset>
+		<gp:geopriv>
+			<gp:location-info>
+				<cl:civicAddress xml:lang="en-AU">
+					<cl:country>AU</cl:country>
+					<cl:A1>NSW</cl:A1>
+					<cl:A3>Wollongong</cl:A3>
+					<cl:A4>North Wollongong</cl:A4>
+					<cl:RD>Flinders</cl:RD>
+					<cl:STS>Street</cl:STS>
+					<cl:RDBR>Campbell Street</cl:RDBR>
+					<cl:LMK>Gilligan's Island</cl:LMK>
+					<cl:LOC>Corner</cl:LOC>
+					<cl:NAM>Video Rental Store</cl:NAM>
+					<cl:PC>2500</cl:PC>
+					<cl:ROOM>Westerns and Classics</cl:ROOM>
+					<cl:PLC>store</cl:PLC>
+					<cl:POBOX>Private Box 15</cl:POBOX>
+				</cl:civicAddress>
+			</gp:location-info>
+			<gp:usage-rules>
+        		<gp:retransmission-allowed>no</gp:retransmission-allowed>
+        		<gp:retention-expiry>2003-06-23T04:57:29Z</gp:retention-expiry>
+      		</gp:usage-rules>
+		</gp:geopriv>
+		<rpid:class>forfriends</rpid:class>
+		<pdm:note xml:lang="en">I am in a boring meeting!!</pdm:note>
+		<pdm:timestamp>2008-10-28T20:07:07Z</pdm:timestamp>
+	</pdm:person>
+
+	<pdm:device id="a1234">
+		<op:network-availability>
+			<op:network id="IMS">
+				<op:active />
+				<opd:home />
+			</op:network>
+		</op:network-availability>
+		<gp:geopriv>
+			<gp:location-info>
+				<gml:Point srsName="urn:ogc:def:crs:EPSG::4326">
+					<gml:pos>-34.407 150.883</gml:pos>
+				</gml:Point>
+			</gp:location-info>
+			<gp:usage-rules>
+				<gp:retransmission-allowed>no</gp:retransmission-allowed>
+				<gp:retention-expiry>2008-10-29T04:07:07Z</gp:retention-expiry>
+			</gp:usage-rules>
+		</gp:geopriv>
+		<rpid:class>phone</rpid:class>
+		<pdm:deviceID>urn:uuid:d27459b7-8213-4395-aa77-ed859a3e5b3a
+		</pdm:deviceID>		
+		<pdm:timestamp>2008-10-28T20:07:07Z</pdm:timestamp>
+	</pdm:device>
+
+</presence>

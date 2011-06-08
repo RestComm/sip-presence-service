@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cr:ruleset xmlns="urn:oma:xml:prs:pres-rules" xmlns:pr="urn:ietf:params:xml:ns:pres-rules"
+	xmlns:cr="urn:ietf:params:xml:ns:common-policy">
+	<cr:rule id="a">
+		<cr:conditions>
+			<cr:identity>
+				<cr:one id="sip:subscriber@example.com" />
+			</cr:identity>
+		</cr:conditions>
+		<cr:actions>
+			<pr:sub-handling>allow</pr:sub-handling>
+		</cr:actions>
+		<cr:transformations>
+			<pr:provide-services>
+				<pr:all-services />
+			</pr:provide-services>
+			<pr:provide-persons>
+				<pr:all-persons />
+			</pr:provide-persons>
+			<pr:provide-devices>
+				<pr:all-devices />
+			</pr:provide-devices>
+			<pr:provide-activities>true</pr:provide-activities>
+			<provide-barring-state>true</provide-barring-state>
+			<pr:provide-class>true</pr:provide-class>
+			<pr:provide-deviceID>true</pr:provide-deviceID>
+			<provide-geopriv>full</provide-geopriv>
+			<pr:provide-mood>true</pr:provide-mood>
+			<provide-network-availability>true</provide-network-availability>
+			<pr:provide-note>true</pr:provide-note>
+			<pr:provide-place-is>true</pr:provide-place-is>
+			<pr:provide-place-type>true</pr:provide-place-type>
+			<pr:provide-privacy>true</pr:provide-privacy>
+			<provide-registration-state>true</provide-registration-state>
+			<pr:provide-relationship>true</pr:provide-relationship>
+			<provide-session-participation>true</provide-session-participation>
+			<pr:provide-sphere>true</pr:provide-sphere>
+			<pr:provide-status-icon>true</pr:provide-status-icon>
+			<pr:provide-time-offset>true</pr:provide-time-offset>
+			<pr:provide-user-input>false</pr:provide-user-input>
+			<provide-willingness>true</provide-willingness>
+			<pr:provide-unknown-attribute ns="urn:ietf:params:xml:ns:pidf:caps"
+				name="servcaps">true</pr:provide-unknown-attribute>
+			<pr:provide-unknown-attribute ns="urn:oma:xml:pde:pidf:ext"
+				name="session-answermode">true</pr:provide-unknown-attribute>
+			<pr:provide-unknown-attribute ns="urn:oma:xml:pde:pidf:ext:1.1"
+				name="link">true</pr:provide-unknown-attribute>
+		</cr:transformations>
+	</cr:rule>
+</cr:ruleset>

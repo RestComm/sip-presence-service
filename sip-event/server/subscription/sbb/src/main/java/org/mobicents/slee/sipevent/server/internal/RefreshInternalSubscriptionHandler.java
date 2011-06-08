@@ -122,7 +122,7 @@ public class RefreshInternalSubscriptionHandler {
 		internalSubscriptionHandler.sbb.getParentSbb().resubscribeOk(
 				subscriber, notifier, eventPackage, subscriptionId, expires);
 
-		if (!subscription.getResourceList()) {
+		if (!subscription.isResourceList()) {
 			// notify subscriber
 			internalSubscriptionHandler.getInternalSubscriberNotificationHandler()
 			.notifyInternalSubscriber(subscription, aci,
@@ -138,7 +138,7 @@ public class RefreshInternalSubscriptionHandler {
 					+ " seconds");
 		}
 		
-		if (subscription.getResourceList()) {
+		if (subscription.isResourceList()) {
 			// it's a resource list subscription thus pas control to rls
 			internalSubscriptionHandler.sbb.getEventListSubscriptionHandler().refreshSubscription(subscription);
 		}

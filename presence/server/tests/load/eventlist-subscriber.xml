@@ -86,7 +86,7 @@
  	
   	<recv request="NOTIFY" timeout="115000" ontimeout="loop-end-check"/>
 		
-	<send">
+	<send>
 	<![CDATA[
       
       SIP/2.0 200 OK

@@ -43,17 +43,40 @@ public class UnknownBooleanAttributeTransformation implements Serializable {
 		this.namespace = namespace;
 	}
 	
-	public int hashCode() {
-		return name.hashCode()*31+namespace.hashCode();
+	public String getName() {
+		return name;
 	}
 	
-	public boolean equals(Object obj) {
-		if (obj != null && obj.getClass() == this.getClass()) {
-			UnknownBooleanAttributeTransformation other = (UnknownBooleanAttributeTransformation)obj;
-			return this.name.equals(other.name) && this.namespace.equals(other.namespace);
-		}
-		else {
-			return false;
-		}
+	public String getNamespace() {
+		return namespace;
 	}
+
+	@Override
+	public int hashCode() {
+		int result = name.hashCode();
+		result = 31 * result
+				+ ((namespace == null) ? 0 : namespace.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		UnknownBooleanAttributeTransformation other = (UnknownBooleanAttributeTransformation) obj;
+		if (!name.equals(other.name))
+			return false;
+		if (namespace == null) {
+			if (other.namespace != null)
+				return false;
+		} else if (!namespace.equals(other.namespace))
+			return false;
+		return true;
+	}
+	
+	
 }

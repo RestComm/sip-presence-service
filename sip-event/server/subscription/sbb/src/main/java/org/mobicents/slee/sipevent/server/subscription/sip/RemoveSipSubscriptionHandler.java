@@ -141,7 +141,7 @@ public class RemoveSipSubscriptionHandler {
 					tracer.info("Removing " + subscription.getKey()
 							+ " data due to error on notify response.");
 				}
-				if (!subscription.getResourceList()) {
+				if (!subscription.isResourceList()) {
 					sipSubscriptionHandler.sbb.getEventListSubscriptionHandler().removeSubscription(subscription);
 				}
 				sipSubscriptionHandler.sbb.removeSubscriptionData(

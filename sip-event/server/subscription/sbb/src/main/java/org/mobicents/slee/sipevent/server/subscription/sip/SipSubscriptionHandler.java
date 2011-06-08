@@ -226,7 +226,7 @@ public class SipSubscriptionHandler {
 									tracer.severe("Can't send RESPONSE", e);
 								}
 								// remove subscription
-								if (subscription.getResourceList()) {
+								if (subscription.isResourceList()) {
 									sbb.getEventListSubscriptionHandler().removeSubscription(subscription);
 								}
 								removeSipSubscriptionHandler

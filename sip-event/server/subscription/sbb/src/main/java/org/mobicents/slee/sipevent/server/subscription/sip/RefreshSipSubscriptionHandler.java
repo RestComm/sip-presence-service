@@ -88,7 +88,7 @@ public class RefreshSipSubscriptionHandler {
 			tracer.severe("Can't send RESPONSE", e);
 		}
 
-		if (!subscription.getResourceList()) {
+		if (!subscription.isResourceList()) {
 			// notify subscriber
 			try {
 				sipSubscriptionHandler.getSipSubscriberNotificationHandler()
@@ -107,7 +107,7 @@ public class RefreshSipSubscriptionHandler {
 					+ " seconds");
 		}
 		
-		if (subscription.getResourceList()) {
+		if (subscription.isResourceList()) {
 			// it's a resource list subscription thus pas control to rls
 			sipSubscriptionHandler.sbb.getEventListSubscriptionHandler().refreshSubscription(subscription);
 		}

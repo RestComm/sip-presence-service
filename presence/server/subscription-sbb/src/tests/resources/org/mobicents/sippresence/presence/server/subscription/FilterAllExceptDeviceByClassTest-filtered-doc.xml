@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presence xmlns="urn:ietf:params:xml:ns:pidf" xmlns:pdm="urn:ietf:params:xml:ns:pidf:data-model"
+	xmlns:rpid="urn:ietf:params:xml:ns:pidf:rpid" xmlns:op="urn:oma:xml:prs:pidf:oma-pres"
+	xmlns:gp="urn:ietf:params:xml:ns:pidf:geopriv10" xmlns:cl="urn:ietf:params:xml:ns:pidf:geopriv10:civicAddr"
+	xmlns:gml="http://www.opengis.net/gml" xmlns:lt="urn:ietf:params:xml:ns:location-type"
+	xmlns:opd="urn:oma:xml:pde:pidf:ext" xmlns:opd1.1="urn:oma:xml:pde:pidf:ext:1.1"
+	xmlns:caps="urn:ietf:params:xml:ns:pidf:caps" entity="sip:someone@example.com">
+
+	<pdm:device id="a1234">
+		<op:network-availability>
+			<op:network id="IMS">
+				<op:active />
+				<opd:home />
+			</op:network>
+		</op:network-availability>
+		<gp:geopriv>
+			<gp:location-info>
+				<gml:Point srsName="urn:ogc:def:crs:EPSG::4326">
+					<gml:pos>-34.407 150.883</gml:pos>
+				</gml:Point>
+			</gp:location-info>
+			<gp:usage-rules>
+				<gp:retransmission-allowed>no</gp:retransmission-allowed>
+				<gp:retention-expiry>2008-10-29T04:07:07Z</gp:retention-expiry>
+			</gp:usage-rules>
+		</gp:geopriv>
+		<rpid:class>phone</rpid:class>
+		<rpid:user-input idle-threshold="600"
+			last-input="2004-10-21T13:20:00-05:00">idle</rpid:user-input>
+		<pdm:deviceID>urn:uuid:d27459b7-8213-4395-aa77-ed859a3e5b3a
+		</pdm:deviceID>
+		<pdm:timestamp>2008-10-28T20:07:07Z</pdm:timestamp>
+	</pdm:device>
+
+</presence>
