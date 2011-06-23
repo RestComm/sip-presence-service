@@ -8,12 +8,12 @@
 		<relativePath>../../..</relativePath>
 	</parent>
 		
-	<artifactId>integrated-server-subscription-sbb</artifactId>
+	<artifactId>integrated-server-publication-sbb</artifactId>
 	
 	<dependencies>
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
-			<artifactId>integrated-server-subscription-library</artifactId>
+			<artifactId>integrated-server-publication-library</artifactId>
 			<version>${pom.version}</version>			
 		</dependency>
 	</dependencies>

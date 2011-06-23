@@ -79,20 +79,20 @@ public interface ImplementedPublicationControl {
 	 * 
 	 * @return
 	 */
-	public Schema getSchema();
+	public Schema getSchema(String eventPackage);
 
 	/**
 	 * Retrieves the {@link StateComposer} concrete impl, used to combine publications.
 	 * 
 	 * @return 
 	 */
-	public StateComposer getStateComposer();
+	public StateComposer getStateComposer(String eventPackage);
 
 	/**
 	 * Checks if this server is responsible for the resource publishing state.
 	 * 
 	 */
-	public boolean isResponsibleForResource(URI uri);
+	public boolean isResponsibleForResource(URI uri,String eventPackage);
 
 	/**
 	 * verifies if entity is authorized to publish the content
@@ -101,7 +101,7 @@ public interface ImplementedPublicationControl {
 	 * @param content
 	 * @return
 	 */
-	public boolean authorizePublication(String entity,
+	public boolean authorizePublication(String entity,String eventPackage,
 			Document content);
 
 	/**

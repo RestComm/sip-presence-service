@@ -78,6 +78,6 @@ public interface PublicationControl extends PublicationClientControl {
 	 * Checks if this server is responsible for the resource publishing state.
 	 * 
 	 */
-	public boolean isResponsibleForResource(URI uri);
+	public boolean isResponsibleForResource(URI uri, String eventPackage);
 	
 }

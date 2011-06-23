@@ -9,17 +9,12 @@
 		<relativePath>../../..</relativePath>
 	</parent>
 		
-	<artifactId>integrated-server-subscription-library</artifactId>
+	<artifactId>integrated-server-publication-library</artifactId>
 	
-	<dependencies>	
-		<dependency>
-			<groupId>org.mobicents.servers.xdm</groupId>
-			<artifactId>xdms-core-subscription-control-sbb</artifactId>
-			<version>${pom.version}</version>
-		</dependency>
+	<dependencies>		
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
-			<artifactId>sip-presence-server-subscription-control-sbb</artifactId>
+			<artifactId>sip-presence-server-publication-control-sbb</artifactId>
 			<version>${pom.version}</version>			
 		</dependency>					
 	</dependencies>
@@ -38,7 +33,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<library-name>integrated-server-subscription-library</library-name>
+					<library-name>integrated-server-publication-library</library-name>
 					<library-vendor>org.mobicents.servers.sippresence</library-vendor>
 					<library-version>1.0</library-version>					
 					<!-- 
@@ -47,15 +42,10 @@
 						<library-vendor>org.mobicents.servers.sipevent</library-vendor>
 						<library-version>1.0</library-version>
 					</library-ref>
-					-->
+					 -->
 					<library-ref>
 						<library-name>sip-presence-server-library</library-name>
 						<library-vendor>org.mobicents.servers.sippresence</library-vendor>
-						<library-version>1.0</library-version>
-					</library-ref>
-					<library-ref>
-						<library-name>xdms-core-datasource-library</library-name>
-						<library-vendor>org.mobicents.servers.xdm</library-vendor>
 						<library-version>1.0</library-version>
 					</library-ref>
 				</configuration>

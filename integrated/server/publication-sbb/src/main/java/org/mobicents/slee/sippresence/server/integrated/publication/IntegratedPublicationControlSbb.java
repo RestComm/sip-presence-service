@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.mobicents.slee.sippresence.server.publication;
+package org.mobicents.slee.sippresence.server.integrated.publication;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -42,24 +42,26 @@ import org.mobicents.slee.ChildRelationExt;
 import org.mobicents.slee.sipevent.server.publication.StateComposer;
 import org.mobicents.slee.sipevent.server.publication.data.ComposedPublication;
 import org.mobicents.slee.sipevent.server.publication.data.Publication;
-import org.mobicents.slee.sipevent.server.subscription.ImplementedSubscriptionControlParent;
+import org.mobicents.slee.sipevent.server.subscription.SubscriptionControl;
+import org.mobicents.slee.sippresence.server.publication.PresencePublicationControl;
 import org.w3c.dom.Document;
 
 /**
- * Publication control implementation child sbb that transforms the sip event
- * framework in the PUBLISH interface of a SIP Presence Server.
+ * Implemented Publication control child sbb for an integrated server, that is,
+ * accepting publications of several event packages. At this moment this service
+ * includes only the presence event package.
  * 
  * @author eduardomartins
  * 
  */
-public abstract class PresencePublicationControlSbb implements Sbb,
-		PresencePublicationControlSbbInterface {
+public abstract class IntegratedPublicationControlSbb implements Sbb,
+		IntegratedPublicationControlSbbInterface {
 
 	private static Logger logger = Logger
-			.getLogger(PresencePublicationControlSbb.class);
-	
+			.getLogger(IntegratedPublicationControlSbb.class);
+
 	private final static PresencePublicationControl PRESENCE_PUBLICATION_CONTROL = new PresencePublicationControl();
-	
+
 	/**
 	 * SbbObject's context setting
 	 */
@@ -80,21 +82,22 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 	public abstract ChildRelationExt getPresenceSubscriptionControlChildRelation();
 
 	@Override
-	public ImplementedSubscriptionControlParent getPresenceSubscriptionControl() {
+	public SubscriptionControl getPresenceSubscriptionControl() {
 		ChildRelationExt childRelationExt = getPresenceSubscriptionControlChildRelation();
-		ImplementedSubscriptionControlParent childSbb = (ImplementedSubscriptionControlParent) childRelationExt.get(ChildRelationExt.DEFAULT_CHILD_NAME);
+		SubscriptionControl childSbb = (SubscriptionControl) childRelationExt
+				.get(ChildRelationExt.DEFAULT_CHILD_NAME);
 		if (childSbb == null) {
 			try {
-				childSbb = (ImplementedSubscriptionControlParent) childRelationExt
+				childSbb = (SubscriptionControl) childRelationExt
 						.create(ChildRelationExt.DEFAULT_CHILD_NAME);
 			} catch (Exception e) {
 				logger.error("Failed to create child sbb", e);
 				return null;
-			}			
+			}
 		}
 		return childSbb;
 	}
-	
+
 	@Override
 	public String[] getEventPackages() {
 		return PRESENCE_PUBLICATION_CONTROL.getEventPackages();
@@ -102,30 +105,35 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 
 	@Override
 	public void notifySubscribers(ComposedPublication composedPublication) {
-		PRESENCE_PUBLICATION_CONTROL.notifySubscribers(composedPublication, this);
+		PRESENCE_PUBLICATION_CONTROL.notifySubscribers(composedPublication,
+				this);
 	}
 
 	@Override
 	public boolean authorizePublication(String entity, String eventPackage,
 			Document content) {
-		return PRESENCE_PUBLICATION_CONTROL.authorizePublication(entity, content);
+		return PRESENCE_PUBLICATION_CONTROL.authorizePublication(entity,
+				content);
 	}
 
 	@Override
 	public boolean acceptsContentType(String eventPackage,
 			ContentTypeHeader contentTypeHeader) {
-		return PRESENCE_PUBLICATION_CONTROL.acceptsContentType(eventPackage, contentTypeHeader);
+		return PRESENCE_PUBLICATION_CONTROL.acceptsContentType(eventPackage,
+				contentTypeHeader);
 	}
 
 	@Override
 	public Header getAcceptsHeader(String eventPackage) {
-		return PRESENCE_PUBLICATION_CONTROL.getAcceptsHeader(eventPackage,this);
+		return PRESENCE_PUBLICATION_CONTROL
+				.getAcceptsHeader(eventPackage, this);
 	}
 
 	@Override
 	public Schema getSchema(String eventPackage) {
 		return PRESENCE_PUBLICATION_CONTROL.getSchema();
 	}
+
 	@Override
 	public StateComposer getStateComposer(String eventPackage) {
 		return PRESENCE_PUBLICATION_CONTROL.getStateComposer();
@@ -134,11 +142,12 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 	@Override
 	public Publication getAlternativeValueForExpiredPublication(
 			Publication publication) {
-		return PRESENCE_PUBLICATION_CONTROL.getAlternativeValueForExpiredPublication(publication);
+		return PRESENCE_PUBLICATION_CONTROL
+				.getAlternativeValueForExpiredPublication(publication);
 	}
 
 	@Override
-	public boolean isResponsibleForResource(URI uri,String eventPackage) {
+	public boolean isResponsibleForResource(URI uri, String eventPackage) {
 		return PRESENCE_PUBLICATION_CONTROL.isResponsibleForResource(uri);
 	}
 
@@ -174,5 +183,4 @@ public abstract class PresencePublicationControlSbb implements Sbb,
 
 	public void unsetSbbContext() {
 	}
-
 }

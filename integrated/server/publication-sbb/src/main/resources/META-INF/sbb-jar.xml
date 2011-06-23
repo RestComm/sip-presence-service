@@ -11,18 +11,13 @@
         <sbb-vendor>org.mobicents</sbb-vendor>
         <sbb-version>1.0</sbb-version>
 
-		<!-- <library-ref>
-			<library-name>sip-event-server-publication-library</library-name>
-			<library-vendor>org.mobicents.servers.sipevent</library-vendor>
-			<library-version>1.0</library-version>
-		</library-ref>
-		 -->
-		 
 		<library-ref>
-			<library-name>sip-presence-server-library</library-name>
+			<library-name>integrated-server-publication-library</library-name>
 			<library-vendor>org.mobicents.servers.sippresence</library-vendor>
 			<library-version>1.0</library-version>
 		</library-ref>
+		 
+
 		
 		<sbb-ref>
        		<sbb-name>SubscriptionControlSbb</sbb-name>
@@ -33,7 +28,7 @@
        
         <sbb-classes>
             <sbb-abstract-class reentrant="True">
-                <sbb-abstract-class-name>org.mobicents.slee.sippresence.server.publication.PresencePublicationControlSbb</sbb-abstract-class-name>    
+                <sbb-abstract-class-name>org.mobicents.slee.sippresence.server.integrated.publication.IntegratedPublicationControlSbb</sbb-abstract-class-name>    
                 <get-child-relation-method>                	
                 	<sbb-alias-ref>childSbb</sbb-alias-ref>
                 	<get-child-relation-method-name>getPresenceSubscriptionControlChildRelation</get-child-relation-method-name>

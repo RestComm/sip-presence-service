@@ -14,7 +14,7 @@
    
 	<bean name="Mobicents.SipPresence.SipEvent.PublicationControlManagement" class="org.mobicents.slee.sipevent.server.publication.jmx.PublicationControlManagement">
       
-      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="org.mobicents.slee:sippresence=SipEventPublicationControl",exposedInterface=org.mobicents.slee.sipevent.server.publication.jmx.PublicationControlManagementMBean.class,registerDirectly=true)</annotation>
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="org.mobicents.sippresence:name=SipEventPublicationControl",exposedInterface=org.mobicents.slee.sipevent.server.publication.jmx.PublicationControlManagementMBean.class,registerDirectly=true)</annotation>
       
       <constructor factoryMethod="getInstance"/>
       

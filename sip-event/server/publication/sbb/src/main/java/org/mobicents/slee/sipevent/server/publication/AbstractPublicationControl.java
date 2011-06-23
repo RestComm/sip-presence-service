@@ -31,7 +31,6 @@ import javax.sip.header.ContentTypeHeader;
 import javax.sip.header.Header;
 import javax.sip.message.Response;
 import javax.xml.transform.dom.DOMSource;
-import javax.xml.validation.Schema;
 
 import org.mobicents.slee.sipevent.server.publication.data.ComposedPublication;
 import org.mobicents.slee.sipevent.server.publication.data.ComposedPublicationKey;
@@ -61,28 +60,10 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 	protected abstract PublicationControlLogger getLogger();
 
 	protected abstract ImplementedPublicationControl getImplementedPublicationControl();
-
-	private static StateComposer _stateComposer;
-	
-	private static Schema _schema;
 	
 	private static final PublicationControlManagement management = PublicationControlManagement
 			.getInstance();
 	private static final PublicationControlDataSource dataSource = management.getDataSource();
-
-	private Schema getSchema() {
-		if(_schema == null) {
-			_schema = getImplementedPublicationControl().getSchema();
-		}
-		return _schema;
-	}
-	
-	private StateComposer getStateComposer() {
-		if (_stateComposer == null) {
-			_stateComposer = getImplementedPublicationControl().getStateComposer();
-		}
-		return _stateComposer;
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -105,9 +86,12 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 		Publication publication = null;
 		Result result = null;
 
+		// get child sbb
+		final ImplementedPublicationControl impl = getImplementedPublicationControl();
+
 		try {
 
-			Document domDocument = unmarshallDocument(document);
+			Document domDocument = unmarshallDocument(document, eventPackage, impl);
 			
 			if (domDocument == null) {
 				// If the content type of the request does
@@ -124,11 +108,9 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 				return UNSUPPORTED_MEDIA_TYPE;
 			}
 
-			// get child sbb
-			final ImplementedPublicationControl impl = getImplementedPublicationControl();
-
+			
 			// authorize publication
-			if (!impl.authorizePublication(entity, domDocument)) {
+			if (!impl.authorizePublication(entity, eventPackage, domDocument)) {
 				if (logger.isInfoEnabled()) {
 					logger.info("publication for resource " + entity
 							+ " on event package " + eventPackage
@@ -160,7 +142,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 					// composed publication exists
 					composedPublication = updateComposedPublication(
 							publication, getPublications(entity, eventPackage),
-							null);
+							null,impl);
 				}
 				// persist data
 				dataSource.add(publication);
@@ -184,12 +166,12 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 		return result;
 	}
 
-	private Document unmarshallDocument(String document) {
+	private Document unmarshallDocument(String document, String eventPackage, ImplementedPublicationControl implementedPublicationControl) {
 		// unmarshall document
 		StringReader reader = new StringReader(document);
 		try {
 			Document domDocument = DomUtils.DOCUMENT_BUILDER_NS_AWARE_FACTORY.newDocumentBuilder().parse(new InputSource(reader));
-			getSchema().newValidator().validate(new DOMSource(domDocument));
+			implementedPublicationControl.getSchema(eventPackage).newValidator().validate(new DOMSource(domDocument));
 			return domDocument;
 		}
 		catch (Exception e) {
@@ -333,7 +315,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 				// we need to re-compose all publications except the one being
 				// removed
 				final ComposedPublication composedPublication = removeFromComposedPublication(
-						publication, publications, true);
+						publication, publications, true, impl);
 				if (composedPublication.getDocumentAsString() == null
 						&& management
 								.isUseAlternativeValueForExpiredPublication()) {
@@ -419,7 +401,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 				result = CONDITIONAL_REQUEST_FAILED;
 			} else {
 				// unmarshall document
-				final Document unmarshalledContent = unmarshallDocument(document);
+				final Document unmarshalledContent = unmarshallDocument(document,eventPackage,impl);
 				if (unmarshalledContent == null) {
 					// If the content type of the request does
 					// not match the event package, or is not understood by the
@@ -437,7 +419,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 				}
 
 				// authorize publication
-				if (!impl.authorizePublication(entity, unmarshalledContent)) {
+				if (!impl.authorizePublication(entity, eventPackage, unmarshalledContent)) {
 					result = FORBIDDEN;
 					if (logger.isInfoEnabled()) {
 						logger.info("publication for resource " + entity
@@ -457,7 +439,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 					newPublication.setDocumentAsDOM(unmarshalledContent);
 					// get composed publication and rebuild it
 					final ComposedPublication composedPublication = updateComposedPublication(
-							newPublication, publications, oldETag);
+							newPublication, publications, oldETag, impl);
 					// reset timer
 					resetTimer(publication, newPublication, expires);
 					// replace data
@@ -485,7 +467,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 	 */
 	private ComposedPublication updateComposedPublication(
 			Publication publication, Publication[] publications,
-			String exceptETag) {
+			String exceptETag, ImplementedPublicationControl impl) {
 		final ComposedPublication composedPublication = ComposedPublication
 				.fromPublication(publication);
 		Document unmarshalledContent = publication
@@ -494,7 +476,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 			if (exceptETag == null
 					|| !otherPublication.getPublicationKey().getETag().equals(
 							exceptETag)) {
-				unmarshalledContent = getStateComposer()
+				unmarshalledContent = impl.getStateComposer(publication.getPublicationKey().getEventPackage())
 						.compose(unmarshalledContent,
 								otherPublication.getDocumentAsDOM());
 			}
@@ -532,7 +514,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 				final ComposedPublication composedPublication = removeFromComposedPublication(
 						publication, getPublications(publication
 								.getPublicationKey().getEntity(), publication
-								.getPublicationKey().getEventPackage()), false);
+								.getPublicationKey().getEventPackage()), false,impl);
 				if (composedPublication.getDocumentAsString() == null
 						&& management
 								.isUseAlternativeValueForExpiredPublication()) {
@@ -623,15 +605,15 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 	 * @seeorg.mobicents.slee.sipevent.server.publication.PublicationControl#
 	 * isResponsibleForResource(javax.sip.address.URI)
 	 */
-	public boolean isResponsibleForResource(URI uri) {
-		return getImplementedPublicationControl().isResponsibleForResource(uri);
+	public boolean isResponsibleForResource(URI uri, String eventPackage) {
+		return getImplementedPublicationControl().isResponsibleForResource(uri,eventPackage);
 	}
 
 	// ----------- AUX METHODS
 
 	private ComposedPublication removeFromComposedPublication(
 			Publication publication, Publication[] publications,
-			boolean publicationIsInPublications) {
+			boolean publicationIsInPublications, ImplementedPublicationControl impl) {
 
 		final String entity = publication.getPublicationKey().getEntity();
 		final String eventPackage = publication.getPublicationKey()
@@ -648,7 +630,7 @@ public abstract class AbstractPublicationControl implements PublicationControl {
 			if (!publicationIsInPublications
 					|| !otherPublication.getPublicationKey().getETag().equals(
 							publication.getPublicationKey().getETag())) {
-				composedPublicationUnmarshalledContent = getStateComposer()
+				composedPublicationUnmarshalledContent = impl.getStateComposer(eventPackage)
 						.compose(composedPublicationUnmarshalledContent,
 								otherPublication.getDocumentAsDOM());
 			}

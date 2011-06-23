@@ -30,7 +30,7 @@ package org.mobicents.slee.sipevent.server.subscription.jmx;
  */
 public interface SubscriptionControlManagementMBean {
 
-	public static final String MBEAN_NAME = "org.mobicents.slee:sippresence=SipEventSubscriptionControl";
+	public static final String MBEAN_NAME = "org.mobicents.sippresence:name=SipEventSubscriptionControl";
 
 	/**
 	 * Retrieves default subscription time in seconds.

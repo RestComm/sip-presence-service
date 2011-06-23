@@ -84,11 +84,13 @@
 			<groupId>org.mobicents.servers.sippresence</groupId>
 			<version>${pom.version}</version>			
 		</dependency>
+		<!--
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
 			<artifactId>sip-presence-server-publication-control-sbb</artifactId>
 			<version>${pom.version}</version>			
 		</dependency>
+		-->
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
 			<artifactId>sip-presence-server-pres-rules-cache-sbb</artifactId>
@@ -101,6 +103,16 @@
 		</dependency>
 		
 		<!-- integrated server -->		
+		<dependency>
+			<groupId>${pom.groupId}</groupId>
+			<artifactId>integrated-server-publication-library</artifactId>
+			<version>${pom.version}</version>	
+		</dependency>
+		<dependency>
+			<groupId>${pom.groupId}</groupId>
+			<artifactId>integrated-server-publication-sbb</artifactId>
+			<version>${pom.version}</version>	
+		</dependency>
 		<dependency>
 			<groupId>${pom.groupId}</groupId>
 			<artifactId>integrated-server-subscription-library</artifactId>

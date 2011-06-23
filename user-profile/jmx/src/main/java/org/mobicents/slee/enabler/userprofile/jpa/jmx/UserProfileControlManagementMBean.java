@@ -31,7 +31,7 @@ package org.mobicents.slee.enabler.userprofile.jpa.jmx;
 public interface UserProfileControlManagementMBean {
 
 	
-	public static final String MBEAN_NAME="org.mobicents.slee:userprofile=UserProfileControl";
+	public static final String MBEAN_NAME="org.mobicents.sippresence:name=UserProfileControl";
 	
 	/**
 	 * Adds a new user with the specified username and password.

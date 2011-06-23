@@ -31,7 +31,7 @@ package org.mobicents.slee.sipevent.server.publication.jmx;
 public interface PublicationControlManagementMBean {
 
 	
-	public static final String MBEAN_NAME="org.mobicents.slee:sippresence=SipEventPublicationControl";
+	public static final String MBEAN_NAME="org.mobicents.sippresence:name=SipEventPublicationControl";
 	
 	/**
 	 * Retrieves default subscription time in seconds.

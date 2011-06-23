@@ -194,7 +194,7 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 			    // is targeted to a resource for which the ESC is responsible for
 			    // maintaining event state.  If not, the ESC MUST return a 404 (Not
 			    // Found) response and skip the remaining steps.
-				if (childSbb.isResponsibleForResource(entityURI)) {	
+				if (childSbb.isResponsibleForResource(entityURI,eventPackage)) {	
 					
 					// process expires header
 					ExpiresHeader expiresHeader = event.getRequest().getExpires();

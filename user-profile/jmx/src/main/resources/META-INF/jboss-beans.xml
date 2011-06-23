@@ -7,7 +7,7 @@
 	<!-- Gets the singleton and registers it as JMX MBean -->
 	
 	<bean name="Mobicents.JAINSLEE.Enabler.UserProfileControlManagement" class="org.mobicents.slee.enabler.userprofile.jpa.jmx.UserProfileControlManagement">      
-      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="org.mobicents.slee:userprofile=UserProfileControl",exposedInterface=org.mobicents.slee.enabler.userprofile.jpa.jmx.UserProfileControlManagementMBean.class,registerDirectly=true)</annotation>
+      <annotation>@org.jboss.aop.microcontainer.aspects.jmx.JMX(name="org.mobicents.sippresence:name=UserProfileControl",exposedInterface=org.mobicents.slee.enabler.userprofile.jpa.jmx.UserProfileControlManagementMBean.class,registerDirectly=true)</annotation>
       <constructor factoryMethod="getInstance"/>
       <depends>jboss.jca:service=DataSourceBinding,name=DefaultDS</depends>      
    </bean>

@@ -6,7 +6,7 @@
 	<property name="release.dir" location="${ant.file.mobicents.release}/../target" />
 	<property name="release.type" value="mobicents" /> <!-- mobicents or jbcp -->
     <property name="docs.dir" location="${ant.file.mobicents.release}/../../docs"/>
-	<property name="mobicents.jainslee.version" value="2.4.0.FINAL" />
+	<property name="mobicents.jainslee.version" value="2.4.1.FINAL" />
 	<property name="jboss.version" value="5.1.0.GA" />
 	<property name="release.version" value="1.0.0-SNAPSHOT" />
 	<property name="mobicents.distro.zip.path" value="mobicents-jainslee-${mobicents.jainslee.version}.zip" />
