@@ -61,9 +61,9 @@
 				id="itsps-binary-SIP_Presence_Service-Software_Prerequisites">
 				<title>Software Prerequisites</title>
 				<varlistentry>
-					<term>JDK 5</term>
+					<term>JDK 6</term>
 					<listitem>
-						<para>A working installation of the Java Development Kit (<acronym>JDK</acronym>) version 5 or higher is required in order to run the <application>&PLATFORM_NAME; SIP Presence Service</application>.</para>
+						<para>A working installation of the Java Development Kit (<acronym>JDK</acronym>) version 6 or higher is required in order to run the <application>&PLATFORM_NAME; SIP Presence Service</application>.</para>
 					</listitem>
 				</varlistentry>
 				<varlistentry>

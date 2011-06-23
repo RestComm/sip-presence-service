@@ -23,6 +23,12 @@
 				</listitem>
 			</varlistentry>
 			<varlistentry>
+				<term>Presence Content Manipulation Control</term>
+				<listitem>
+					<para>This functional element is responsible for subscribing presence content stored in the XDMS, create and manage the related publications in the Presence Publication Contro.</para>
+				</listitem>
+			</varlistentry>
+			<varlistentry>
 				<term>Presence Subscription Control</term>
 				<listitem>
 					<para>This functional element handles subscriptions to presence events or to the list of subscribers (watchers) for any specific resource. It is responsible for emitting notifications related to those subscriptions.</para>
@@ -37,17 +43,6 @@
 			</varlistentry>
 		</variablelist>
 		
-			<para>The implementation architecture of the SIP Presence Server also contains client-side components:</para>
-			<variablelist>
-				<varlistentry>
-					<term>Presence Client SBB</term>
-					<listitem>
-						<para>The <literal>PresenceClientSBB</literal> is the interface to a JAIN SLEE SBB intended to be used as a client for the <application>&PLATFORM_NAME; SIP Presence Server</application> (and other servers compliant with same standards), in JAIN SLEE child relations.</para>
-						<para>Two implementations of this interface are provided: the <literal>InternalPresenceClientSBB</literal> that is used with applications running in the <application>&PLATFORM_NAME; SIP Presence Server</application> JAIN SLEE container, and the <literal>ExternalPresenceClientSBB</literal>, used with applications running in a different JAIN SLEE container than the <application>&PLATFORM_NAME; SIP Presence Server</application>.</para>
-					</listitem>
-				</varlistentry>
-			</variablelist>
-		
 	</section>
 	<section
 	id="sps-Configuring_The_Sip_Presence_Server">
@@ -56,17 +51,84 @@
 		<section id="sps-Configuring_the_Abstract_SIP_Event_Publication_Interface">
 			<title>Configuring the Abstract SIP Event Publication Interface</title>
 			<para>Edit the properties in file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-sip-presence/3-beans/configuration/sip-event/publication/META-INF/jboss-beans.xml</filename>.</para>
-			<para>This configuration part can also be done through JMX, using the <emphasis>org.mobicents.slee:sippresence=SipEventPublicationControl</emphasis> MBean. The configuration changes through JMX are not persistent.</para>
+			<para>This configuration part can also be done through JMX, using the <emphasis>org.mobicents.sippresence:name=SipEventPublicationControl</emphasis> MBean. The configuration changes through JMX are not persistent.</para>
 		</section>
 		<section id="sps-Configuring_the_Abstract_SIP_Event_Subscription_Interface">
 			<title>Configuring the Abstract SIP Event Subscription Interface</title>
 			<para>Edit the properties in file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-sip-presence/3-beans/configuration/sip-event/subscription/META-INF/jboss-beans.xml</filename>.</para>
-			<para>This configuration part can also be done through JMX, using the <emphasis>org.mobicents.slee:sippresence=SipEventSubscriptionControl</emphasis> MBean. The configuration changes through JMX are not persistent.</para>
+			<para>This configuration part can also be done through JMX, using the <emphasis>org.mobicents.sippresence:name=SipEventSubscriptionControl</emphasis> MBean. The configuration changes through JMX are not persistent.</para>
 		</section>
 		<section id="sps-Configuring_the_Concrete_SIP_Event_Interfaces">
 			<title>Configuring the Concrete SIP Event Interfaces</title>
 			<para>Edit the properties in file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-sip-presence/3-beans/configuration/sip-presence/META-INF/jboss-beans.xml</filename>.</para>
-			<para>This configuration part can also be done through JMX, using the <emphasis>org.mobicents.slee:sippresence=SipPresenceServerManagement</emphasis> MBean. The configuration changes through JMX are not persistent.</para>
+			<para>This configuration part can also be done through JMX, using the <emphasis>org.mobicents.sippresence:name=SipPresenceServerManagement</emphasis> MBean. The configuration changes through JMX are not persistent.</para>
 		</section>		
+	</section>
+	<section
+	id="sps-Content_Accepted_By_The_Sip_Presence_Server">
+		<title>Content accepted by the SIP Presence Server</title>
+		<para>The <application>&PLATFORM_NAME; SIP Presence Server</application> accepts the following content type to be published and subscribed by users:</para>
+		<itemizedlist>
+		<listitem>
+			<para>
+				<ulink url="http://tools.ietf.org/html/rfc3863">IETF Presence Information Data Format - PIDF (RFC 3863)</ulink>
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<ulink
+					url="http://tools.ietf.org/html/rfc4479">A Data Model for Presence (RFC 4479)</ulink>
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<ulink
+					url="http://tools.ietf.org/html/rfc4480">IETF Rich Presence Information Data format - RPID (RFC 4480)</ulink>
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<ulink url="http://tools.ietf.org/html/rfc4481">IETF Timed Presence Extensions (RFC 4481)</ulink>
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<ulink
+					url="http://tools.ietf.org/html/rfc4482">IETF Contact Information in Presence Information Data Format - CIPID (RFC 4482)</ulink>
+			</para>
+		</listitem>		
+		<listitem>
+			<para>
+				<ulink url="http://tools.ietf.org/html/rfc4199">IETF A Presence-based GEOPRIV Location Object Format - GEOPRIV (RFC 4199)</ulink>
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<ulink url="http://tools.ietf.org/html/rfc5196">IETF SIP UA Capability Extension to Presence Information Data Format (RFC 5196)</ulink>
+			</para>
+		</listitem>
+		
+		<listitem>
+			<para>
+				<ulink
+					url="http://www.openmobilealliance.org">OMA Extensions to PIDF and Presence Data Model</ulink>
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<ulink
+					url="http://www.openmobilealliance.org">OMA PDE - Presence SIMPLE Data Extension 1.0</ulink>
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<ulink
+					url="http://www.openmobilealliance.org">OMA PDE - Presence SIMPLE Data Extension 1.1</ulink>
+			</para>
+		</listitem>
+	</itemizedlist>		
+	<important>
+		<para>The content accepted can be easily extended/modified, one just need to add/remove the related XML schema files in the directory <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-sip-presence/3-beans/configuration/sip-presence/xsd</filename>.</para>
+	</important>
 	</section>
 </chapter>

@@ -8,17 +8,6 @@
 	<title>&PLATFORM_NAME; XML Document Management Server</title>
 	<para>The <application>&PLATFORM_NAME; XML Document Management Server</application> (XDMS) is part of the <application>&PLATFORM_NAME; SIP Presence Service</application>. It is the first free and open source implementation of an <application>XML Document Management Server</application> as defined in the Open Mobile Alliance (OMA) XML Document Management v1.1 specification. This functional element of next-generation IP communication networks is responsible for handling the management of user XML documents stored on the network side, such as presence authorization rules, contact and group lists (also known as resource lists), static presence information, and much more.</para>
 
-	<important>
-	<para>The SIP interface partially implements the XCAP Diff Event IETF
-		draft, version 3. Subscriptions to a single document or usage by an
-		entire application are supported. However, these differing usages do
-		not extend to the single-XML element or attribute value level.
-		If the diff-processing subscription parameter is present for notifications,
-		it is currently ignored. Patching of content is not
-		available at the moment, which means that only the document etags, new
-		and/or old, will be provided.
-	</para>
-	</important>
 	<para>The <application>XDM Server</application> comprises the following functional elements:</para>
 	<variablelist
 			id="xdms-Functional_Elements_of_the_XDM_Server">
@@ -51,7 +40,7 @@
 		<varlistentry>
 			<term>XDM Event Subscription Control</term>
 			<listitem>
-				<para>This element, using the SIP protocol, is responsible for handling subscriptions to documents managed by the XDM. Its functions include the authentication and authorization of a subscription, attachment to update events on specific documents or application usages, and the sending of notifications when documents change.</para>
+				<para>This element, using the SIP protocol, is responsible for handling subscriptions to documents managed by the XDM. Its functions include the authentication and authorization of a subscription, attachment to update events on specific documents or collections, and the sending of notifications when documents change. This interface is fully compatible with the XCAP DIFF event package, defined by IETF RFC 5875.</para>
 			</listitem>
 		</varlistentry>
 	</variablelist>
@@ -70,8 +59,8 @@
 					<para>Edit <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/http-servlet-ra-DU-*.jar/META-INF/deploy-config.xml</filename>. Uncomment and set custom servlet name again to the desired last path segment in the XCAP root.</para>					
 				</listitem>
 				<listitem>
-					<para>Edit the properties in file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-xdms/3-beans/configuration/xdms/META-INF/jboss-beans.xml</filename>. Note that the xcapRoot has a leading /. Also note that for the <application>Integrated Server</application> the path segment mobicents-xdms is mobicents-sip-presence.</para>
-					<para>This configuration part can also be done through JMX, using the MBean named <emphasis>org.mobicents.slee:sippresence=XDMServerConfiguration</emphasis>. The configuratian changes through JMX are not persistent.</para>
+					<para>Edit the properties in file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-xdms/3-beans/configuration/xdms/META-INF/jboss-beans.xml</filename>. Note that the xcapRoot has a leading and trailing /. Also note that for the <application>Integrated Server</application> the path segment mobicents-xdms is mobicents-sip-presence.</para>
+					<para>This configuration part can also be done through JMX, using the MBean named <emphasis>org.mobicents.sippresence:name=XDMServerConfiguration</emphasis>. The configuration changes through JMX are not persistent.</para>
 				</listitem>
 			</itemizedlist>
 		</section>
@@ -82,7 +71,7 @@
 			<itemizedlist>	
 				<listitem>
 					<para>Edit the properties in file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-xdms/3-beans/configuration/xdms/META-INF/jboss-beans.xml</filename>. Note that for the <application>Integrated Server</application> the path segment mobicents-xdms is mobicents-sip-presence.</para>
-					<para>This configuration part can also be done through JMX, using the MBean named <emphasis>org.mobicents.slee:sippresence=XDMServerConfiguration</emphasis>. The configuratian changes through JMX are not persistent.</para>
+					<para>This configuration part can also be done through JMX, using the MBean named <emphasis>org.mobicents.sippresence:name=XDMServerConfiguration</emphasis>. The configuration changes through JMX are not persistent.</para>
 				</listitem>
 			</itemizedlist>
 		</section>
@@ -93,7 +82,7 @@
 			<itemizedlist>	
 				<listitem>
 					<para>Edit the properties in file <filename>$JBOSS_HOME/server/&lt;server_profile&gt;/deploy/mobicents-xdms/3-beans/configuration/sip-event/subscription/META-INF/jboss-beans.xml</filename>. Note that for the <application>Integrated Server</application> the path segment mobicents-xdms is mobicents-sip-presence.</para>
-					<para>This configuration part can also be done through JMX, using the MBean named <emphasis>org.mobicents.slee:sippresence=SipEventSubscriptionControl</emphasis>. The configuratian changes through JMX are not persistent.</para>
+					<para>This configuration part can also be done through JMX, using the MBean named <emphasis>org.mobicents.sippresence:name=SipEventSubscriptionControl</emphasis>. The configuratian changes through JMX are not persistent.</para>
 				</listitem>
 			</itemizedlist>
 		</section>
@@ -105,7 +94,7 @@
 				<varlistentry>
 					<term>User Provisioning through an JMX Client</term>
 					<listitem>
-						<para>Users can be added/removed through the <emphasis>org.mobicents.slee:userprofile=UserProfileControl</emphasis> MBean. </para>
+						<para>Users can be added/removed through the <emphasis>org.mobicents.sippresence:name=UserProfileControl</emphasis> MBean. </para>
 					</listitem>
 				</varlistentry>
 				<varlistentry>
@@ -122,6 +111,10 @@
 			<section id="xdms-Local_XCAP_Requests" >
 				<title>Local XCAP Requests</title>
 				<para>By default, the local (same host) XCAP requests will go around user authentication. This can also be disabled through configuration of the XCAP interface.</para>
+			</section>
+			<section id="xdms-Xcap_Diff_Super_Users">
+				<title>Xcap Diff Super Users</title>
+				<para>It is possible to define a set of super users, through the configuration of the XCAP interface, which are authorized to subscribe any document or collection. Any other user may only subscribe documents in its own user directory, for each XCAP app usage deployed. By default there are no super users configured.</para>
 			</section>
 		</section>
 		

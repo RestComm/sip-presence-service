@@ -82,6 +82,18 @@
 		</listitem>
 		<listitem>
 			<para>
+				<ulink
+					url="http://www.openmobilealliance.org/Technical/release_program/xdm_v2_0.aspx">OMA Presence Content (OMA XDM v2.0)</ulink>
+			</para>
+		</listitem>
+		<listitem>
+			<para>
+				<ulink
+					url="http://tools.ietf.org/html/rfc4827">IETF Presence Document Content Manipulation (IETF RFC 4827)</ulink>
+			</para>
+		</listitem>		
+		<listitem>
+			<para>
 				<ulink url="http://tools.ietf.org/html/rfc4826">IETF Resource Lists</ulink>
 			</para>
 		</listitem>
@@ -146,12 +158,13 @@ public class PresRulesAppUsage extends AppUsage {
 }
 ]]>
         	</programlisting>
-			<para>Methods for data constraints and resource interdependencies can be overriden:</para>
+			<para>Methods for schema validation, data constraints and resource interdependencies can be overriden:</para>
 			<programlisting language="Java" role="JAVA"><![CDATA[
-public void checkConstraintsOnPut();
-public void checkConstraintsOnDelete();
-public void processResourceInterdependenciesOnPutDocument();
-public void processResourceInterdependenciesOnDeleteElement();
+public void validateSchema(...);
+public void checkConstraintsOnPut(...);
+public void checkConstraintsOnDelete(...);
+public void processResourceInterdependenciesOnPutDocument(...);
+public void processResourceInterdependenciesOnDeleteElement(...);
 //...
 ]]>
         	</programlisting>
