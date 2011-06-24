@@ -44,10 +44,6 @@
 	<xi:include
 		xmlns:xi="http://www.w3.org/2001/XInclude"
 		href="Section-SIP_Event_Subscription_Client_Enabler.xml" />
-			
-	<xi:include
-		xmlns:xi="http://www.w3.org/2001/XInclude"
-		href="Section-Presence_Client_Enabler.xml" />	
 	
 	<section
 		id="msps-Client_Application_Examples">

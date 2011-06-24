@@ -10,6 +10,19 @@
 		<revhistory>
 		<!--revisions must be listed in chronological order with the latest at the top-->
 			<revision>
+				<revnumber>4</revnumber>
+				<date>Fri Jun 24 2011</date>
+				<author>
+					<firstname>Eduardo</firstname>
+					<surname>Martins</surname>					
+				</author>
+				<revdescription>
+					<simplelist>
+						<member>Documentation update for Mobicents SIP Presence Service 1.0.0.CR1.</member>
+					</simplelist>
+				</revdescription>
+			</revision>
+			<revision>
 				<revnumber>3.1</revnumber>
 				<date>Fri Dec 11 2009</date>
 				<author>
