@@ -8,7 +8,7 @@
     <property name="docs.dir" location="${ant.file.mobicents.release}/../../docs"/>
 	<property name="mobicents.jainslee.version" value="2.4.1.FINAL" />
 	<property name="jboss.version" value="5.1.0.GA" />
-	<property name="release.version" value="1.0.0-SNAPSHOT" />
+	<property name="release.version" value="1.0.0.CR1" />
 	<property name="mobicents.distro.zip.path" value="mobicents-jainslee-${mobicents.jainslee.version}.zip" />
 	<property name="jboss.home" location="${release.dir}/jboss-${jboss.version}/" />
 	<property name="jboss.config" value="default" />
@@ -302,15 +302,30 @@
 	</target>
 
 	<target name="build-mobicents-jain-slee" depends="get-mobicents-jain-slee,unzip-mobicents-jainslee">
+		<!-- delete all profile, clustering not yet available -->
 		<delete dir="${release.dir}/jboss-5.1.0.GA/server/all" failonerror="true" />
-		<move todir="${jboss.home}/docs/mobicents-jain-slee">
+		<!-- including SLEE docs -->
+		<move todir="${jboss.home}/docs/mobicents-slee">
 			<fileset dir="${release.dir}/docs">
-				<include name="**"/>
+				<include name="container/**"/>
+				<include name="enablers/**"/>
+				<include name="tools/**"/>
+				<include name="resources/sip11/**"/>
+				<include name="resources/http-servlet/**"/>
+				<include name="resources/xcap-client/**"/>
 			</fileset>
 		</move>
-		<copy toFile="${jboss.home}/mobicents-jainslee-src.zip" file="${jboss.home}/../sources.zip" />
+		<!-- including SLEE tools --> 
+		<move todir="${jboss.home}/mobicents-slee-tools">
+			<fileset dir="${release.dir}/tools">
+				<include name="**"/>
+			</fileset>
+		</move>				
+		<!-- including SLEE sources -->
+		<copy toFile="${jboss.home}/mobicents-slee-src.zip" file="${jboss.home}/../sources.zip" />
+		<!-- deploying HTTP Servlet RA -->
 		<ant antfile="${jboss.home}/../resources/http-servlet/build.xml" target="deploy" inheritall="true" />
-		<!-- this deploys also sip ra and sip subscription client enabler -->
+		<!-- deploying XDM Client enabler, this deploys also XCAP Client RA, SIP11 RA and SIP subscription client enabler -->
 		<ant antfile="${jboss.home}/../enablers/xdm-client/build.xml" target="deploy-all" inheritall="true" />
 	</target>
 
