@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.mobicents.servers.sipevent</groupId>
 		<artifactId>sip-event-subscription-control-rls-cache</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>1.0.0.CR1</version>
 	</parent>
 		
 	<artifactId>sip-event-subscription-control-rls-cache-ratype</artifactId>
