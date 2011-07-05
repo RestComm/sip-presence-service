@@ -31,4 +31,4 @@ Any other directory where additional instructions are needed has its own README 
 
 Beta Documentation
 -------------------------------------------------------------------------------
-http://hudson.jboss.org/hudson/job/MobicentsDocumentation/lastSuccessfulBuild/artifact/html_single/index.html#chapter-Mobicents_SIP_Presence_Service
+http://ci.jboss.org/jenkins/job/Mobicents-Books/lastSuccessfulBuild/artifact/sip-presence/index.html
