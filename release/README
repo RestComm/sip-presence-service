@@ -1,0 +1,91 @@
+Here it is, Mobicents SIP Presence Service 1.0.0.CR1, the first 
+candidate release for the popular open source SIP Presence service 
+implementation, now adding RCS to supported standard networks.
+
+What is new?
+--------------------------------------------------------------------------
+
+1) Performance & Stability:
++-- Latest SLEE 2.4.1.FINAL;
++-- Optimized SLEE app code, taking full advantage of custom Mobicents 
+JAIN SLEE 1.1 Extensions.
++-- Several issues fixed, some not even listed on Issue Tracker;
++-- Network Simulation tools ensures stable memory and performance
+behavior on long runs.
+
+2) XDM Server:
++-- XCAP Diff interface completed, fully compatible with RFC 5875, support 
+for XML Patch Ops included;
++-- IETF Presence Document Content Manipulation (RFC 4827) XCAP App 
+Usage, for storage of permanent presence state;
++-- OMA XDM 2.0 Presence Content XCAP App Usage, for storage of content 
+such as status icons;
++-- Optimized XCAP App Usage management, pooling of instances not 
+needed anymore;
++-- XCAP Diff Super Users support, these will have authorization to subscribe 
+changes in any document or collection.
+
+3) Presence and Resource Lists Servers:
++-- Pres Rules Transformations, documents are now used not only to authorize 
+presence subscriptions, but to transform the presence state notified. Polite 
+blocking supported too;
++-- Service that monitors permanent presence state in the XDMS, such state is 
+then composed with the state published through SIP;
++-- Extended Accepted Presence Content:
+    - OMA Extensions to PIDF and Presence Data Model, OMA PDE 1.0, OMA 
+PDE 1.1
+    - IETF RFCs 3863, 4479, 4480, 4481, 4482, 4199, 5196;
++-- Simpler extension of accepted presence content, just drop xsd files in 
+related configuration directory and the server will automatically combine all 
+to achieve the supported documents schema;
++-- JAXB replaced with DOM in publication and subscription interfaces, faster 
+and better validation of state published, no unneeded XML namespaces in the 
+notified state;
++-- Multiple event packages now supported in the SIP Event Publication 
+Control, opens the door for the support of other publishing services in the 
+integrated server.
+
+What is included?
+------------------------------------------------------------------------------
++-- Mobicents XDM Server standalone installed in JBoss AS + Mobicents
+JAIN SLEE (mobicents-sip-presence-xdms-1.0.0.CR1.zip)
++-- Mobicents XDM Server and Mobicents SIP Presence Servers integrated
+installed in JBboss AS + Mobicents JAIN SLEE, plus two example
+presence aware JAIN SLEE applications pre-deployed
+(mobicents-sip-presence-integrated-1.0.0.CR1.zip)
++-- Mobicents SIP Presence Service binary package that you can use to
+install XDM or Integrated servers in JBoss AS + Mobicents JAIN SLEE 2.4.1.FINAL
+(mobicents-sip-presence-1.0.0.CR1.zip)
+
+Download URL:
+-------------------------------------------------------------------------------
+http://sourceforge.net/projects/mobicents/files/Mobicents%20SIP%20Presence%20Service/1.0.0.CR1
+
+SVN source code and tag:
+-------------------------------------------------------------------------------
+http://mobicents.googlecode.com/svn/tags/servers/sip-presence/1.0.0.CR1
+
+How to get started?
+-----------------------------------------a--------------------------------------
+Please check the documentation included in directory named docs
+
+Issues fixed & enhancements:
+-------------------------------------------------------------------------------
+http://code.google.com/p/mobicents/issues/list?can=1&q=msps%3D1.0.0.CR1
+
+Very Important:
+-------------------------------------------------------------------------------
+This is a community project and, as such is not supported with an SLA.
+Any questions or problems can be raised through our forums, where we
+will provide our best efforts to assist.
+This project is included in the JBoss Communications Platform for
+which a support subscription is available. Red Hat also provides other
+solutions, such as training or consultancy. More at
+http://www.redhat.com/solutions/telco
+
+A final note, even if it is repeated on every release announcement, a
+sincere big thanks to all Mobicents community members who helped the
+making of this release, be it bug reports, feature contribution or
+testing enhancements, without you it would be much harder.
+
+Cheers.
