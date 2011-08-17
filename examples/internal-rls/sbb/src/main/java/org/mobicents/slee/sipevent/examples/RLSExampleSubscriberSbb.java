@@ -321,14 +321,14 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 	
 	@Override
 	public void resubscribeFailed(int arg0, XDMClientChildSbbLocalObject arg1,
-			URI arg2) {
+			String arg2) {
 		// TODO Auto-generated method stub
 		
 	}
 	
 	@Override
 	public void subscribeFailed(int arg0, XDMClientChildSbbLocalObject arg1,
-			URI arg2) {
+			String arg2) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -341,14 +341,14 @@ public abstract class RLSExampleSubscriberSbb implements javax.slee.Sbb,
 	
 	@Override
 	public void unsubscribeFailed(int arg0, XDMClientChildSbbLocalObject arg1,
-			URI arg2) {
+			String arg2) {
 		// TODO Auto-generated method stub
 		
 	}
 	
 	@Override
 	public void subscriptionTerminated(XDMClientChildSbbLocalObject arg0,
-			URI arg1, TerminationReason arg2) {
+			String arg1, TerminationReason arg2) {
 		// TODO Auto-generated method stub
 		
 	}
