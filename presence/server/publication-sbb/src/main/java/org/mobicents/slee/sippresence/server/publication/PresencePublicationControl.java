@@ -152,7 +152,7 @@ public class PresencePublicationControl {
 				}
 				// add a closed status element
 				Element status = document.createElement("status");
-				tupleChild.appendChild(status);
+				presenceChild.appendChild(status);
 				Element basic = document.createElement("basic");
 				basic.setTextContent("closed");
 				status.appendChild(basic);				
