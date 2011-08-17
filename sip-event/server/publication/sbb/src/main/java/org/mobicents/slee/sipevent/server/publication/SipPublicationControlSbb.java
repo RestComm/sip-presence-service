@@ -188,8 +188,13 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 			// check event package
 			String eventPackage = eventHeader.getEventType();
 			if (acceptsEventPackage(eventPackage,childSbb)) {
-
 				URI entityURI = event.getRequest().getRequestURI();
+				String entity = entityURI.toString();
+				int i = entity.indexOf(';');
+				if (i>0) {
+					// remove all parameters (can't find a reference indicating any param that should be kept...)
+					entity = entity.substring(0,i);
+				}
 				// The ESC inspects the Request-URI to determine whether this request
 			    // is targeted to a resource for which the ESC is responsible for
 			    // maintaining event state.  If not, the ESC MUST return a 404 (Not
@@ -216,7 +221,6 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 							if (expires > getConfiguration().getMaxExpires()) {
 								expires = getConfiguration().getMaxExpires();
 							}						
-							String entity = entityURI.toString();
 							// new publication or publication refresh ?	
 							SIPIfMatchHeader sipIfMatchHeader = (SIPIfMatchHeader)event.getRequest().getHeader(SIPIfMatchHeader.NAME);
 							if (sipIfMatchHeader != null) {
@@ -265,7 +269,7 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 								if (event.getRequest().getContentLength().getContentLength() != 0) {
 									ContentTypeHeader contentTypeHeader = (ContentTypeHeader) event.getRequest().getHeader(ContentTypeHeader.NAME);
 									if (childSbb.acceptsContentType(eventPackage,contentTypeHeader)) {
-										final Result result = childSbb.newPublication(entityURI.toString(), eventPackage, new String(event.getRequest().getRawContent()), contentTypeHeader.getContentType(), contentTypeHeader.getContentSubType(), expires);
+										final Result result = childSbb.newPublication(entity, eventPackage, new String(event.getRequest().getRawContent()), contentTypeHeader.getContentType(), contentTypeHeader.getContentSubType(), expires);
 										if (result.getStatusCode() < 300) {
 											try {
 												sendOkResponse(event, result.getETag(), result.getExpires());
@@ -297,7 +301,6 @@ public abstract class SipPublicationControlSbb implements Sbb, PublicationClient
 					}
 
 					else if (expires == 0) {
-						String entity = event.getRequest().getRequestURI().toString();
 						SIPIfMatchHeader sipIfMatchHeader = (SIPIfMatchHeader)event.getRequest().getHeader(SIPIfMatchHeader.NAME);
 						if (sipIfMatchHeader != null) {
 							// remove publication
