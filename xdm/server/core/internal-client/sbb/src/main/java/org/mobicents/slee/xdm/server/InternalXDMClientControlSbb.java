@@ -26,7 +26,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 
-import javax.slee.ChildRelation;
 import javax.slee.CreateException;
 import javax.slee.SbbContext;
 import javax.slee.facilities.Tracer;

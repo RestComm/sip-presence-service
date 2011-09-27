@@ -70,7 +70,7 @@ public class Document implements org.openxdm.xcap.common.datasource.Document, Se
 	/**
 	 * the document XML
 	 */
-	@Column(name = "XML", nullable = false)
+	@Column(name = "XML", length=65535, nullable = false)
 	private String xml;
 	
 	/**
