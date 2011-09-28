@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>org.mobicents</groupId>
 		<artifactId>mobicents-parent</artifactId>
-		<version>2.18</version>
+		<version>2.20</version>
 	</parent>
 		
 	<artifactId>sip-presence-parent</artifactId>
@@ -200,20 +200,6 @@
 				<updatePolicy>never</updatePolicy>
 			</snapshots>
 		</repository>
-        <repository>
-          <id>jboss-deprecated-repository</id>
-          <name>JBoss Deprecated Maven Repository</name>
-          <url>https://repository.jboss.org/nexus/content/repositories/deprecated/</url>
-          <layout>default</layout>
-          <releases>
-            <enabled>true</enabled>
-            <updatePolicy>never</updatePolicy>
-          </releases>
-          <snapshots>
-            <enabled>false</enabled>
-            <updatePolicy>never</updatePolicy>
-          </snapshots>
-        </repository>
 	</repositories>
 	
 	<profiles>
