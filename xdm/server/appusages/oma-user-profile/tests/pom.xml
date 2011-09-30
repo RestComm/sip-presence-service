@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.mobicents.servers.xdm</groupId>
 		<artifactId>xdms-appusages-oma-user-profile</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>1.0.0.FINAL</version>
 	</parent>
 				
 	<artifactId>xdms-appusages-oma-user-profile-tests</artifactId>
